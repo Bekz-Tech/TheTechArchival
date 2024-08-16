@@ -1,0 +1,12 @@
+{
+  "name": "thetecharchival",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd server_side && npm install && cd ../client_side && npm install && npm run build",
+   "start": "cd server_side && npm start"
+  },
+  "author": "",
+  "license": "ISC"
+}
