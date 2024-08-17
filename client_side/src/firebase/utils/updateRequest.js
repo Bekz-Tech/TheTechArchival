@@ -32,6 +32,46 @@ const updateUserDetails = async (userId, userDetails) => {
     }
   };
 
+  // Function to update the curriculum for an existing course
+const updateCourseCurriculum = async (courseId, newCurriculum) => {
+  try {
+    // Fetch the course document
+    const courseDocRef = doc(db, 'courses', courseId);
+    
+    // Update the course document with the new curriculum
+    await updateDoc(courseDocRef, {
+      curriculum: newCurriculum
+    });
 
-  export {updateUserDetails, updateEnquiryReadStatus}
+    // Update each instructor's course instance with the new curriculum
+    const usersCollectionRef = collection(db, 'users');
+    const instructorsQuery = query(usersCollectionRef, where('role', '==', 'instructor'));
+    const querySnapshot = await getDocs(instructorsQuery);
+
+    querySnapshot.forEach(async (instructorDoc) => {
+      const instructorDocRef = doc(db, 'users', instructorDoc.id);
+
+      // Update the curriculum in the instructor's course instance
+      await updateDoc(instructorDocRef, {
+        'courses': arrayUnion({
+          courseId,
+          curriculum: newCurriculum
+        })
+      });
+    });
+
+    alert('Course curriculum updated successfully');
+  } catch (error) {
+    console.error('Error updating course curriculum:', error);
+    throw error;
+  }
+};
+
+
+
+  export {
+    updateUserDetails,
+    updateEnquiryReadStatus,
+    updateCourseCurriculum
+  }
 

@@ -11,6 +11,7 @@ import {
 } from '../../data/mockData';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SchoolIcon from '@mui/icons-material/School';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday'; // Add this import for the Calendar icon
 import ProgressCircle from '../../components/ProgressCircle';
 
 const Instructor = () => {
@@ -25,10 +26,7 @@ const Instructor = () => {
   const [messages, setMessages] = useState([]);
   const [overallRating, setOverallRating] = useState(null);
 
-  
-
-const mockInstructorOverallRating = 4.7;
-
+  const mockInstructorOverallRating = 4.7;
 
   useEffect(() => {
     let isMounted = true;
@@ -53,32 +51,37 @@ const mockInstructorOverallRating = 4.7;
   return (
     <Box m="20px">
       {/* ROW 1 */}
-
       <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap="20px">
-      <Box gridColumn="span 6" backgroundColor={colors.primary[400]} p="20px">
+        {/* Course Progress */}
+        <Box gridColumn="span 3" backgroundColor={colors.primary[400]} p="20px">
           <Typography variant="h5" fontWeight="600">
             Course Progress
           </Typography>
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            mt="25px"
-          >
+          <Box display="flex" flexDirection="column" alignItems="center" mt="25px">
             <ProgressCircle size="125" />
-            <Typography
-              variant="h5"
-              color={colors.greenAccent[500]}
-              sx={{ mt: "15px" }}
-            >
+            <Typography variant="h5" color={colors.greenAccent[500]} sx={{ mt: "15px" }}>
               50% completed
             </Typography>
             <Typography>20% of total expected payments</Typography>
           </Box>
         </Box>
 
+        {/* Attendance */}
+        <Box gridColumn="span 3" backgroundColor={colors.primary[400]} p="20px">
+          <Typography variant="h5" fontWeight="600">
+            Attendance
+          </Typography>
+          <Box display="flex" flexDirection="column" alignItems="center" mt="25px">
+            <ProgressCircle size="125" />
+            <Typography variant="h5" color={colors.greenAccent[500]} sx={{ mt: "15px" }}>
+              70% rate
+            </Typography>
+            <Typography>20% of total expected payments</Typography>
+          </Box>
+        </Box>
+
         {/* Next Lecture */}
-        <Box gridColumn="span 6" backgroundColor={colors.primary[400]} p="20px">
+        <Box gridColumn="span 3" backgroundColor={colors.primary[400]} p="20px">
           <Typography variant="h5" fontWeight="600" mb="15px">
             Next Lecture
           </Typography>
@@ -96,6 +99,26 @@ const mockInstructorOverallRating = 4.7;
           </Box>
         </Box>
 
+        {/* Overall Rating */}
+        <Box gridColumn="span 3" backgroundColor={colors.primary[400]} p="20px">
+          <Typography variant="h5" fontWeight="600" mb="15px">
+            Overall Rating
+          </Typography>
+          <Box textAlign="center">
+            {overallRating !== null ? (
+              <Box>
+                <Rating value={overallRating} readOnly precision={0.1} />
+                <Typography variant="h6">Rating: {overallRating}</Typography>
+              </Box>
+            ) : (
+              <Typography>No ratings available.</Typography>
+            )}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* ROW 2 */}
+      <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap="20px" mt="20px">
         {/* Direct Messages */}
         <Box gridColumn="span 6" backgroundColor={colors.primary[400]} p="20px">
           <Typography variant="h5" fontWeight="600" mb="15px">
@@ -115,28 +138,17 @@ const mockInstructorOverallRating = 4.7;
           ))}
         </Box>
 
+        {/* Time-table */}
         <Box gridColumn="span 6" backgroundColor={colors.primary[400]} p="20px">
-          <Typography variant="h5" fontWeight="600">
-            Attendance
+          <Typography variant="h5" fontWeight="600" mb="15px">
+            Time-table
           </Typography>
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            mt="25px"
-          >
-            <ProgressCircle size="125" />
-            <Typography
-              variant="h5"
-              color={colors.greenAccent[500]}
-              sx={{ mt: "15px" }}
-            >
-                70% rate
-            </Typography>
-            <Typography>20% of total expected payments</Typography>
-          </Box>
+          {/* Add timetable content here */}
         </Box>
+      </Box>
 
+      {/* ROW 3 */}
+      <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap="20px" mt="20px">
         {/* Assignments */}
         <Box gridColumn="span 6" backgroundColor={colors.primary[400]} p="20px">
           <Typography variant="h5" fontWeight="600" mb="15px">
@@ -154,21 +166,20 @@ const mockInstructorOverallRating = 4.7;
           ))}
         </Box>
 
-        {/* Overall Rating */}
+        {/* Learning Path */}
         <Box gridColumn="span 6" backgroundColor={colors.primary[400]} p="20px">
           <Typography variant="h5" fontWeight="600" mb="15px">
-            Overall Rating
+            Learning Path
           </Typography>
-          <Box textAlign="center">
-            {overallRating !== null ? (
-              <Box>
-                <Rating value={overallRating} readOnly precision={0.1} />
-                <Typography variant="h6">Rating: {overallRating}</Typography>
-              </Box>
-            ) : (
-              <Typography>No ratings available.</Typography>
-            )}
-          </Box>
+          {/* Add learning path content here */}
+          {recommendations.map((rec, index) => (
+            <Card key={index} sx={{ mb: 2 }}>
+              <CardContent>
+                <Typography variant="h6">{rec.title}</Typography>
+                <Typography>{rec.description}</Typography>
+              </CardContent>
+            </Card>
+          ))}
         </Box>
       </Box>
     </Box>

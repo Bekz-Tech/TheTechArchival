@@ -27,7 +27,7 @@ const roleFields = {
         { label: 'Confirm Password', name: 'confirmPassword', type: 'password', required: true },
         { label: 'Profile Picture', name: 'profilePicture', type: 'file', required: false },
         { label: 'Program', name: 'program', type: 'select', required: true, options: ['Fullstack Development', 'Frontend Development', 'Data Analysis', 'Cyber Security', 'UI/UX Design'] },
-        // Add more fields specific to instructors
+        // Add any additional instructor-specific fields here
     ],
     admin: [
         { label: 'First Name', name: 'firstName', type: 'text', required: true },
@@ -37,7 +37,7 @@ const roleFields = {
         { label: 'Password', name: 'password', type: 'password', required: true },
         { label: 'Confirm Password', name: 'confirmPassword', type: 'password', required: true },
         { label: 'Profile Picture', name: 'profilePicture', type: 'file', required: false },
-        // Add more fields specific to admins
+        // Add more fields specific to admins here
     ]
 };
 
@@ -45,8 +45,8 @@ const SignUpForm = ({ role }) => {
     // Initialize form data
     const initialFormData = () => {
         const initialData = {};
-        if (role === 'student') {
-            roleFields.student.forEach(field => {
+        if (roleFields[role]) {
+            roleFields[role].forEach(field => {
                 initialData[field.name] = field.type === 'number' ? 0 : ''; // Set initial value for 'amountPaid' to 0
             });
         }
@@ -94,7 +94,7 @@ const SignUpForm = ({ role }) => {
                     uploadTask.on(
                         'state_changed',
                         (snapshot) => {
-                            // Progress function if needed
+                            // Optionally handle upload progress
                         },
                         (error) => {
                             reject(error);
@@ -116,15 +116,14 @@ const SignUpForm = ({ role }) => {
                 phoneNumber: formData.phoneNumber,
                 password: formData.password,
                 profilePictureUrl: downloadURL,
-                amountPaid: formData.amountPaid, // Include amountPaid for students
-                // Add additional fields based on role
                 ...(role === 'student' && {
                     program: formData.program,
                     emergencyContactName: formData.emergencyContactName,
                     emergencyContactRelationship: formData.emergencyContactRelationship,
-                    emergencyContactPhone: formData.emergencyContactPhone
-                })
-                // Add more fields as needed for 'instructor' and 'admin' roles
+                    emergencyContactPhone: formData.emergencyContactPhone,
+                    amountPaid: formData.amountPaid // Include amountPaid for students
+                }),
+                // Add additional fields for instructor and admin roles if necessary
             };
 
             await handleSignUp(userData, role);
@@ -147,7 +146,7 @@ const SignUpForm = ({ role }) => {
             </Typography>
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
-                    {roleFields[role].map((field) => (
+                    {roleFields[role]?.map((field) => (
                         <Grid item xs={12} key={field.name}>
                             {field.type === 'select' ? (
                                 <FormControl fullWidth variant="outlined">

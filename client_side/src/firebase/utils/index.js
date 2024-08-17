@@ -1,12 +1,15 @@
 import { handleSignUp, logout } from "./auth";
-import { addUser, submitEnquiry } from "./postRequest";
+import { addUser, submitEnquiry, addCourse} from "./postRequest";
 import {
   fetchAndStoreUsers,
   fetchEnquiries,
   fetchUserDetailsByEmailAndRole,
       } from "./getRequest";
 import { deleteUser, deleteEnquiry } from "./deleteRequest";
-import { updateUserDetails, updateEnquiryReadStatus } from "./updateRequest";
+import {
+  updateUserDetails,
+  updateEnquiryReadStatus,
+  updateCourseCurriculum} from "./updateRequest";
 
 export {
   handleSignUp,
@@ -19,5 +22,7 @@ export {
   submitEnquiry,
   fetchEnquiries,
   updateEnquiryReadStatus,
-  deleteEnquiry
+  deleteEnquiry,
+  addCourse,
+  updateCourseCurriculum
 };

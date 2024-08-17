@@ -15,85 +15,70 @@ import { fetchAndStoreUsers, fetchEnquiries } from '../../../../firebase/utils/i
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../../firebase/config'; // Ensure this import is correct
 
-
 const Admin = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [userData, setUserData] = useState([]);
   const [enquiries, setEnquiries] = useState([]);
   const [unreadEnquiriesCount, setUnreadEnquiriesCount] = useState(0);
-
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
-    let isMounted = true;
     const fetchData = async () => {
       const users = await fetchAndStoreUsers();
-      setUserData(users);
-
+      if (isMounted) {
+        setUserData(users);
+  
+        // Calculate total amount paid from sessionStorage
+        const total = users.reduce((sum, user) => {
+          const amountPaid = parseFloat(user.amountPaid) || 0;
+          return sum + amountPaid;
+        }, 0);
+        setTotalRevenue(total);
+      }
     };
-
+  
+    let isMounted = true; // track whether the component is mounted
     fetchData();
-
+  
     return () => {
-      isMounted = false; // Cleanup flag when component unmounts
+      isMounted = false; // cleanup function sets isMounted to false
     };
-  }, []);
-
+  }, []); // Empty dependency array ensures it only runs once on mount
+  
   useEffect(() => {
-    let isMounted = true;
     const fetchEnquiry = async () => {
       const enquiries = await fetchEnquiries();
-      setEnquiries(enquiries);
-    
-      // Count unread enquiries
-      const unreadCount = enquiries.filter(enquiry => !enquiry.read).length;
-      setUnreadEnquiriesCount(unreadCount);
+      if (isMounted) {
+        setEnquiries(enquiries);
+  
+        // Count unread enquiries
+        const unreadCount = enquiries.filter(enquiry => !enquiry.read).length;
+        setUnreadEnquiriesCount(unreadCount);
+      }
     };
-    
-
+  
+    let isMounted = true; // track whether the component is mounted
     fetchEnquiry();
-
+  
     return () => {
-      isMounted = false; // Cleanup flag when component unmounts
+      isMounted = false; // cleanup function sets isMounted to false
     };
-  }, []);
+  }, []); // Empty dependency array ensures it only runs once on mount
+  
 
-
-
-  useEffect(() => {
-    let isMounted = true;
-    // Count instructors registered in the previous month
-    const fetchInstructorsCount = async () => {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-
-
-    };
-    fetchInstructorsCount();
-
-    return () => {
-      isMounted = false; // Cleanup flag when component unmounts
-    };
-  }, []);
-
-
-// Function to check if a student is new (created in the last 24 hours)
-const isNewStudent = (createdAt) => {
-  const createdDate = new Date(createdAt);
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
-  return createdDate >= oneDayAgo;
-};
-
-
+  // Function to check if a student is new (created in the last 24 hours)
+  const isNewStudent = (createdAt) => {
+    const createdDate = new Date(createdAt);
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+    return createdDate >= oneDayAgo;
+  };
 
   // Separate students and instructors
   const students = userData.filter(user => user.role === 'student');
   const instructors = userData.filter(user => user.role === 'instructor');
   const newStudents = students.filter(student => isNewStudent(student.createdAt));
-
-
 
   return (
     <Box
@@ -185,7 +170,7 @@ const isNewStudent = (createdAt) => {
           justifyContent="space-between"
           alignItems="center"
         >
-          <Box p= "10px 0">
+          <Box p="10px 0">
             <Typography
               variant="h5"
               fontWeight="600"
@@ -198,7 +183,7 @@ const isNewStudent = (createdAt) => {
               fontWeight="bold"
               color={colors.greenAccent[500]}
             >
-               ₦59,342.32
+              ₦{totalRevenue.toFixed(2)}
             </Typography>
           </Box>
           <Box>
@@ -232,7 +217,6 @@ const isNewStudent = (createdAt) => {
           </Typography>
         </Box>
 
-
         {mockTransactions.map((transaction, i) => (
           <Box
             key={`${transaction.txId}-${i}`}
@@ -260,7 +244,7 @@ const isNewStudent = (createdAt) => {
               p="5px 10px"
               borderRadius="4px"
             >
-               open
+              open
             </Box>
           </Box>
         ))}
@@ -285,13 +269,13 @@ const isNewStudent = (createdAt) => {
           mt="25px"
           mb="25px"
         >
-          <ProgressCircle size="125"  />
+          <ProgressCircle size="125" />
           <Typography
             variant="h5"
             color={colors.greenAccent[500]}
             sx={{ pt: "20px" }}
           >
-             ₦48,352 Oustanding payment
+            ₦48,352 Oustanding payment
           </Typography>
           <Typography>20% of total expected payments</Typography>
         </Box>
@@ -327,10 +311,9 @@ const isNewStudent = (createdAt) => {
           p="15px"
         >
           <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
-            Concerns and Feedbacks
+            Payment Statistics
           </Typography>
         </Box>
-
 
         {mockTransactions.map((transaction, i) => (
           <Box
