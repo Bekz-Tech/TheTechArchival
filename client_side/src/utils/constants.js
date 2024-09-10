@@ -14,7 +14,6 @@ const getAllUserDetails = () => {
   const storedUserDetails = sessionStorage.getItem(userKey);
   if (storedUserDetails) {
     const userDetails = JSON.parse(storedUserDetails);
-    console.log(userDetails);
     return userDetails;
   }
 };

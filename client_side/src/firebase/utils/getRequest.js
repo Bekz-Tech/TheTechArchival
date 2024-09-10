@@ -1,5 +1,5 @@
 import { db } from '../config';
-import { doc, collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 // Memoization utility
 const memoize = (fn) => {
@@ -15,7 +15,7 @@ const memoize = (fn) => {
   };
 };
 
-// Fetch user details
+// Fetch user details by email and role
 const fetchUserDetailsByEmailAndRole = memoize(async (email, role) => {
   try {
     const usersCollectionRef = collection(db, 'users');
@@ -63,7 +63,7 @@ const fetchAndStoreUsers = memoize(async () => {
     const userList = userSnapshot.docs.map(doc => doc.data());
 
     // Store the user list in session storage with key 'babtech_users'
-    sessionStorage.setItem('babtech_users', JSON.stringify(userList));
+    sessionStorage.setItem('btech_users', JSON.stringify(userList));
 
     return userList;
   } catch (error) {
@@ -71,8 +71,50 @@ const fetchAndStoreUsers = memoize(async () => {
     throw error;
   }
 });
+
+// Fetch all courses and store in session storage
+const fetchCourses = memoize(async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'courses'));
+    const courses = querySnapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id // Include the unique document ID
+    }));
+
+    // Store the courses in session storage with key 'babtech_courses'
+    sessionStorage.setItem('btech_courses', JSON.stringify(courses));
+
+    return courses;
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    throw error;
+  }
+});
+
+// Fetch timetables and store in session storage
+const fetchTimetables = memoize(async () => {
+  console.log("called")
+  try {
+    const querySnapshot = await getDocs(collection(db, 'timetable'));
+    const timetables = querySnapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id // Include the unique document ID
+    }));
+
+    // Store the timetables in session storage with key 'babtech_timetables'
+    sessionStorage.setItem('btech_timetables', JSON.stringify(timetables));
+
+    return timetables;
+  } catch (error) {
+    console.error('Error fetching timetables:', error);
+    throw error;
+  }
+});
+
 export {
   fetchUserDetailsByEmailAndRole,
   fetchAndStoreUsers,
-  fetchEnquiries
+  fetchEnquiries,
+  fetchCourses,
+  fetchTimetables
 };

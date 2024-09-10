@@ -41,5 +41,5 @@ export {
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
-    createUserWithEmailAndPassword // Export the function
+    createUserWithEmailAndPassword
 };

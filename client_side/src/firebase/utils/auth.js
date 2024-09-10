@@ -1,5 +1,5 @@
 import { db, signOut, auth, createUserWithEmailAndPassword } from '../config';
-import { doc, setDoc, collection, updateDoc, arrayUnion, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 // Helper function to format date to a more readable format
@@ -12,12 +12,12 @@ const formatDate = (date) => {
 const generateStudentId = async (program) => {
   try {
     const studentsCollectionRef = collection(db, 'users');
-    const studentsQuery = query(studentsCollectionRef, where('role', '==', 'student'), where('program', '==', program));
+    const studentsQuery = query(studentsCollectionRef, where('role', '==', 'student'));
     const querySnapshot = await getDocs(studentsQuery);
-    
+
     let maxSerial = 0;
     querySnapshot.forEach((doc) => {
-      const studentId = doc.data().studentId;
+      const studentId = doc.data().userId;
       const serial = parseInt(studentId.split('/').pop());
       if (serial > maxSerial) {
         maxSerial = serial;
@@ -42,9 +42,11 @@ const generateInstructorId = async () => {
     let maxSerial = 0;
     querySnapshot.forEach((doc) => {
       const instructorId = doc.data().instructorId;
-      const serial = parseInt(instructorId.split('/').pop());
-      if (serial > maxSerial) {
-        maxSerial = serial;
+      if (instructorId) {
+        const serial = parseInt(instructorId.split('/').pop());
+        if (serial > maxSerial) {
+          maxSerial = serial;
+        }
       }
     });
 
@@ -59,6 +61,12 @@ const generateInstructorId = async () => {
 // Function to get instructors for a program
 const getInstructorsForProgram = async (program) => {
   try {
+    const storedUsers = sessionStorage.getItem('btech_users');
+    if (storedUsers) {
+      const instructors = JSON.parse(storedUsers);
+      return instructors.filter(instructor => instructor.programsAssigned.includes(program));
+    }
+
     const instructorsCollectionRef = collection(db, 'users');
     const instructorsQuery = query(instructorsCollectionRef, where('role', '==', 'instructor'), where('programsAssigned', 'array-contains', program));
     const querySnapshot = await getDocs(instructorsQuery);
@@ -68,10 +76,12 @@ const getInstructorsForProgram = async (program) => {
       const data = doc.data();
       instructors.push({
         instructorId: data.instructorId,
-        fullName: `${data.firstName} ${data.lastName}`, // Adjust if you have different fields
+        fullName: `${data.firstName} ${data.lastName}`,
         program: program
       });
     });
+
+    sessionStorage.setItem('btech_users', JSON.stringify(instructors));
     return instructors;
   } catch (error) {
     console.error('Error fetching instructors:', error);
@@ -79,9 +89,13 @@ const getInstructorsForProgram = async (program) => {
   }
 };
 
-// Sign up logic
-const handleSignUp = async (formData, role, profilePicture) => {
+// Handle sign up
+const handleSignUp = async (formData, role, profilePicture, courses) => {
   try {
+    if (!formData.email || !formData.password) {
+      throw new Error('Email and password are required');
+    }
+
     const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
     const user = userCredential.user;
 
@@ -96,33 +110,32 @@ const handleSignUp = async (formData, role, profilePicture) => {
     let userDoc = { ...baseUserDoc };
 
     if (role === 'student') {
-      const studentId = await generateStudentId(formData.program); // Generate student ID
-      const existingAmount = 0; // Replace with logic to fetch existing amount from database
+      const studentId = await generateStudentId(formData.programsAssigned);
+      const existingAmount = 0;
       const amountPaid = parseInt(formData.amountPaid) + existingAmount;
-      
-      // Get instructors for the program
-      const instructors = await getInstructorsForProgram(formData.program);
+
+      const program = formData.programsAssigned;
+      const instructors = program ? await getInstructorsForProgram(program) : [];
 
       userDoc = {
         ...baseUserDoc,
-        studentId, // Add studentId
+        studentId,
         learningSchedules: [],
-        instructors, // Add instructors array with relevant info
+        instructors,
         studentProgress: 0,
         learningPlanClassesAndLessons: [],
         chatsWithInstructor: [],
-        amountPaid, // Include amountPaid in userDoc
+        amountPaid,
       };
     } else if (role === 'instructor') {
-      const instructorId = await generateInstructorId(); // Generate instructor ID
+      const instructorId = await generateInstructorId();
       userDoc = {
         ...baseUserDoc,
-        instructorId, // Add instructorId
-        programsAssigned: formData.programsAssigned || [], // Programs the instructor is assigned to
-        studentsAssigned: [], // Array of students assigned to the instructor
-        coursesTaught: 0,
-        studentsTaught: 0,
+        instructorId,
+        programsAssigned: formData.programsAssigned || [],
+        studentsAssigned: [],
         averageRating: 0,
+        courses,
       };
     }
 
@@ -143,7 +156,6 @@ const handleSignUp = async (formData, role, profilePicture) => {
           },
           async () => {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            console.log('File available at', downloadURL);
             userDoc = { ...userDoc, profilePictureUrl: downloadURL };
             resolve();
           }
@@ -151,21 +163,11 @@ const handleSignUp = async (formData, role, profilePicture) => {
       });
     }
 
+    // Filter out undefined fields
+    userDoc = Object.fromEntries(Object.entries(userDoc).filter(([_, v]) => v !== undefined));
+
     const usersCollectionRef = collection(db, 'users');
     await setDoc(doc(usersCollectionRef, user.uid), userDoc);
-
-    // If role is instructor, update existing instructors with new student if necessary
-    if (role === 'instructor') {
-      const instructorsQuery = query(usersCollectionRef, where('role', '==', 'instructor'));
-      const querySnapshot = await getDocs(instructorsQuery);
-
-      querySnapshot.forEach(async (instructorDoc) => {
-        const instructorDocRef = doc(db, 'users', instructorDoc.id);
-        await updateDoc(instructorDocRef, {
-          studentsAssigned: arrayUnion(user.uid)
-        });
-      });
-    }
 
     console.log('User registered successfully');
     return true;
@@ -175,7 +177,7 @@ const handleSignUp = async (formData, role, profilePicture) => {
   }
 };
 
-// Login logic
+// Logout logic
 const logout = async () => {
   try {
     sessionStorage.removeItem("btech_user");

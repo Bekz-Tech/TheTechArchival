@@ -61,6 +61,7 @@ export const FormContent = styled.div`
   position: relative;
   z-index: 2;
   width: auto;
+  color: #000000;
   @media screen and (max-width: 480px) {
     padding: 0 10px !important;
   }
@@ -103,18 +104,33 @@ export const FormLabel = styled.label`
 `;
 
 export const FormInput = styled.input`
-    margin-top: 0%;
+  margin-top: 0%;
+  background: #000000;
   padding: 4% 16px;
   border-radius: 4px;
   transition: border-color 0.3s;
   position: relative;
+  border: none;
   z-index: 3;
+  color: #fff; /* Ensure text color is visible on dark background */
 
   &:focus {
     border-color: rgb(87, 65, 217);
     outline: rgb(87, 65, 217);
     outline-style: auto;
     outline-width: 1px;
+  }
+
+  &:-internal-autofill-selected {
+    appearance: none !important;
+    background-image: none !important;
+    background-color: #000000 !important; /* Keeps the same background as input */
+    color: #fff !important; /* Explicitly set the text color */
+  }
+
+  &:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px #000000 inset !important;
+    -webkit-text-fill-color: #fff !important; /* Ensures text is white */
   }
 `;
 

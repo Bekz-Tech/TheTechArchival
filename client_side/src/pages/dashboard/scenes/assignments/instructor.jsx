@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material';
 import Header from '../../components/Header';
 import Modal from '../../components/modal';
 import TableComponent from '../../../../components/table'; // Adjust the import path as needed
+import { addAssignmentToInstructors } from '../../../../firebase/utils/postRequest'; // Adjust the path
 
 const Assignment = () => {
   const theme = useTheme();
@@ -13,25 +14,44 @@ const Assignment = () => {
   const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [openModal, setOpenModal] = useState(false);
-  const [newAssignment, setNewAssignment] = useState({ title: '', dueDate: '', description: '' });
+  const [newAssignment, setNewAssignment] = useState({ title: '', dueDate: '', description: '', courseId: '' });
   const [sortBy, setSortBy] = useState('id');
   const [sortDirection, setSortDirection] = useState('asc');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [courses, setCourses] = useState([]); // State to hold list of courses
 
+  // Mock data for assignments
   const mockAssignments = [
-    { id: 1, title: 'Math Homework', dueDate: '2024-07-21', description: 'Solve all exercises on page 42.' },
-    { id: 2, title: 'Science Project', dueDate: '2024-07-22', description: 'Build a model of the solar system.' },
-    { id: 3, title: 'History Essay', dueDate: '2024-07-23', description: 'Write an essay on the French Revolution.' },
-    { id: 4, title: 'English Assignment', dueDate: '2024-07-24', description: 'Read Chapter 5 and answer the questions.' },
-    { id: 5, title: 'Physical Education', dueDate: '2024-07-25', description: 'Practice the exercises shown in class.' },
+    { id: 1, title: 'Math Homework', dueDate: '2024-07-21', description: 'Solve all exercises on page 42.', courseId: 'course1' },
+    { id: 2, title: 'Science Project', dueDate: '2024-07-22', description: 'Build a model of the solar system.', courseId: 'course2' },
+    { id: 3, title: 'History Essay', dueDate: '2024-07-23', description: 'Write an essay on the French Revolution.', courseId: 'course3' },
+  ];
+
+  // Mock data for courses
+  const mockCourses = [
+    { courseId: 'course1', courseName: 'Math 101' },
+    { courseId: 'course2', courseName: 'Science 101' },
+    { courseId: 'course3', courseName: 'History 101' },
+  ];
+
+  // Column definitions for the table
+  const columns = [
+    { id: 'id', label: 'ID', minWidth: 50 },
+    { id: 'title', label: 'Title', minWidth: 100 },
+    { id: 'dueDate', label: 'Due Date', minWidth: 100 },
+    { id: 'description', label: 'Description', minWidth: 150 },
+    { id: 'courseId', label: 'Course ID', minWidth: 100 },
   ];
 
   useEffect(() => {
-    // Simulating API call to fetch assignments
+    // Simulate API call to fetch assignments
     setTimeout(() => {
       setAssignments(mockAssignments);
     }, 1000);
+
+    // Simulate API call to fetch courses
+    setCourses(mockCourses);
   }, []);
 
   const handleOpenModal = (assignment = null) => {
@@ -40,7 +60,7 @@ const Assignment = () => {
       setNewAssignment(assignment);
     } else {
       setSelectedAssignment(null);
-      setNewAssignment({ title: '', dueDate: '', description: '' });
+      setNewAssignment({ title: '', dueDate: '', description: '', courseId: '' });
     }
     setOpenModal(true);
   };
@@ -49,40 +69,24 @@ const Assignment = () => {
     setOpenModal(false);
   };
 
-  const handleConfirm = () => {
-    if (selectedAssignment) {
-      // Update existing assignment
-      setAssignments(assignments.map(a => a.id === selectedAssignment.id ? { ...newAssignment, id: selectedAssignment.id } : a));
-    } else {
-      // Add new assignment
-      setAssignments([...assignments, { ...newAssignment, id: assignments.length + 1 }]);
+  const handleConfirm = async () => {
+    try {
+      if (selectedAssignment) {
+        // Update existing assignment
+        setAssignments(assignments.map(a => a.id === selectedAssignment.id ? { ...newAssignment, id: selectedAssignment.id } : a));
+      } else {
+        // Add new assignment locally
+        const updatedAssignments = [...assignments, { ...newAssignment, id: assignments.length + 1 }];
+        setAssignments(updatedAssignments);
+
+        // Add assignment to instructors' courses
+        await addAssignmentToInstructors(newAssignment); 
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error updating assignments: ', error);
     }
-    handleCloseModal();
   };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewAssignment(prev => ({ ...prev, [name]: value }));
-  };
-
-  const columns = [
-    { id: 'id', label: 'ID' },
-    { id: 'title', label: 'Title' },
-    { id: 'dueDate', label: 'Due Date' },
-    { id: 'description', label: 'Description' },
-    {
-      id: 'actions',
-      label: 'Actions',
-      renderCell: (row) => (
-        <Button
-          onClick={() => handleOpenModal(row)}
-          sx={{ color: colors.greenAccent[500] }}
-        >
-          Edit
-        </Button>
-      ),
-    },
-  ];
 
   const handleSortChange = (columnId) => {
     const isAsc = sortBy === columnId && sortDirection === 'asc';
@@ -100,6 +104,11 @@ const Assignment = () => {
 
   const handleRowClick = (row) => {
     console.log(row);
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setNewAssignment(prevState => ({ ...prevState, [name]: value }));
   };
 
   return (
@@ -174,6 +183,25 @@ const Assignment = () => {
             multiline
             rows={4}
           />
+          <TextField
+            select
+            label="Course"
+            name="courseId"
+            value={newAssignment.courseId}
+            onChange={handleInputChange}
+            SelectProps={{
+              native: true,
+            }}
+            helperText="Please select the course"
+            required
+          >
+            <option value="" disabled>Select a course</option>
+            {courses.map((course) => (
+              <option key={course.courseId} value={course.courseId}>
+                {course.courseName}
+              </option>
+            ))}
+          </TextField>
         </Box>
       </Modal>
     </Box>

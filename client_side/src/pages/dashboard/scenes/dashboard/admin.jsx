@@ -10,62 +10,16 @@ import BarChart from '../../components/BarChart';
 import StatBox from '../../components/StatBox';
 import ProgressCircle from '../../components/ProgressCircle';
 import { mockTransactions } from '../../data/mockData';
-import { useState, useEffect } from 'react';
-import { fetchAndStoreUsers, fetchEnquiries } from '../../../../firebase/utils/index'; 
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../../../firebase/config'; // Ensure this import is correct
+import { useState } from 'react';
+import DataFetcher from './adminDataFetcher'; 
 
 const Admin = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [userData, setUserData] = useState([]);
-  const [enquiries, setEnquiries] = useState([]);
   const [unreadEnquiriesCount, setUnreadEnquiriesCount] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const users = await fetchAndStoreUsers();
-      if (isMounted) {
-        setUserData(users);
-  
-        // Calculate total amount paid from sessionStorage
-        const total = users.reduce((sum, user) => {
-          const amountPaid = parseFloat(user.amountPaid) || 0;
-          return sum + amountPaid;
-        }, 0);
-        setTotalRevenue(total);
-      }
-    };
-  
-    let isMounted = true; // track whether the component is mounted
-    fetchData();
-  
-    return () => {
-      isMounted = false; // cleanup function sets isMounted to false
-    };
-  }, []); // Empty dependency array ensures it only runs once on mount
-  
-  useEffect(() => {
-    const fetchEnquiry = async () => {
-      const enquiries = await fetchEnquiries();
-      if (isMounted) {
-        setEnquiries(enquiries);
-  
-        // Count unread enquiries
-        const unreadCount = enquiries.filter(enquiry => !enquiry.read).length;
-        setUnreadEnquiriesCount(unreadCount);
-      }
-    };
-  
-    let isMounted = true; // track whether the component is mounted
-    fetchEnquiry();
-  
-    return () => {
-      isMounted = false; // cleanup function sets isMounted to false
-    };
-  }, []); // Empty dependency array ensures it only runs once on mount
-  
+  const [timeTable, setTimeTable] = useState([]);
 
   // Function to check if a student is new (created in the last 24 hours)
   const isNewStudent = (createdAt) => {
@@ -87,7 +41,15 @@ const Admin = () => {
       gridAutoRows="140px"
       gap="20px"
     >
-      {/* ROW 1 */}
+      {/* DataFetcher component to handle fetching data */}
+      <DataFetcher 
+        setUserData={setUserData}
+        setUnreadEnquiriesCount={setUnreadEnquiriesCount}
+        setTotalRevenue={setTotalRevenue}
+        setTimeTable={setTimeTable}
+      />
+
+      {/* UI components */}
       <Box
         gridColumn="span 3"
         backgroundColor={colors.primary[400]}
@@ -217,9 +179,9 @@ const Admin = () => {
           </Typography>
         </Box>
 
-        {mockTransactions.map((transaction, i) => (
+        {timeTable.map((schedule) => (
           <Box
-            key={`${transaction.txId}-${i}`}
+            key={`${schedule.id}/${schedule.time}/${schedule.userId}`}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -232,13 +194,13 @@ const Admin = () => {
                 variant="h5"
                 fontWeight="600"
               >
-                {transaction.txId}
+                {schedule.topic}
               </Typography>
               <Typography color={colors.grey[100]}>
-                {transaction.user}
+                {`${schedule.firstName} ${schedule.lastName}`}
               </Typography>
             </Box>
-            <Box color={colors.grey[100]}>{transaction.date}</Box>
+            <Box color={colors.grey[100]}>{schedule.date}</Box>
             <Box
               backgroundColor={colors.greenAccent[500]}
               p="5px 10px"
