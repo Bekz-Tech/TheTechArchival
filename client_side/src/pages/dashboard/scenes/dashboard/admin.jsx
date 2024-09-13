@@ -34,6 +34,35 @@ const Admin = () => {
   const instructors = userData.filter(user => user.role === 'instructor');
   const newStudents = students.filter(student => isNewStudent(student.createdAt));
 
+  const outstanding = () => {
+    return students.map(student => {
+      // Step 1: Calculate the total course cost
+      const courseAmount = student.courses.reduce((total, course) => {
+        // Remove "₦ " and convert the string to a number
+        const cost = parseFloat(course.cost.replace('₦ ', ''));
+        return total + cost;
+      }, 0); // Initialize total to 0
+  
+      // Step 2: Calculate the total paid amount
+      const paidAmount = student.amountPaid.reduce((total, paid) => {
+        return total + paid;
+      }, 0); // Initialize total to 0
+  
+      // Step 3: Calculate the outstanding payment
+      const outstandingPayment = courseAmount - paidAmount;
+  
+      // Step 4: Return the results
+      return {
+        studentName: student.name,  // Include student name for context
+        courseAmount,
+        paidAmount,
+        outstandingPayment
+      };
+    });
+  };
+  
+  console.log(outstanding())
+
   return (
     <Box
       display="grid"

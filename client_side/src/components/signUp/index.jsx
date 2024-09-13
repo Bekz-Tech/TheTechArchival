@@ -12,7 +12,6 @@ const SignUpForm = ({ role }) => {
     const instructors = JSON.parse(sessionStorage.getItem('btech_users'))?.filter(user => user.role === 'instructor') || [];
     const [coursesOptions, setCoursesOptions] = useState(null);  // Initialize as null
 
-
     const roleFields = {
         student: [
             { label: 'First Name', name: 'firstName', type: 'text', required: true },
@@ -79,6 +78,8 @@ const SignUpForm = ({ role }) => {
             const allCourses = JSON.parse(sessionStorage.getItem('btech_courses')) || [];
             const instructorCourses = allCourses.filter(course => course.courseName === program);
             setCoursesOptions(instructorCourses);
+            console.log(coursesOptions)
+            
         } catch (error) {
             console.error('Error fetching courses:', error);
         }
@@ -113,7 +114,6 @@ const SignUpForm = ({ role }) => {
             }
         }
     };
-
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -158,7 +158,6 @@ const SignUpForm = ({ role }) => {
 
             // Fetch instructor and course details if role is student
             let assignedInstructorData = {};
-            let selectedCourseData = {};
 
             if (role === 'student') {
                 if (selectedInstructor) {
@@ -166,10 +165,6 @@ const SignUpForm = ({ role }) => {
                     assignedInstructorData = instructorDoc.exists() ? instructorDoc.data() : {};
                 }
 
-                // Get the selected course from Firestore
-                const selectedCourse = formData.program;
-                const courseDoc = await getDoc(doc(db, 'courses', selectedCourse));
-                selectedCourseData = courseDoc.exists() ? courseDoc.data() : {};
             }
 
             const userData = {
@@ -182,7 +177,6 @@ const SignUpForm = ({ role }) => {
                 ...(role === 'student' && formData.program && {
                     program: formData.program,
                     assignedInstructor: assignedInstructorData,
-                    courses: selectedCourseData ? [selectedCourseData] : []
                 }),
                 ...(role === 'student' && formData.amountPaid && {
                     amountPaid: formData.amountPaid
@@ -199,15 +193,17 @@ const SignUpForm = ({ role }) => {
                 }),
             };
 
+            const allCourses = JSON.parse(sessionStorage.getItem('btech_courses')) || [];
+            const studentCourses = allCourses.filter(course => course.courseName === userData.program);
+
             // Sign up the user with Firebase Auth and store user data in Firestore
-            const newUserRef = await handleSignUp(userData, role, profilePicture, coursesOptions);
-            const newUserId = newUserRef.userId;
+            const newUserRef = await handleSignUp(userData, role, profilePicture, studentCourses);
 
             // If a student is assigned to an instructor, update the instructor's document
             if (role === 'student' && formData.assignedInstructor) {
                 const instructorRef = doc(db, 'users', selectedInstructor.userId);
                 await updateDoc(instructorRef, {
-                    studentsAssigned: [...assignedInstructorData.studentsAssigned, newUserId]
+                    studentsAssigned: [...assignedInstructorData.studentsAssigned, newUserRef]
                 });
             }
 

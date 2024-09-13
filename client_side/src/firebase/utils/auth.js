@@ -77,7 +77,8 @@ const getInstructorsForProgram = async (program) => {
       instructors.push({
         instructorId: data.instructorId,
         fullName: `${data.firstName} ${data.lastName}`,
-        program: program
+        program: program,
+        courses: data.courses
       });
     });
 
@@ -91,6 +92,7 @@ const getInstructorsForProgram = async (program) => {
 
 // Handle sign up
 const handleSignUp = async (formData, role, profilePicture, courses) => {
+  console.log(courses);
   try {
     if (!formData.email || !formData.password) {
       throw new Error('Email and password are required');
@@ -126,6 +128,7 @@ const handleSignUp = async (formData, role, profilePicture, courses) => {
         learningPlanClassesAndLessons: [],
         chatsWithInstructor: [],
         amountPaid,
+        courses,
       };
     } else if (role === 'instructor') {
       const instructorId = await generateInstructorId();
@@ -137,6 +140,7 @@ const handleSignUp = async (formData, role, profilePicture, courses) => {
         averageRating: 0,
         courses,
       };
+      console.log(formData.courses);
     }
 
     if (profilePicture) {
@@ -170,7 +174,8 @@ const handleSignUp = async (formData, role, profilePicture, courses) => {
     await setDoc(doc(usersCollectionRef, user.uid), userDoc);
 
     console.log('User registered successfully');
-    return true;
+    console.log(user.uid)
+    return user.uid;
   } catch (error) {
     console.error('Error signing up:', error);
     throw error;
