@@ -92,7 +92,7 @@ const getInstructorsForProgram = async (program) => {
 
 // Handle sign up
 const handleSignUp = async (formData, role, profilePicture, courses) => {
-  console.log(courses);
+  console.log(formData);
   try {
     if (!formData.email || !formData.password) {
       throw new Error('Email and password are required');
@@ -130,6 +130,18 @@ const handleSignUp = async (formData, role, profilePicture, courses) => {
         amountPaid,
         courses,
       };
+
+      // Send payment details to payment collection
+      const paymentCollectionRef = collection(db, 'payments');
+      await setDoc(doc(paymentCollectionRef, user.uid), {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        createdAt: formatDate(new Date()),
+        amountPaid,
+        userId: user.uid,
+        // courseName: program
+      });
+      console.log(program);
     } else if (role === 'instructor') {
       const instructorId = await generateInstructorId();
       userDoc = {

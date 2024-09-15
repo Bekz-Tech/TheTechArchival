@@ -9,7 +9,8 @@ import {
   fetchEnquiries,
   fetchUserDetailsByEmailAndRole,
   fetchCourses,
-  fetchTimetables
+  fetchTimetables,
+  fetchPayments
       } from "./getRequest";
 
 import {
@@ -42,5 +43,6 @@ export {
   addTimetableToInstructors,
   updateTimetable,
   deleteTimetable,
-  fetchTimetables
+  fetchTimetables,
+  fetchPayments
 };

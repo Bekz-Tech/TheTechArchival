@@ -6,9 +6,8 @@ import { getAllUserDetails } from '../../../utils/constants'; // Adjust the impo
 
 const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
   const [lineData, setLineData] = useState([]);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const theme = useTheme();
-
-  // Memoize the colors object to prevent unnecessary re-renders
   const colors = useMemo(() => tokens(theme.palette.mode), [theme.palette.mode]);
 
   const generateColor = (index) => {
@@ -27,12 +26,24 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
             "July", "August", "September", "October", "November", "December"
           ];
 
+          // Determine the current year dynamically based on the data
+          const years = Array.from(new Set(data.map(user => new Date(user.createdAt).getFullYear())));
+          const selectedYear = years.includes(currentYear) ? currentYear : Math.max(...years);
+
+          setCurrentYear(selectedYear); // Update currentYear if needed
+
           const aggregatedData = {};
 
           data.forEach(user => {
             const program = user.program;
-            const createdMonth = new Date(user.createdAt).getMonth();
+            const createdAt = user.createdAt ? new Date(user.createdAt) : new Date();
+            const createdYear = createdAt.getFullYear();
+            const createdMonth = createdAt.getMonth();
             const monthName = months[createdMonth];
+
+            if (createdYear !== selectedYear) {
+              return; // Skip data if it's not from the selected year
+            }
 
             if (!aggregatedData[program]) {
               aggregatedData[program] = months.map((_, index) => ({
@@ -43,11 +54,16 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
 
             if (aggregatedData[program][createdMonth]) {
               aggregatedData[program][createdMonth].y += user.amountPaid;
+            } else {
+              console.warn(`Data point with month index ${createdMonth} is undefined for program ${program}.`);
             }
           });
 
           const processedData = Object.keys(aggregatedData).map((program, index) => {
-            const seriesData = aggregatedData[program];
+            const seriesData = aggregatedData[program].map(point => ({
+              x: point.x || "Unknown",
+              y: point.y || 0
+            }));
 
             return {
               id: program,
@@ -57,6 +73,8 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
           });
 
           setLineData(processedData);
+        } else {
+          console.warn("No data available or data array is empty.");
         }
 
       } catch (error) {
@@ -64,9 +82,13 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
       }
     };
 
-    fetchData(); // Fetch data on component mount
+    fetchData(); // Fetch data on component mount or when currentYear changes
 
-  }, [isCustomLineColors, colors.primary]); // Only re-run when isCustomLineColors or colors.primary change
+  }, [isCustomLineColors, colors.primary, currentYear]);
+
+  if (lineData.length === 0) {
+    return <Box>Loading data...</Box>;
+  }
 
   return (
     <Box width="98%" height="100%">
@@ -82,7 +104,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
             legend: {
               text: {
                 fill: colors.grey[100],
-                fontSize: 8, // Adjust this value to change the font size of legends
+                fontSize: 8,
               },
             },
             ticks: {
@@ -92,14 +114,14 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
               },
               text: {
                 fill: colors.grey[100],
-                fontSize: 8, // Adjust this value to change the font size of axis ticks
+                fontSize: 8,
               },
             },
           },
           legends: {
             text: {
               fill: colors.grey[100],
-              fontSize: 8, // Adjust this value to change the font size of legend text
+              fontSize: 8,
             },
           },
           tooltip: {
@@ -114,7 +136,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
         yScale={{
           type: 'linear',
           min: 0,
-          max: 1000000,
+          max: 'auto',
           stacked: false,
           reverse: false,
         }}

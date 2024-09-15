@@ -93,7 +93,6 @@ const fetchCourses = memoize(async () => {
 
 // Fetch timetables and store in session storage
 const fetchTimetables = memoize(async () => {
-  console.log("called")
   try {
     const querySnapshot = await getDocs(collection(db, 'timetable'));
     const timetables = querySnapshot.docs.map(doc => ({
@@ -111,10 +110,27 @@ const fetchTimetables = memoize(async () => {
   }
 });
 
+// Fetch timetables and store in session storage
+const fetchPayments = memoize(async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'payments'));
+    const payments = querySnapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id // Include the unique document ID
+    }));
+    console.log(payments);
+    return payments;
+  } catch (error) {
+    console.error('Error fetching fetching payment:', error);
+    throw error;
+  }
+});
+
 export {
   fetchUserDetailsByEmailAndRole,
   fetchAndStoreUsers,
   fetchEnquiries,
   fetchCourses,
-  fetchTimetables
+  fetchTimetables,
+  fetchPayments
 };

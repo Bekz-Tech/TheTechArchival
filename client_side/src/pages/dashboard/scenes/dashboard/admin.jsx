@@ -10,16 +10,19 @@ import BarChart from '../../components/BarChart';
 import StatBox from '../../components/StatBox';
 import ProgressCircle from '../../components/ProgressCircle';
 import { mockTransactions } from '../../data/mockData';
-import { useState } from 'react';
-import DataFetcher from './adminDataFetcher'; 
+import useFetchData from './adminDataFetcher'; // Import the custom hook
 
 const Admin = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [userData, setUserData] = useState([]);
-  const [unreadEnquiriesCount, setUnreadEnquiriesCount] = useState(0);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [timeTable, setTimeTable] = useState([]);
+
+  // Use the custom hook to fetch data
+  const { userData, unreadEnquiriesCount, totalRevenue, timeTable, isDataLoaded, payments } = useFetchData();
+
+  // Render loading state until data is loaded
+  if (!isDataLoaded) {
+    return <div>Loading...</div>; // Or any loading indicator you prefer
+  }
 
   // Function to check if a student is new (created in the last 24 hours)
   const isNewStudent = (createdAt) => {
@@ -34,34 +37,87 @@ const Admin = () => {
   const instructors = userData.filter(user => user.role === 'instructor');
   const newStudents = students.filter(student => isNewStudent(student.createdAt));
 
-  const outstanding = () => {
-    return students.map(student => {
-      // Step 1: Calculate the total course cost
-      const courseAmount = student.courses.reduce((total, course) => {
-        // Remove "₦ " and convert the string to a number
-        const cost = parseFloat(course.cost.replace('₦ ', ''));
-        return total + cost;
-      }, 0); // Initialize total to 0
+  // Fix the transformDataForBarChart function
+  const transformDataForBarChart = (students) => {
+    const courseCounts = {};
+    const years = new Set();
   
-      // Step 2: Calculate the total paid amount
-      const paidAmount = student.amountPaid.reduce((total, paid) => {
-        return total + paid;
-      }, 0); // Initialize total to 0
+    students.forEach(student => {
+      const program = student.program || "Unknown Program";
+      if (!student.createdAt) {
+        console.error("No createdAt field");
+        return;
+      }
   
-      // Step 3: Calculate the outstanding payment
-      const outstandingPayment = courseAmount - paidAmount;
+      const date = new Date(student.createdAt);
+      if (isNaN(date.getTime())) {
+        console.warn(`Skipping student with invalid date: ${student.createdAt}`);
+        return;
+      }
   
-      // Step 4: Return the results
+      const year = date.getFullYear();
+      years.add(year);
+  
+      if (!courseCounts[year]) {
+        courseCounts[year] = {};
+      }
+  
+      if (courseCounts[year][program]) {
+        courseCounts[year][program] += 1;
+      } else {
+        courseCounts[year][program] = 1;
+      }
+    });
+  
+    const sortedYears = Array.from(years).sort((a, b) => a - b);
+  
+    const formattedData = sortedYears.map(year => {
       return {
-        studentName: student.name,  // Include student name for context
+        year,
+        ...courseCounts[year] || {}
+      };
+    });
+  
+    return formattedData;
+  };
+
+  // Getting outstanding payments
+  const outstanding = () => {
+    let totalExpectedPayment = 0;
+    let totalOutstandingPayment = 0;
+
+    const paymentDetails = students.map(student => {
+      const courseAmount = (student.courses || []).reduce((total, course) => {
+        const cost = parseFloat(course.cost) || 0;
+        return total + cost;
+      }, 0);
+
+      let paidAmount = 0;
+      if (Array.isArray(student.amountPaid)) {
+        paidAmount = student.amountPaid.reduce((total, paid) => total + paid, 0);
+      } else if (!isNaN(parseFloat(student.amountPaid))) {
+        paidAmount = parseFloat(student.amountPaid);
+      }
+
+      const outstandingPayment = courseAmount - paidAmount;
+
+      totalExpectedPayment += courseAmount;
+      totalOutstandingPayment += outstandingPayment;
+
+      return {
+        studentName: student.firstName + ' ' + student.lastName || 'Unknown',
         courseAmount,
         paidAmount,
         outstandingPayment
       };
     });
+
+    return {
+      paymentDetails,
+      totalExpectedPayment,
+      totalOutstandingPayment
+    };
   };
-  
-  console.log(outstanding())
 
   return (
     <Box
@@ -70,14 +126,6 @@ const Admin = () => {
       gridAutoRows="140px"
       gap="20px"
     >
-      {/* DataFetcher component to handle fetching data */}
-      <DataFetcher 
-        setUserData={setUserData}
-        setUnreadEnquiriesCount={setUnreadEnquiriesCount}
-        setTotalRevenue={setTotalRevenue}
-        setTimeTable={setTimeTable}
-      />
-
       {/* UI components */}
       <Box
         gridColumn="span 3"
@@ -260,17 +308,36 @@ const Admin = () => {
           mt="25px"
           mb="25px"
         >
-          <ProgressCircle size="125" />
-          <Typography
-            variant="h5"
-            color={colors.greenAccent[500]}
-            sx={{ pt: "20px" }}
-          >
-            ₦48,352 Oustanding payment
-          </Typography>
-          <Typography>20% of total expected payments</Typography>
+          {(() => {
+            const { totalExpectedPayment, totalOutstandingPayment } = outstanding();
+            const percentageOutstanding = 
+              totalExpectedPayment !== 0
+                ? (totalOutstandingPayment / totalExpectedPayment) * 100
+                : 0;
+
+            return (
+              <>
+                <ProgressCircle
+                  size="125"
+                  progress={percentageOutstanding / 100}
+                />
+                <Typography
+                  variant="h5"
+                  color={colors.greenAccent[500]}
+                  sx={{ pt: "20px" }}
+                >
+                  ₦{totalOutstandingPayment.toLocaleString()} outstanding payment
+                </Typography>
+                <Typography>
+                  {percentageOutstanding.toFixed(2)}% of total expected payments
+                </Typography>
+              </>
+            );
+          })()}
         </Box>
       </Box>
+
+      {/* Course Registrations */}
       <Box
         gridColumn="span 4"
         gridRow="span 2"
@@ -281,12 +348,17 @@ const Admin = () => {
           fontWeight="600"
           sx={{ padding: "30px 30px 0 30px" }}
         >
-          Course registrations
+          Course Registrations
         </Typography>
         <Box height="250px" mt="-20px">
-          <BarChart isDashboard={true} />
+          <BarChart 
+            data={transformDataForBarChart(students)}
+            isDashboard={true}
+          />
         </Box>
       </Box>
+
+      {/* Payment Details */}
       <Box
         gridColumn="span 4"
         gridRow="span 2"
@@ -306,34 +378,43 @@ const Admin = () => {
           </Typography>
         </Box>
 
-        {mockTransactions.map((transaction, i) => (
+        {payments.map((payment, i) => (
           <Box
-            key={`${transaction.txId}-${i}`}
+            key={`${payment.userId}-${i}`}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
             borderBottom={`4px solid ${colors.primary[500]}`}
             p="15px"
           >
-            <Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                maxWidth: '150px', // Adjust as needed
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
               <Typography
                 color={colors.greenAccent[500]}
                 variant="h5"
                 fontWeight="600"
               >
-                {transaction.txId}
+                {`${payment.firstName} ${payment.lastName}`}
               </Typography>
-              <Typography color={colors.grey[100]}>
-                {transaction.user}
+              <Typography color={colors.grey[100]} fontSize={10} textOverflow={'ellipsis'}>
+                {payment.userId}
               </Typography>
             </Box>
-            <Box color={colors.grey[100]}>{transaction.date}</Box>
+            <Box color={colors.grey[100]} fontSize={10}>{payment.createdAt}</Box>
             <Box
               backgroundColor={colors.greenAccent[500]}
               p="5px 10px"
               borderRadius="4px"
             >
-              open
+              ₦{payment.amountPaid.toLocaleString()}
             </Box>
           </Box>
         ))}

@@ -10,8 +10,9 @@ const getUserDetails = () => {
 };
 
 const getAllUserDetails = () => {
-  const userKey = 'babtech_users';
+  const userKey = 'btech_users';
   const storedUserDetails = sessionStorage.getItem(userKey);
+  console.log(storedUserDetails)
   if (storedUserDetails) {
     const userDetails = JSON.parse(storedUserDetails);
     return userDetails;
