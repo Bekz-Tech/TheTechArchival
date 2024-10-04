@@ -159,7 +159,21 @@ const UserManagement = () => {
 
   const columns = [
     { id: 'sn', label: 'S/N', width: 90 },
-    { id: 'userId', label: 'User ID', width: 150 },
+    { 
+      id: 'userId', 
+      label: 'User ID', 
+      width: 100,
+      renderCell: (row) => (
+        <Typography sx={{
+          width: '100px', // Adjust the width according to your requirement
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          display: 'block',
+        }}
+        >{`${row.userId}`}</Typography>
+      ),
+    },
     { id: 'name', label: 'Name', flex: 1 },
     { id: 'phoneNumber', label: 'Phone Number', flex: 1 },
     { id: 'role', label: 'Role', width: 150 },
@@ -179,21 +193,28 @@ const UserManagement = () => {
     },
   ];
 
-  const formattedUserData = userData.map((user, index) => ({
+
+
+  console.log(userData);
+
+  const formattedUserData = userData
+  .map((user, index) => ({
     id: user.userId,
     sn: index + 1,
     role: user.role,
     userId: user.role === "student"
-            ? user.studentId
-            : user.role === "instructor"
-            ? user.instructorId
-            : user.userId,
-
+      ? (`${user.studentId}` || "N/A")
+      : user.role === "instructor"
+      ? (user.instructorId || "N/A")
+      : (user.userId || "N/A"),
     name: `${user.firstName || 'N/A'} ${user.lastName || 'N/A'}`,
     phoneNumber: user.phoneNumber || 'N/A',
     program: user.program || 'N/A',
-    registeredDate: user.createdAt ? user.createdAt : 'N/A',
-}));
+    registeredDate: user.createdAt || 'N/A',
+  }))
+  .sort((a, b) => a.sn - b.sn); // Sorting by S/N in ascending order
+
+
 
 
   const getUniqueProgramsAssigned = () => {
@@ -339,10 +360,16 @@ const UserManagement = () => {
         </Box>
       </Modal>
 
-      {/* Include SignUp components for adding users */}
-      {signUpDialogOpen && selectedRole === 'student' && <SignUpStudent onClose={() => setSignUpDialogOpen(false)} />}
-      {signUpDialogOpen && selectedRole === 'instructor' && <SignUpInstructor onClose={() => setSignUpDialogOpen(false)} />}
-      {signUpDialogOpen && selectedRole === 'admin' && <SignUpAdmin onClose={() => setSignUpDialogOpen(false)} />}
+
+{/* user signUp modal */}
+      <Modal
+        open={signUpDialogOpen}
+        onClose={() => setSignUpDialogOpen(false)}
+      >
+        {selectedRole === 'student' && <SignUpStudent />}
+        {selectedRole === 'instructor' && <SignUpInstructor />}
+        {selectedRole === 'admin' && <SignUpAdmin />}
+      </Modal>
     </Box>
   );
 };

@@ -4,6 +4,11 @@ import { tokens } from "../theme";
 
 // data/mockData.js
 
+export const mockPaymentData = [
+  { id: 'Payment 1', value: 70 },
+  { id: 'Payment 2', value: 30 },
+];
+
 export const mockInstructorRatings = [
   { name: 'John Doe', rating: 4.5 },
   { name: 'Jane Smith', rating: 4.8 }

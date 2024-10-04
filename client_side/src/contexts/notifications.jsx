@@ -33,6 +33,12 @@ export const NotificationProvider = ({ children }) => {
       return; // Early return if userRole or userId is not found
     }
 
+    // Ensure the userId is in the correct format
+    if (userId.includes('/')) {
+      console.error('User ID should not contain slashes:', userId);
+      return;
+    }
+
     const usersCollection = collection(db, 'users');
 
     // Ensure all users have a notifications field
@@ -49,7 +55,6 @@ export const NotificationProvider = ({ children }) => {
 
     ensureNotificationsField(); // Run the initialization on mount
 
-    // Handle new user registrations and deletions
     const handleNewUserNotification = async (userDoc) => {
       const newUser = userDoc.data();
       const { firstName, lastName, role } = newUser;
@@ -65,15 +70,12 @@ export const NotificationProvider = ({ children }) => {
       };
 
       try {
-        // Fetch all admins and superadmins
         const adminQuery = query(usersCollection, where('role', 'in', ['admin', 'superadmin']));
         const adminSnapshot = await getDocs(adminQuery);
 
         adminSnapshot.forEach(async (adminDoc) => {
           const adminData = adminDoc.data();
           const adminNotifications = adminData.notifications || [];
-
-          // Check for duplicates based on message and createdAt
           const isDuplicate = adminNotifications.some(n =>
             n.message === notification.message ||
             n.createdAt === notification.createdAt
@@ -81,21 +83,17 @@ export const NotificationProvider = ({ children }) => {
 
           if (!isDuplicate) {
             adminNotifications.push(notification);
-
-            // Update the notifications field for each admin and superadmin
             await updateDoc(doc(db, 'users', adminDoc.id), { notifications: adminNotifications });
             console.log(`Updated notifications for admin ${adminDoc.id}`);
           } else {
             console.log(`Duplicate notification detected for admin ${adminDoc.id}`);
           }
         });
-
       } catch (error) {
         console.error('Error adding notification:', error);
       }
     };
 
-    // Listen for changes in the users collection
     const unsubscribeUsers = onSnapshot(usersCollection, (snapshot) => {
       snapshot.docChanges().forEach(async (change) => {
         if (change.type === 'added' || change.type === 'removed') {
@@ -106,6 +104,8 @@ export const NotificationProvider = ({ children }) => {
 
     // Listen for changes in the logged-in user's notifications
     const userDocRef = doc(db, 'users', userId);
+    console.log('User Document Reference:', userDocRef.path); // Debugging line
+
     const unsubscribeNotifications = onSnapshot(userDocRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data();

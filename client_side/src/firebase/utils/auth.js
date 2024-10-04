@@ -10,6 +10,7 @@ const formatDate = (date) => {
 
 // Function to generate a student ID
 const generateStudentId = async (program) => {
+  console.log(program)
   try {
     const studentsCollectionRef = collection(db, 'users');
     const studentsQuery = query(studentsCollectionRef, where('role', '==', 'student'));
@@ -142,7 +143,6 @@ const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl) 
         userId: user.uid,
         // courseName: program
       });
-      console.log(program);
     } else if (role === 'instructor') {
       const instructorId = await generateInstructorId();
       userDoc = {

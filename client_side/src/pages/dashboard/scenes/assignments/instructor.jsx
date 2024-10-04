@@ -25,38 +25,43 @@ const Assignment = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [courses, setCourses] = useState([]); // State to hold list of courses
-  const [userDetails, setUserDetails] = useState(null); // State to hold user details
+  const [userDetails, setUserDetails] = useState({}); // State to hold user details
   const [viewSubmissionsModal, setViewSubmissionsModal] = useState(false); // Modal for viewing submissions
 
   // Fetch user details and assignments
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userDetails = await getUserDetails(); // Fetch user details
-        setUserDetails(userDetails);
-        setCourses(userDetails.courses); // Set courses from user details
-
-        // Set assignments from userDetails.courses
-        if (userDetails.courses.length > 0) {
-          const allAssignments = userDetails.courses.flatMap(course => course.assignments);
-          setAssignments(sortAssignments(allAssignments)); // Set all assignments in state
+        const userDetailss = await getUserDetails();  // Fetch user details
+        setUserDetails(userDetailss);  // Set user details
+  
+        // Use the response directly to set courses and assignments
+        if (userDetailss.courses) {
+          setCourses(userDetailss.courses);  // Set courses from the fetched userDetails
+          console.log('Courses set:', userDetailss.courses);
+  
+          const allAssignments = userDetailss.courses.flatMap(course => course.assignments || []);
+          setAssignments(sortAssignments(allAssignments));
+        } else {
+          console.error('No courses found in user details.');
         }
       } catch (error) {
         console.error('Error fetching data: ', error);
       }
     };
-
     fetchData();
   }, []);
+  
+  
 
   const sortAssignments = (assignments) => {
-    return assignments.sort((a, b) => b.id - a.id); // Sort by S/N in descending order
+    return assignments.sort((a, b) => (b?.id || 0) - (a?.id || 0));
   };
 
   const handleOpenModal = (assignment = null) => {
     if (assignment) {
       setSelectedAssignment(assignment);
-      const course = courses.find(course => course.courseName === assignment.courseName);
+      const course = courses.find(course => course?.courseName === assignment.courseName);
       setNewAssignment({
         title: assignment.title,
         dueDate: assignment.dueDate,
@@ -257,8 +262,8 @@ const Assignment = () => {
             required
           >
             <option value="" disabled>Select a course</option>
-            {courses.map((course) => (
-              <option key={course.courseId} value={course.courseId}>
+            {courses.map((course, index) => (
+              <option key={course.id || index} value={course.courseId}>
                 {course.courseName}
               </option>
             ))}
