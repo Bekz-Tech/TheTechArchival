@@ -1,40 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Paper, Divider, useTheme } from '@mui/material';
+import { Box, Typography, Divider, useTheme } from '@mui/material';
 import { tokens } from '../../theme';
 import TableComponent from '../../../../components/table';
-import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
+import { getUserDetails } from '../../../../utils/constants';
+import { fetchTimetables } from '../../../../firebase/utils';
 
 const TimeTable = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-
-  const mockSchedules = [
-    { id: 1, day: 'Monday', course: 'Math', time: '09:00 - 10:30', location: 'Room 101' },
-    { id: 2, day: 'Tuesday', course: 'Science', time: '11:00 - 12:30', location: 'Room 102' },
-    { id: 3, day: 'Wednesday', course: 'History', time: '09:00 - 10:30', location: 'Room 103' },
-    { id: 4, day: 'Thursday', course: 'English', time: '11:00 - 12:30', location: 'Room 104' },
-    { id: 5, day: 'Friday', course: 'Physical Education', time: '13:00 - 14:30', location: 'Gym' },
-  ];
-
   const [schedules, setSchedules] = useState([]);
-  const [sortBy, setSortBy] = useState('id');
+  const [sortBy, setSortBy] = useState('date');
   const [sortDirection, setSortDirection] = useState('asc');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+
   useEffect(() => {
-    // Simulating API call to fetch schedules
-    setTimeout(() => {
-      setSchedules(mockSchedules);
-    }, 1000);
+    const studentDetails = getUserDetails();
+    if (!studentDetails?.assignedInstructor || !studentDetails.assignedInstructor.courses) return;
+
+    // Destructure userId from assignedInstructor
+    const { userId: instructorUserId } = studentDetails.assignedInstructor;
+
+    // Extract courseIds from the assignedInstructor.courses array
+    const courseIds = studentDetails.assignedInstructor.courses.map(course => ({
+      courseId: course.courseId,
+      courseName: course.courseName
+    }));
+
+    // Fetch the timetables and filter based on instructorUserId and courseIds
+    const getTimetable = async () => {
+      try {
+        const timetables = await fetchTimetables(); // Fetch all timetables
+
+        // Filter timetables where userId and courseId match the instructor's userId and any of the courseIds
+        const filteredTimetables = timetables.filter((timetable) =>
+          timetable.userId === instructorUserId &&
+          courseIds.some(course => course.courseId === timetable.courseId && course.courseName === timetable.courseName)
+        );
+
+        // Modify the schedules to include the 'Complete' field based on 'done'
+        const modifiedSchedules = filteredTimetables.map(schedule => ({
+          ...schedule,
+          complete: schedule.done ? 'Yes' : 'Not' // Add 'complete' field based on 'done'
+        }));
+
+        setSchedules(modifiedSchedules);
+      } catch (error) {
+        console.error('Error fetching timetables:', error);
+      }
+    };
+
+    getTimetable();
   }, []);
 
   const columns = [
+    { id: 'date', label: 'Date' },
     { id: 'id', label: 'ID' },
-    { id: 'day', label: 'Day' },
-    { id: 'course', label: 'Course' },
-    { id: 'time', label: 'Time' },
     { id: 'location', label: 'Location' },
+    { id: 'time', label: 'Time' },
+    { id: 'topic', label: 'Topic' },
+    { id: 'complete', label: 'Complete' }, // New 'Complete' column
   ];
 
   const handleSortChange = (columnId) => {
@@ -43,7 +69,7 @@ const TimeTable = () => {
     setSortBy(columnId);
   };
 
-  const handlePageChange = (event, newPage) => {
+  const handlePageChange = (newPage) => {
     setPage(newPage);
   };
 
@@ -59,16 +85,11 @@ const TimeTable = () => {
     <Box p="20px">
       <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
         <Typography variant="h2">Time Table</Typography>
-        <TextField
-          variant="outlined"
-          placeholder="Search..."
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
       </Box>
       <Divider />
       <TableComponent
         columns={columns}
-        tableHeader="Overview of Weekly Schedule"
+        tableHeader={`${getUserDetails().program} Schedule`}
         data={schedules}
         sortBy={sortBy}
         sortDirection={sortDirection}

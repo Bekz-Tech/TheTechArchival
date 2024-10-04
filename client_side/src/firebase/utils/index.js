@@ -3,7 +3,8 @@ import {
   addUser, 
   submitEnquiry, 
   addCourse, 
-  addTimetableToInstructors} from "./postRequest";
+  addTimetableToInstructors,
+  addAssignmentToInstructors} from "./postRequest";
 import {
   fetchAndStoreUsers,
   fetchEnquiries,
@@ -22,9 +23,14 @@ import {
   updateUserDetails,
   updateEnquiryReadStatus,
   updateCourseCurriculum,
-  updateTimetable
+  updateTimetable,
+  updateAssignment
 } from "./updateRequest";
 
+import { listenForInstructorChanges } from "./realtimeData/instuctorChange";
+
+
+//exports
 export {
   handleSignUp,
   addUser,
@@ -44,5 +50,8 @@ export {
   updateTimetable,
   deleteTimetable,
   fetchTimetables,
-  fetchPayments
+  fetchPayments,
+  listenForInstructorChanges,
+  addAssignmentToInstructors,
+  updateAssignment
 };

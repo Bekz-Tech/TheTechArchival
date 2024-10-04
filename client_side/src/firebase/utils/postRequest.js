@@ -1,5 +1,6 @@
 import { db } from '../config';
 import { doc, addDoc, setDoc, collection, query, where, getDocs, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { fetchUserDetailsByEmailAndRole } from './getRequest';
 
 // Function to generate a course ID using "e-learning" initials and course name initials
 const generateCourseId = (courseName) => {
@@ -111,57 +112,93 @@ const addUser = async (user) => {
 
 
 //post assignment by instructor
-const addAssignmentToInstructors = async (assignment) => {
+const addAssignmentToInstructors = async (assignment, userId, courseId, email, role) => {
   try {
-    // Fetch the course from the courses collection
-    const coursesCollectionRef = collection(db, 'users');
-    const courseQuery = query(coursesCollectionRef, where('courseId', '==', assignment.courseId));
+    if (!userId || !courseId) {
+      throw new Error('User ID or Course ID is undefined or null. Cannot update assignment.');
+    }
+
+    // Step 1: Reference the course document in Firestore by course ID
+    const courseCollectionRef = collection(db, 'courses');
+    const courseQuery = query(courseCollectionRef, where('courseId', '==', courseId));
     const courseSnapshot = await getDocs(courseQuery);
 
     if (courseSnapshot.empty) {
-      throw new Error(`Course with ID ${assignment.courseId} not found.`);
+      throw new Error(`Course with ID ${courseId} not found.`);
     }
 
     // Assume one course is returned
     const courseDoc = courseSnapshot.docs[0];
     const courseData = courseDoc.data();
 
-    // Now query all instructors teaching this course
-    const usersCollectionRef = collection(db, 'users');
-    const instructorsQuery = query(usersCollectionRef, where('role', '==', 'instructor'));
-    const instructorsSnapshot = await getDocs(instructorsQuery);
+    // Step 2: Add the assignment to the `assignments` collection and get the generated ID
+    const assignmentEntry = {
+      ...assignment,
+      courseId,
+      courseName: courseData.courseName, // Add courseName from the courses collection
+      createdBy: userId, // Include the instructor's userId
+      createdAt: new Date().toISOString(), // Optionally add creation timestamp
+    };
 
-    instructorsSnapshot.forEach(async (instructorDoc) => {
+    const assignmentsCollectionRef = collection(db, 'assignments');
+    const assignmentDocRef = await addDoc(assignmentsCollectionRef, assignmentEntry);
+    const assignmentId = assignmentDocRef.id; // Get the generated assignment ID
+
+    console.log(`Assignment entry saved successfully with ID: ${assignmentId}`);
+
+    // Step 3: Find the specific instructor by userId
+    const instructorDocRef = collection(db, 'users');
+    const instructorQuery = query(instructorDocRef, where('userId', '==', userId), where('role', '==', 'instructor'));
+    const instructorSnapshot = await getDocs(instructorQuery);
+
+    if (instructorSnapshot.empty) {
+      throw new Error(`Instructor with userId ${userId} not found.`);
+    }
+
+    // Step 4: Update the instructor’s document by adding the assignment to the correct course
+    instructorSnapshot.forEach(async (instructorDoc) => {
       const instructorData = instructorDoc.data();
 
       // Iterate over the instructor's courses to find the matching course
       const updatedCourses = instructorData.courses.map(course => {
-        if (course.courseId === courseData.courseId) {
-          // Push the new assignment to the course's assignments array
+        if (course.courseId === courseId) {
+          // Check if assignments exist, if not, initialize as an empty array
+          const existingAssignments = course.assignments || [];
+
+          // Add the new assignment to the assignments array
+          const updatedAssignments = [...existingAssignments, {
+            id: assignmentId, // Use the assignment ID
+            title: assignment.title,
+            dueDate: assignment.dueDate,
+            description: assignment.description,
+            courseName: courseData.courseName,
+            submissions: [],
+            createdBy: userId, // Include the instructor's userId here as well
+          }];
+
           return {
             ...course,
-            assignments: arrayUnion({
-              title: assignment.title,
-              dueDate: assignment.dueDate,
-              description: assignment.description,
-              courseName: courseData.courseName, // Add courseName from the courses collection
-            }),
+            assignments: updatedAssignments, // Replace assignments array with updated array
           };
         }
         return course;
       });
 
-      // Update the instructor's document with the new assignment
+      // Update the instructor's document with the updated course data
       const instructorDocRef = doc(db, 'users', instructorDoc.id);
       await updateDoc(instructorDocRef, { courses: updatedCourses });
+
+      console.log(`Assignment added to instructor ${instructorDoc.id} successfully`);
+      fetchUserDetailsByEmailAndRole(email, role);
     });
 
-    console.log('Assignment added to instructors successfully');
+    console.log('Assignment added to the instructor successfully');
   } catch (error) {
-    console.error('Error adding assignment to instructors: ', error);
+    console.error('Error adding assignment to instructor: ', error);
     throw error;
   }
 };
+
 
 // Function to add a timetable to the courses field for instructors
 const addTimetableToInstructors = async (timetable, userId, courseId) => {
@@ -182,7 +219,7 @@ const addTimetableToInstructors = async (timetable, userId, courseId) => {
     const { firstName, lastName } = instructorData; // Extract firstName and lastName
 
     if (instructorData.courses && instructorData.courses.length > 0) {
-      const course = instructorData.courses.find(course => course.id === courseId);
+      const course = instructorData.courses.find(course => course.courseId === courseId);
 
       if (!course) {
         throw new Error('Course not found.');
@@ -212,7 +249,7 @@ const addTimetableToInstructors = async (timetable, userId, courseId) => {
 
       // Step 3: Add the timetable ID to the course's timetable array in the instructor document
       const updatedCourses = instructorData.courses.map(course => {
-        if (course.id === courseId) {
+        if (course.courseId === courseId) {
           if (!course.timetable) {
             course.timetable = []; // Initialize timetable array if it doesn't exist
           }
@@ -243,10 +280,8 @@ const addTimetableToInstructors = async (timetable, userId, courseId) => {
 };
 
 
-
-
-
-export { submitEnquiry,
+export { 
+  submitEnquiry,
   addUser,
   addCourse,
   addAssignmentToInstructors,

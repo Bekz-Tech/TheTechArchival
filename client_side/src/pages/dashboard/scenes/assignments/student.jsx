@@ -3,8 +3,9 @@ import { Box, Button, TextField } from '@mui/material';
 import { tokens } from '../../theme';
 import { useTheme } from '@mui/material';
 import Header from '../../components/Header';
-import Modal from '../../components/modal'; // Adjust the import path as needed
-import TableComponent from '../../../../components/table'; // Adjust the import path as needed
+import Modal from '../../components/modal';
+import TableComponent from '../../../../components/table';
+import { fetchUserDetailsByEmailAndRole } from '../../../../firebase/utils';
 
 const Assignment = () => {
   const theme = useTheme();

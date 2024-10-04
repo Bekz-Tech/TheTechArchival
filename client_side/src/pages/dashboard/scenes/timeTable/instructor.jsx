@@ -6,7 +6,12 @@ import Modal from '../../components/modal';
 import TableComponent from '../../../../components/table';
 import { tokens } from '../../theme';
 import { getUserDetails } from '../../../../utils/constants';
-import { addTimetableToInstructors, deleteTimetable, updateTimetable, fetchUserDetailsByEmailAndRole } from '../../../../firebase/utils';
+import {
+  addTimetableToInstructors,
+  deleteTimetable,
+  updateTimetable,
+  fetchUserDetailsByEmailAndRole,
+} from '../../../../firebase/utils';
 
 const Instructor = () => {
   const theme = useTheme();
@@ -21,22 +26,23 @@ const Instructor = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState('date');
   const [sortDirection, setSortDirection] = useState('asc');
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState([]); // State for programsAssigned array
   const [selectedCourse, setSelectedCourse] = useState('');
   const [scheduleToDelete, setScheduleToDelete] = useState(null);
 
   useEffect(() => {
     const userDetails = getUserDetails();
-    if (userDetails && userDetails.programsAssigned) {
-      setCourses(userDetails.programsAssigned);
-      fetchUserDetailsByEmailAndRole(userDetails.email, userDetails.role);
+
+    if (userDetails && Array.isArray(userDetails.programsAssigned)) {
+      setCourses(userDetails.programsAssigned); // Populate courses with programsAssigned array
     }
 
     if (userDetails && userDetails.courses) {
-      const allTimetables = userDetails.courses.flatMap(course => 
-        (course.timetable || []).map(timetable => ({
+      const allTimetables = userDetails.courses.flatMap((course) =>
+        (course.timetable || []).map((timetable) => ({
           ...timetable,
           courseName: course.courseName,
+          courseId: course.courseId // Add courseId for referencing later
         }))
       );
       setSchedules(allTimetables);
@@ -106,21 +112,20 @@ const Instructor = () => {
 
   const handleConfirmDelete = async () => {
     const userDetails = getUserDetails();
-    const userId = userDetails?.userId;
-    const course = userDetails.courses.find(course => 
-      course.timetable.some(t => t.id === scheduleToDelete.id)
+    const course = userDetails.courses.find((course) =>
+      course.timetable.some((t) => t.id === scheduleToDelete.id)
     );
-    const courseId = course?.id;
+    const courseId = course?.courseId;
     const timetableId = scheduleToDelete.id;
 
-    if (!userId || !courseId || !timetableId) {
-      console.error('Missing user ID, course ID, or timetable ID.');
+    if (!courseId || !timetableId) {
+      console.error('Missing course ID or timetable ID.');
       return;
     }
 
     try {
       await deleteTimetable(timetableId);
-      const updatedSchedules = schedules.filter(s => s.id !== timetableId);
+      const updatedSchedules = schedules.filter((s) => s.id !== timetableId);
       setSchedules(updatedSchedules);
       console.log('Timetable deleted successfully.');
     } catch (error) {
@@ -130,54 +135,64 @@ const Instructor = () => {
     fetchUserDetailsByEmailAndRole(userDetails.email, userDetails.role);
   };
 
-  const handleSubmit = async () => {
-    const userDetails = getUserDetails();
-    const userId = userDetails?.userId;
-    const selectedCourseObj = userDetails.courses.find(course => course.courseName === selectedCourse);
-    const courseId = selectedCourseObj?.id;
+const handleSubmit = async () => {
+  const userDetails = getUserDetails();
+  const userId = userDetails.userId;
+  const findCourse = userDetails.courses.find(course => course.courseName === selectedCourse)
+  const courseId = findCourse.courseId; 
+  console.log(courseId)
 
-    if (!userId || !courseId) {
-      console.error('User ID or Course ID is undefined or null. Cannot update timetable.');
-      return;
+  if (!userId || !courseId) {
+    console.error('User ID or Course ID is undefined or null. Cannot update timetable.');
+    return;
+  }
+
+  try {
+    if (editingSchedule) {
+      const updatedSchedules = schedules.map((schedule) =>
+        schedule.id === editingSchedule.id ? { ...schedule, ...formData } : schedule
+      );
+      setSchedules(updatedSchedules);
+
+      await updateTimetable(
+        editingSchedule.id,
+        {
+          date: formData.day,
+          time: formData.time,
+          location: formData.location,
+          topic: formData.topic,
+        },
+        userId,
+        courseId
+      );
+    } else {
+      const newSchedule = {
+        id: schedules.length + 1,
+        date: formData.day,
+        courseName: findCourse.courseName,
+        time: formData.time,
+        location: formData.location,
+        topic: formData.topic,
+      };
+      setSchedules([...schedules, newSchedule]);
+
+      await addTimetableToInstructors(
+        {
+          date: formData.day,
+          time: formData.time,
+          location: formData.location,
+          topic: formData.topic,
+        },
+        userId,
+        courseId
+      );
     }
-
-    try {
-      if (editingSchedule) {
-        const updatedSchedules = schedules.map((schedule) =>
-          schedule.id === editingSchedule.id ? { ...schedule, ...formData } : schedule
-        );
-        setSchedules(updatedSchedules);
-
-        await updateTimetable(editingSchedule.id, {
-          date: formData.day,
-          time: formData.time,
-          location: formData.location,
-          topic: formData.topic,
-        }, userId, courseId);
-      } else {
-        const newSchedule = {
-          id: schedules.length + 1,
-          date: formData.day,
-          courseName: selectedCourse,
-          time: formData.time,
-          location: formData.location,
-          topic: formData.topic,
-        };
-        setSchedules([...schedules, newSchedule]);
-
-        await addTimetableToInstructors({
-          date: formData.day,
-          time: formData.time,
-          location: formData.location,
-          topic: formData.topic,
-        }, userId, courseId);
-      }
-    } catch (error) {
-      console.error('Error handling schedule submit:', error);
-    }
-    handleCloseEditModal();
-    fetchUserDetailsByEmailAndRole(userDetails.email, userDetails.role);
-  };
+  } catch (error) {
+    console.error('Error handling schedule submit:', error);
+  }
+  handleCloseEditModal();
+  fetchUserDetailsByEmailAndRole(userDetails.email, userDetails.role);
+};
 
   const handleSortChange = (columnId) => {
     const isAsc = sortBy === columnId && sortDirection === 'asc';
@@ -193,27 +208,32 @@ const Instructor = () => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
-
   return (
     <Box m="20px">
-      <Header
-        title="TIME TABLE"
-        subtitle="Overview of Weekly Schedule"
-      />
+      <Header title="TIME TABLE" subtitle="Overview of Weekly Schedule" />
       <FormControl sx={{ mb: '15px', width: '20%' }}>
-        <InputLabel>Select Course</InputLabel>
-        <Select
-          value={selectedCourse}
-          onChange={(e) => setSelectedCourse(e.target.value)}
-          label="Select Course"
-        >
-          {courses.map((course, index) => (
-            <MenuItem key={index} value={course.courseName}>
-              {course.courseName}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+          <InputLabel>Select Course</InputLabel>
+          <Select
+            value={selectedCourse} // Ensure proper value binding
+            onChange={(e) => {
+              const selected = courses.find(course => course === e.target.value);
+              setSelectedCourse(selected); // Set the full course object as selected
+              console.log(selectedCourse)
+            }}
+            label="Select Course"
+          >
+            {courses.length > 0 ? (
+              courses.map((course, index) => (
+                <MenuItem key={index} value={course}>
+                  {course}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>No Courses Available</MenuItem>
+            )}
+          </Select>
+</FormControl>
+
       <Button
         variant="contained"
         color="primary"
@@ -233,8 +253,9 @@ const Instructor = () => {
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
       />
-      {/* Edit Modal */}
-      <Modal
+
+       {/* Edit Modal */}
+       <Modal
         open={openEditModal}
         onClose={handleCloseEditModal}
         title={editingSchedule ? 'Edit Schedule' : 'Add Schedule'}
@@ -245,17 +266,25 @@ const Instructor = () => {
           fullWidth
           name="day"
           label="Day"
+          type="date"
           value={formData.day}
           onChange={(e) => setFormData({ ...formData, day: e.target.value })}
           sx={{ mb: '15px' }}
+          InputLabelProps={{
+            shrink: true,
+          }}
         />
         <TextField
           fullWidth
           name="time"
           label="Time"
+          type="time"
           value={formData.time}
           onChange={(e) => setFormData({ ...formData, time: e.target.value })}
           sx={{ mb: '15px' }}
+          InputLabelProps={{
+            shrink: true,
+          }}
         />
         <TextField
           fullWidth
@@ -274,18 +303,16 @@ const Instructor = () => {
           sx={{ mb: '15px' }}
         />
       </Modal>
-      {/* Delete Confirmation Modal */}
+
+      {/* Delete Modal */}
       <Modal
-        open={openDeleteModal}
-        onClose={handleCloseDeleteModal}
-        title="Confirm Deletion"
-        onConfirm={handleConfirmDelete}
-        confirmMessage="Delete"
-        noConfirm={false}
+         open={openDeleteModal}
+         onClose={handleCloseDeleteModal}
+         title="Delete Schedule"
+         onConfirm={handleConfirmDelete}
+         confirmMessage="Delete"
       >
-        <Box>
-          <p>Are you sure you want to delete this schedule?</p>
-        </Box>
+        Are you sure you want to delete this schedule?
       </Modal>
     </Box>
   );

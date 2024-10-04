@@ -8,7 +8,9 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsPopover from '../../components/notificationPopper';
-import { NotificationContext } from '../../../../contexts/notifications'; 
+import { NotificationContext } from '../../../../contexts/notifications';
+import DownloadIdButton from '../../components/IdCards'
+import { getUserDetails } from '../../../../utils/constants';
 
 const Topbar = () => {
   const theme = useTheme();
@@ -22,13 +24,17 @@ const Topbar = () => {
   const [userDetails, setUserDetails] = useState({});
   const [editDetails, setEditDetails] = useState({});
 
+
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('btech_user'));
+
+    const user = getUserDetails();
     if (user) {
       setUserDetails(user);
       setEditDetails(user);
     }
+
   }, []);
+
 
   const handleOpenSettings = () => setSettingsOpen(true);
   const handleCloseSettings = () => setSettingsOpen(false);
@@ -142,6 +148,7 @@ const Topbar = () => {
             fullWidth
             margin="normal"
           />
+          {userDetails.role === "student"  || userDetails.role === "instrctor" ? <DownloadIdButton userId = {userDetails.userId} /> : null}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProfile}>Cancel</Button>

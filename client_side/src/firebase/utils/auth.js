@@ -1,5 +1,5 @@
 import { db, signOut, auth, createUserWithEmailAndPassword } from '../config';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getDocs, onSnapshot  } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 // Helper function to format date to a more readable format
@@ -91,8 +91,8 @@ const getInstructorsForProgram = async (program) => {
 };
 
 // Handle sign up
-const handleSignUp = async (formData, role, profilePicture, courses) => {
-  console.log(formData);
+const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl) => {
+  console.log(idCardUrl);
   try {
     if (!formData.email || !formData.password) {
       throw new Error('Email and password are required');
@@ -105,6 +105,7 @@ const handleSignUp = async (formData, role, profilePicture, courses) => {
       userId: user.uid,
       ...formData,
       role,
+      idCardUrl,
       createdAt: formatDate(new Date()),
       updatedAt: formatDate(new Date()),
     };
@@ -112,7 +113,7 @@ const handleSignUp = async (formData, role, profilePicture, courses) => {
     let userDoc = { ...baseUserDoc };
 
     if (role === 'student') {
-      const studentId = await generateStudentId(formData.programsAssigned);
+      const studentId = await generateStudentId(formData.program);
       const existingAmount = 0;
       const amountPaid = parseInt(formData.amountPaid) + existingAmount;
 

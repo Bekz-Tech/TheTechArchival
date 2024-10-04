@@ -1,15 +1,16 @@
 import { initializeApp } from 'firebase/app';
-import { 
-    getAuth, 
-    GoogleAuthProvider, 
-    signInWithEmailAndPassword, 
-    signInWithPopup, 
-    FacebookAuthProvider, 
+import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+    FacebookAuthProvider,
     TwitterAuthProvider,
     signOut,
     createUserWithEmailAndPassword // Import the function
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from "firebase/storage"
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -27,6 +28,8 @@ const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
+
 
 const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
@@ -41,5 +44,6 @@ export {
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
-    createUserWithEmailAndPassword
+    createUserWithEmailAndPassword,
+    storage
 };

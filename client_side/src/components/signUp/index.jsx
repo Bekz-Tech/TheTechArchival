@@ -1,16 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, TextField, Typography, Alert, MenuItem, FormControl, InputLabel, Select } from '@mui/material';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { handleSignUp, fetchCourses} from '../../firebase/utils';
+import { handleSignUp, fetchCourses, fetchAndStoreUsers} from '../../firebase/utils';
 import { updateDoc, getDoc, doc} from 'firebase/firestore';
 import { db } from '../../firebase/config'; // Import your Firestore config
 
 const SignUpForm = ({ role }) => {
-    fetchCourses();
     const [instructorOptions, setInstructorOptions] = useState([]);
-    const programs = JSON.parse(sessionStorage.getItem('btech_courses'))?.map(course => course.courseName) || [];
-    const instructors = JSON.parse(sessionStorage.getItem('btech_users'))?.filter(user => user.role === 'instructor') || [];
-    const [coursesOptions, setCoursesOptions] = useState(null);  // Initialize as null
+    const [coursesOptions, setCoursesOptions] = useState(null);
+    const [users, setUsers] = useState([]);
+    const [courses, setCourses] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const coursesData = await fetchCourses();  // Ensure fetchCourses resolves
+                const usersData = await fetchAndStoreUsers();  // Ensure fetchAndStoreUsers resolves
+
+                setCourses(coursesData);
+                setUsers(usersData);  // This sets the state with the actual resolved data
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+
+        fetchData();  // Call the async function to fetch data
+    }, []);
+
+
+    // Ensure users is an array before filtering
+    const instructors = Array.isArray(users) ? users.filter(user => user.role === 'instructor') : [];
+    const programs = Array.isArray(courses) ? courses.map(course => course.courseName) : [];
+
 
     const roleFields = {
         student: [
@@ -76,10 +97,10 @@ const SignUpForm = ({ role }) => {
     const fetchInstructorCourses = (program) => {
         try {
             const allCourses = JSON.parse(sessionStorage.getItem('btech_courses')) || [];
+            console.log(allCourses)
             const instructorCourses = allCourses.filter(course => course.courseName === program);
             setCoursesOptions(instructorCourses);
             console.log(coursesOptions)
-            
         } catch (error) {
             console.error('Error fetching courses:', error);
         }
@@ -93,6 +114,7 @@ const SignUpForm = ({ role }) => {
             );
             const instructorName =  filteredInstructor.map((instrcutor) => `${instrcutor.firstName} ${instrcutor.lastName}`)
             setInstructorOptions(instructorName);
+            console.log(instructors);
         }
     };
 
@@ -187,17 +209,19 @@ const SignUpForm = ({ role }) => {
                     emergencyContactPhone: formData.emergencyContactPhone || ''
                 }),
                 ...(role === 'instructor' && formData.program && {
-                    programsAssigned: [...existingInstructorData, formData.program],
+                    programsAssigned: [formData.program],
                     studentsAssigned: [],
                     averageRating: 0,
                 }),
             };
+            console.log(userData.program)
 
             const allCourses = JSON.parse(sessionStorage.getItem('btech_courses')) || [];
             const studentCourses = allCourses.filter(course => course.courseName === userData.program);
+            const userCourse = role === "student" ? studentCourses : coursesOptions;
 
             // Sign up the user with Firebase Auth and store user data in Firestore
-            const newUserRef = await handleSignUp(userData, role, profilePicture, studentCourses);
+            const newUserRef = await handleSignUp(userData, role, profilePicture, userCourse, '');
 
             // If a student is assigned to an instructor, update the instructor's document
             if (role === 'student' && formData.assignedInstructor) {

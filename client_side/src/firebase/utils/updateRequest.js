@@ -1,16 +1,75 @@
 import { db} from '../config';
-import { doc, updateDoc, collection, query, where, getDocs, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs, arrayUnion, getDoc } from 'firebase/firestore';
+import { fetchUserDetailsByEmailAndRole, fetchAndStoreUsers } from './getRequest';
+import { generateStudentId } from './auth'
 
-//update users
+
 const updateUserDetails = async (userId, userDetails) => {
-    try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, userDetails);
-      console.log('User updated successfully');
-    } catch (error) {
-      console.error('Error updating user:', error);
+  console.log(userId)
+  try {
+    if (!userId || typeof userId !== 'string') {
+      throw new Error("Invalid User ID");
     }
-  };
+
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      console.error("User not found");
+      return;
+    }
+
+    const currentUserData = userSnap.data();
+
+    // Check if the program has changed
+    if (userDetails.program !== currentUserData.program) {
+
+      // Update the courses field by fetching courses for the new program
+      const coursesCollectionRef = collection(db, 'courses');
+      const coursesQuery = query(coursesCollectionRef, where('courseName', '==', userDetails.program));
+      const coursesSnapshot = await getDocs(coursesQuery);
+
+      if (!coursesSnapshot.empty) {
+        const courseData = coursesSnapshot.docs.map(doc => doc.data());
+        userDetails.courses = courseData; // Assuming the courses are stored as an array in the student document
+        console.log(courseData);
+      }
+
+      // Generate a new studentId for the new program
+      const newStudentId = await generateStudentId(userDetails.program);
+      userDetails.studentId = newStudentId;
+    }
+
+    // Check if userDetails contains a selectedInstructor to reassign
+    if (userDetails.assignedInstructor) {
+      const selectedInstructorId = userDetails.assignedInstructor;
+
+      // Fetch full instructor details from Firestore
+      const instructorRef = doc(db, 'users', selectedInstructorId); 
+      const instructorSnap = await getDoc(instructorRef);
+
+      if (instructorSnap.exists()) {
+        const instructorData = instructorSnap.data();
+        // Update userDetails to include full instructor details
+        userDetails.assignedInstructor = {
+          instructorId: selectedInstructorId,
+          ...instructorData
+        };
+      } else {
+        console.error("Instructor not found");
+        return;
+      }
+    }
+
+    // Update the student document in Firestore
+    await updateDoc(userRef, userDetails);
+    await fetchAndStoreUsers();
+
+    console.log("User details updated successfully");
+  } catch (error) {
+    console.error('Error updating user details:', error);
+  }
+};
 
   // Function to update the 'read' status of an enquiry
   const updateEnquiryReadStatus = async (id) => {
@@ -144,11 +203,65 @@ const updateTimetable = async (timetableId, updatedTimetable) => {
 };
 
 
+// Function to update an assignment
+const updateAssignment = async (assignmentId, updatedAssignment, email, role) => {
+
+  try {
+    // Step 1: Update the assignment in the `assignments` collection
+    const assignmentDocRef = doc(db, 'assignments', assignmentId);
+    await updateDoc(assignmentDocRef, updatedAssignment);
+    console.log('Assignment updated successfully in the assignments collection.');
+    console.log(updateAssignment)
+
+    // Step 2: Update the assignment in the instructor's document
+    const usersCollectionRef = collection(db, 'users');
+    const instructorsQuery = query(
+      usersCollectionRef,
+      where('role', '==', 'instructor'),
+      where('userId', '==', updatedAssignment.createdBy)
+    );
+    const querySnapshot = await getDocs(instructorsQuery);
+
+    querySnapshot.forEach(async (instructorDoc) => {
+      const instructorDocRef = doc(db, 'users', instructorDoc.id);
+      const instructorData = instructorDoc.data();
+
+      if (instructorData.courses) {
+        // Find the specific course that contains the assignment
+        const updatedCourses = instructorData.courses.map((course) => {
+          if (course.courseId === updatedAssignment.courseId) {
+            // Update only the assignments in the specific course
+            const updatedAssignments = course.assignments.map((assignment) =>
+              assignment.id === assignmentId ? { ...assignment, ...updatedAssignment } : assignment
+            );
+            return { ...course, assignments: updatedAssignments };
+          }
+          return course; // Return unchanged course
+        });
+
+        // Update the instructor's document with the modified courses
+        await updateDoc(instructorDocRef, { courses: updatedCourses });
+        console.log(`Assignment updated successfully in instructor's user document (ID: ${instructorDoc.id}).`);
+      }
+    });
+  } catch (error) {
+    console.error('Error updating assignment:', error);
+    throw error;
+  }
+
+  fetchUserDetailsByEmailAndRole(email, role);
+};
+
+
+
+
 
   export {
     updateUserDetails,
     updateEnquiryReadStatus,
     updateCourseCurriculum,
-    updateTimetable
+    updateTimetable,
+    updateAssignment,
+    generateStudentId
   }
 
