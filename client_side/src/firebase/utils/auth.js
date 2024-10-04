@@ -206,4 +206,4 @@ const logout = async () => {
   }
 };
 
-export { logout, handleSignUp };
+export { logout, handleSignUp, generateStudentId };
