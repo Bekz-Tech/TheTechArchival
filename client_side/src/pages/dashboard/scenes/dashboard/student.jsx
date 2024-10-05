@@ -26,7 +26,6 @@ const StudentHomeDashboard = () => {
   const [resources, setResources] = useState([]);
   const [nextLecture, setNextLecture] = useState(null);
   const [messages, setMessages] = useState([]);
-
   const [selectedMessenger, setSelectedMessenger] = useState(null);
 
   useEffect(() => {
@@ -59,7 +58,7 @@ const StudentHomeDashboard = () => {
         <Box gridColumn="span 12" display="grid" gridTemplateColumns="repeat(4, 1fr)" gap="20px">
           {/* Course Progress */}
           <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center">
+            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center" width="100%" height="100%">
               <Typography variant="h6" fontWeight="600" mb="5px">
                 Course Progress
               </Typography>
@@ -68,7 +67,7 @@ const StudentHomeDashboard = () => {
           </Box>
           {/* Attendance Level */}
           <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center">
+            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center" width="100%" height="100%">
               <Typography variant="h6" fontWeight="600" mb="5px">
                 Attendance Level
               </Typography>
@@ -77,7 +76,7 @@ const StudentHomeDashboard = () => {
           </Box>
           {/* Payment Rate */}
           <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center">
+            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center" width="100%" height="100%">
               <Typography variant="h6" fontWeight="600" mb="5px">
                 Payment Rate
               </Typography>
@@ -86,7 +85,7 @@ const StudentHomeDashboard = () => {
           </Box>
           {/* Next Lecture */}
           <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px">
+            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" width="100%" height="100%">
               <Typography variant="h6" fontWeight="600" mb="5px" textAlign="center">
                 Next Lecture
               </Typography>
@@ -105,9 +104,9 @@ const StudentHomeDashboard = () => {
         </Box>
 
         {/* SECOND ROW */}
-        <Box gridColumn="span 4" display="flex" flexDirection="column" gap="20px">
+        <Box gridColumn="span 12" display="flex" gap="20px" sx={{ height: '350px' }}>
           {/* Upcoming Schedule */}
-          <Box backgroundColor={colors.primary[400]} p="20px">
+          <Box flex={1} backgroundColor={colors.primary[400]} p="20px" sx={{ overflowY: 'auto' }}>
             <Typography variant="h5" fontWeight="600" mb="15px">
               Upcoming Schedule
             </Typography>
@@ -122,11 +121,9 @@ const StudentHomeDashboard = () => {
               </Card>
             ))}
           </Box>
-        </Box>
 
-        <Box gridColumn="span 4" display="flex" flexDirection="column" gap="20px">
           {/* Assignments */}
-          <Box backgroundColor={colors.primary[400]} p="20px">
+          <Box flex={1} backgroundColor={colors.primary[400]} p="20px" sx={{ overflowY: 'auto' }}>
             <Typography variant="h5" fontWeight="600" mb="15px">
               Assignments
             </Typography>
@@ -141,11 +138,9 @@ const StudentHomeDashboard = () => {
               </Card>
             ))}
           </Box>
-        </Box>
 
-        <Box gridColumn="span 4" display="flex" flexDirection="column" gap="20px">
           {/* Useful Resources */}
-          <Box backgroundColor={colors.primary[400]} p="20px">
+          <Box flex={1} backgroundColor={colors.primary[400]} p="20px" sx={{ overflowY: 'auto' }}>
             <Typography variant="h5" fontWeight="600" mb="15px">
               Useful Resources
             </Typography>
@@ -162,9 +157,38 @@ const StudentHomeDashboard = () => {
           </Box>
         </Box>
 
-        {/* THIRD ROW (MESSAGES) */}
-        <Box gridColumn="span 12" display="flex" flexDirection="column" gap="20px">
-          <Box display="flex" backgroundColor={colors.primary[400]} height="300px">
+        {/* THIRD ROW (MESSAGES + INSTRUCTOR PROFILE) */}
+        <Box gridColumn="span 12" display="flex" gap="20px" sx={{ height: '300px' }}>
+          {/* Instructor Profile (1/3 width) */}
+          <Box
+            width="30%"
+            backgroundColor={colors.primary[400]}
+            p="20px"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            sx={{ borderRadius: '8px' }}
+          >
+            <Avatar
+              src="/path/to/instructor-profile-picture.jpg"
+              alt="Instructor Name"
+              sx={{ width: 120, height: 120, mb: 2 }}
+            />
+            <Typography variant="h6" fontWeight="600">
+              Instructor Name
+            </Typography>
+            <Typography variant="body1">Instructor Title</Typography>
+            <Typography variant="body2" color={colors.grey[500]}>
+              instructor.email@example.com
+            </Typography>
+            <Typography variant="body2" color={colors.grey[500]} mt="5px">
+              Office Hours: Mon - Fri, 10am - 2pm
+            </Typography>
+          </Box>
+
+          {/* Messages (2/3 width) */}
+          <Box width="70%" display="flex" backgroundColor={colors.primary[400]}>
             {/* Messenger List */}
             <Box width="30%" backgroundColor={colors.primary[400]} p="10px" overflow="auto">
               {messages.map((msg, i) => (
@@ -174,7 +198,10 @@ const StudentHomeDashboard = () => {
                   alignItems="center"
                   mb="15px"
                   p="10px"
-                  sx={{ cursor: 'pointer', backgroundColor: selectedMessenger?.name === msg.name ? colors.greenAccent[500] : 'inherit' }}
+                  sx={{
+                    cursor: 'pointer',
+                    backgroundColor: selectedMessenger?.name === msg.name ? colors.greenAccent[500] : 'inherit',
+                  }}
                   onClick={() => handleMessengerClick(msg)}
                 >
                   <Avatar src={msg.picture} alt={msg.name} sx={{ mr: 2 }} />
@@ -195,7 +222,12 @@ const StudentHomeDashboard = () => {
                   </Typography>
                   <Box display="flex" flexDirection="column" gap="10px">
                     {selectedMessenger.conversation.map((text, i) => (
-                      <Typography key={i} sx={{ color: text.isSentByUser ? colors.greenAccent[500] : 'white' }}>
+                      <Typography
+                        key={i}
+                        sx={{
+                          color: text.isSentByUser ? colors.greenAccent[500] : 'white',
+                        }}
+                      >
                         {text.message}
                       </Typography>
                     ))}
