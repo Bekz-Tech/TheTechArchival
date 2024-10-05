@@ -9,7 +9,6 @@ import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
@@ -193,7 +192,7 @@ const Sidebar = () => {
                 >
                   {`${user.firstName} ${user.lastName}`}
                 </Typography>
-                <Typography variant="h5" color={colors.greenAccent[500]}>
+                <Typography variant="h5" color={theme.palette.mode === "light" ? colors.grey[100]: colors.greenAccent[400]}>
                   {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}
                 </Typography>
               </Box>

@@ -214,7 +214,6 @@ const SignUpForm = ({ role }) => {
                     averageRating: 0,
                 }),
             };
-            console.log(userData.program)
 
             const allCourses = JSON.parse(sessionStorage.getItem('btech_courses')) || [];
             const studentCourses = allCourses.filter(course => course.courseName === userData.program);

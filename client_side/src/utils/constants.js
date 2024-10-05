@@ -18,4 +18,13 @@ const getAllUserDetails = () => {
   }
 };
 
-export { getUserDetails, getAllUserDetails };
+const getTimeTable = () => {
+  const userKey = 'btech_timetables';
+  const storedUserDetails = sessionStorage.getItem(userKey);
+  if (storedUserDetails) {
+    const userDetails = JSON.parse(storedUserDetails);
+    return userDetails;
+  }
+};
+
+export { getUserDetails, getAllUserDetails, getTimeTable};

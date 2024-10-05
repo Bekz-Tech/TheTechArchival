@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
@@ -14,7 +14,7 @@ import Enquiries from "./scenes/enquiries/enquiries";
 import UserManagement from "./scenes/userManagement";
 import ContentManagement from "./scenes/contentManagement";
 import CourseManagement from "./scenes/courseManagement";
-import { CssBaseline, ThemeProvider } from "@mui/material";
+import { CssBaseline, ThemeProvider, Box } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import "./index.css";
 import { fetchAndStoreUsers } from "../../firebase/utils";
@@ -28,27 +28,26 @@ import Curriculum from "./scenes/curriculum";
 import StudentPayment from "./scenes/studentPayment";
 import InstructorReviews from "./scenes/instructorReviews";
 import StudentManagement from "./scenes/studentManagement/studentManagement";
+import { tokens } from "./theme";
 
 function DashboardHome() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const [userData, setUserData] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const colors = tokens(theme.palette.mode);
 
   useEffect(() => {
     let isMounted = true;
-
 
     const fetchDataAndUpdateStorage = async () => {
       try {
         const users = await fetchAndStoreUsers();
         if (isMounted) {
           setUserData(users);
-
-          // Fetch role from localStorage
           const storedUser = JSON.parse(sessionStorage.getItem('btech_user'));
           if (storedUser) {
-            setUserRole(storedUser.role); // Assuming 'role' is a field in your user object
+            setUserRole(storedUser.role);
           }
         }
       } catch (error) {
@@ -81,7 +80,6 @@ function DashboardHome() {
             <Route path="/courseManagement" element={<CourseManagement />} />
             <Route path="/feedbacks" element={<Feedbacks />} />
             <Route path="/support" element={<Support />} />
-            <Route path="/courseManagement" element={<CourseManagement />} />
           </>
         );
 
@@ -122,13 +120,20 @@ function DashboardHome() {
         <CssBaseline />
         <div className="app">
           <Sidebar isSidebar={isSidebar} />
-          <main className="content">
+          <Box
+            className="content"
+            sx={{
+              backgroundColor: theme.palette.mode === "light" ? colors.primary[900] : colors.primary[500], // Change background color based on mode
+              height: "auto", // Set full height
+              padding: "20px", // Add padding
+            }}
+          >
             <Topbar setIsSidebar={setIsSidebar} />
             <Routes>
               <Route path="/" element={<Dashboard userData={userData} />} />
               {userRole && renderRoutesBasedOnRole(userRole)}
             </Routes>
-          </main>
+          </Box>
         </div>
       </ThemeProvider>
     </ColorModeContext.Provider>

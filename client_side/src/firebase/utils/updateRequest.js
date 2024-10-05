@@ -13,7 +13,6 @@ const updateUserDetails = async (userId, userDetails) => {
 
     const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
-    
     if (!userSnap.exists()) {
       console.error("User not found");
       return;

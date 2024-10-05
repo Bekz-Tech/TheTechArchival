@@ -5,19 +5,26 @@ import {
   Card,
   CardContent,
   LinearProgress,
-  useTheme
+  useTheme,
 } from "@mui/material";
 import PropTypes from "prop-types";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
+import useStudentData from "../dashboard/customHooks/useStudentData";
 
-const StudentPayment = ({ totalAmount = 10, payments = [] }) => {
+const StudentPayment = ({ payments = [] }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { outstandings } = useStudentData(); // Destructure outstandings from the custom hook
 
-  // Calculate total paid amount and percentage of total payment made
-  const totalPaid = payments.reduce((acc, payment) => acc + (payment.amount || 0), 10);
-  const paymentPercentage = totalAmount > 0 ? (totalPaid / totalAmount) * 100 : 0;
+  // Get total outstanding and paid amounts
+  const { totalOutstanding, amountPaid } = outstandings;
+
+  // Calculate total amount due
+  const totalAmount = totalOutstanding + amountPaid;
+
+  // Calculate payment percentage
+  const paymentPercentage = totalAmount > 0 ? (amountPaid / totalAmount) * 100 : 0;
 
   return (
     <Box m="20px">
@@ -29,10 +36,10 @@ const StudentPayment = ({ totalAmount = 10, payments = [] }) => {
         </Typography>
         <Box mb="20px">
           <Typography variant="h6" mb="5px">
-            Total Amount Due: ${totalAmount.toFixed(2)}
+            Total Amount Due: ₦{totalAmount.toFixed(2)}
           </Typography>
           <Typography variant="h6" mb="5px">
-            Total Paid: ${totalPaid.toFixed(2)}
+            Total Paid: ₦{amountPaid.toFixed(2)}
           </Typography>
           <Typography variant="h6" mb="15px">
             Payment Percentage: {paymentPercentage.toFixed(2)}%
@@ -58,7 +65,7 @@ const StudentPayment = ({ totalAmount = 10, payments = [] }) => {
           <Card key={index} sx={{ mb: 2 }}>
             <CardContent>
               <Typography variant="h6">Payment Date: {payment.date}</Typography>
-              <Typography>Amount: ${payment.amount.toFixed(2)}</Typography>
+              <Typography>Amount: ₦{payment.amount.toFixed(2)}</Typography>
               <Typography>Method: {payment.method}</Typography>
             </CardContent>
           </Card>
@@ -70,7 +77,6 @@ const StudentPayment = ({ totalAmount = 10, payments = [] }) => {
 
 // PropTypes for validating props
 StudentPayment.propTypes = {
-  totalAmount: PropTypes.number,
   payments: PropTypes.arrayOf(
     PropTypes.shape({
       date: PropTypes.string.isRequired,

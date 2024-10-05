@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Divider, useTheme } from '@mui/material';
 import { tokens } from '../../theme';
 import TableComponent from '../../../../components/table';
+import useStudentData from '../dashboard/customHooks/useStudentData'; 
 import { getUserDetails } from '../../../../utils/constants';
-import { fetchTimetables } from '../../../../firebase/utils';
 
 const TimeTable = () => {
-  const [schedules, setSchedules] = useState([]);
+  const { timeTable } = useStudentData(); // Use the timeTable from the hook
   const [sortBy, setSortBy] = useState('date');
   const [sortDirection, setSortDirection] = useState('asc');
   const [page, setPage] = useState(0);
@@ -15,52 +15,18 @@ const TimeTable = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  useEffect(() => {
-    const studentDetails = getUserDetails();
-    if (!studentDetails?.assignedInstructor || !studentDetails.assignedInstructor.courses) return;
-
-    // Destructure userId from assignedInstructor
-    const { userId: instructorUserId } = studentDetails.assignedInstructor;
-
-    // Extract courseIds from the assignedInstructor.courses array
-    const courseIds = studentDetails.assignedInstructor.courses.map(course => ({
-      courseId: course.courseId,
-      courseName: course.courseName
-    }));
-
-    // Fetch the timetables and filter based on instructorUserId and courseIds
-    const getTimetable = async () => {
-      try {
-        const timetables = await fetchTimetables(); // Fetch all timetables
-
-        // Filter timetables where userId and courseId match the instructor's userId and any of the courseIds
-        const filteredTimetables = timetables.filter((timetable) =>
-          timetable.userId === instructorUserId &&
-          courseIds.some(course => course.courseId === timetable.courseId && course.courseName === timetable.courseName)
-        );
-
-        // Modify the schedules to include the 'Complete' field based on 'done'
-        const modifiedSchedules = filteredTimetables.map(schedule => ({
-          ...schedule,
-          complete: schedule.done ? 'Yes' : 'Not' // Add 'complete' field based on 'done'
-        }));
-
-        setSchedules(modifiedSchedules);
-      } catch (error) {
-        console.error('Error fetching timetables:', error);
-      }
-    };
-
-    getTimetable();
-  }, []);
+  // Map timeTable data to the format required by the table
+  const schedules = timeTable.map((schedule) => ({
+    ...schedule,
+    attended: schedule.done ? 'Yes' : 'No' // Use 'attended' field based on 'done'
+  }));
 
   const columns = [
     { id: 'date', label: 'Date' },
-    { id: 'id', label: 'ID' },
     { id: 'location', label: 'Location' },
     { id: 'time', label: 'Time' },
     { id: 'topic', label: 'Topic' },
-    { id: 'complete', label: 'Complete' }, // New 'Complete' column
+    { id: 'attended', label: 'Attended' }, // Consistent lowercase 'attended' field
   ];
 
   const handleSortChange = (columnId) => {
@@ -90,7 +56,7 @@ const TimeTable = () => {
       <TableComponent
         columns={columns}
         tableHeader={`${getUserDetails().program} Schedule`}
-        data={schedules}
+        data={schedules} // Use the schedules from the timeTable
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={handleSortChange}

@@ -14,7 +14,9 @@ import {
 } from '../../data/mockData';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SchoolIcon from '@mui/icons-material/School';
-import ProgressCircle from '../../components/ProgressCircle'; // Import ProgressCircle
+import ProgressCircle from '../../components/ProgressCircle';
+import ChatComponent from '../../components/chatComponent';
+import useStudentData from './customHooks/useStudentData';
 
 const StudentHomeDashboard = () => {
   const theme = useTheme();
@@ -27,10 +29,10 @@ const StudentHomeDashboard = () => {
   const [nextLecture, setNextLecture] = useState(null);
   const [messages, setMessages] = useState([]);
   const [selectedMessenger, setSelectedMessenger] = useState(null);
+  const {progressPercentage, attendanceRate, outstandings, nextClass, timeTable} = useStudentData();
 
   useEffect(() => {
     let isMounted = true;
-
     setTimeout(() => {
       if (isMounted) {
         setSchedules(mockSchedules);
@@ -42,6 +44,7 @@ const StudentHomeDashboard = () => {
       }
     }, 1000);
 
+
     return () => {
       isMounted = false;
     };
@@ -51,50 +54,83 @@ const StudentHomeDashboard = () => {
     setSelectedMessenger(messenger);
   };
 
+  const progressData = [
+    { title: 'Course Progress', value: progressPercentage, details: 'Current course completion' },
+    { title: 'Attendance Level', value: attendanceRate, details: 'Attendance percentage' },
+  ];
+
   return (
     <Box m="20px">
       <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap="20px">
         {/* FIRST ROW */}
         <Box gridColumn="span 12" display="grid" gridTemplateColumns="repeat(4, 1fr)" gap="20px">
-          {/* Course Progress */}
-          <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center" width="100%" height="100%">
-              <Typography variant="h6" fontWeight="600" mb="5px">
-                Course Progress
-              </Typography>
-              <ProgressCircle size="125" progress={mockCourseProgressData[0].value / 100} />
+          {progressData.map((progress, index) => (
+            <Box key={index}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap="10px">
+              <Box
+                backgroundColor={colors.primary[400]}
+                p="10px"
+                borderRadius="8px"
+                textAlign="center"
+                width="100%"
+                height="100%"
+              >
+                <Typography variant="h6" fontWeight="600" mb="5px">
+                  {progress.title}
+                </Typography>
+                <ProgressCircle size="125" progress={progress.value} />
+                <Typography variant="body2" mt="10px">
+                  {progress.details}: {progress.value}%
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-          {/* Attendance Level */}
-          <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center" width="100%" height="100%">
-              <Typography variant="h6" fontWeight="600" mb="5px">
-                Attendance Level
-              </Typography>
-              <ProgressCircle size="125" progress={mockAttendanceData[0].value / 100} />
+          ))}
+
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap="10px">
+              <Box
+                backgroundColor={colors.primary[400]}
+                p="10px"
+                borderRadius="8px"
+                textAlign="center"
+                width="100%"
+                height="100%"
+              >
+                <Typography variant="h6" fontWeight="600" mb="5px">
+                  Payment Rate ({parseInt(100 - outstandings.percentageDifference)}%)
+                </Typography>
+                <ProgressCircle size="125" progress={parseInt(100 - outstandings.percentageDifference)} />
+                <Typography variant="body2" mt="10px">
+                  Oustanding Payments: {outstandings.totalOutstanding}
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-          {/* Payment Rate */}
-          <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" textAlign="center" width="100%" height="100%">
-              <Typography variant="h6" fontWeight="600" mb="5px">
-                Payment Rate
-              </Typography>
-              <ProgressCircle size="125" progress={mockPaymentData[0].value / 100} />
-            </Box>
-          </Box>
+
           {/* Next Lecture */}
           <Box display="flex" flexDirection="column" alignItems="center" gap="10px">
-            <Box backgroundColor={colors.primary[400]} p="10px" borderRadius="8px" width="100%" height="100%">
+            <Box
+              backgroundColor={colors.primary[400]}
+              p="10px"
+              borderRadius="8px"
+              width="100%"
+              height="100%"
+            >
               <Typography variant="h6" fontWeight="600" mb="5px" textAlign="center">
-                Next Lecture
+                Next Class
               </Typography>
-              {nextLecture ? (
+              {nextClass ? (
                 <Box textAlign="center">
                   <SchoolIcon sx={{ fontSize: '30px', color: colors.greenAccent[500] }} />
-                  <Typography variant="h6">{nextLecture.subject}</Typography>
-                  <Typography>{nextLecture.date}</Typography>
-                  <Typography>{nextLecture.time}</Typography>
+                  <Typography variant="h6">{nextClass.topic}</Typography> {/* Use nextClass.topic */}
+                  <Typography>{nextClass.date}</Typography> {/* Use nextClass.date */}
+                  <Typography>{nextClass.time}</Typography> {/* Use nextClass.time */}
+                  <Typography>Location: {nextClass.location}</Typography> {/* Use nextClass.location */}
                 </Box>
               ) : (
                 <Typography>No upcoming lectures.</Typography>
@@ -105,25 +141,46 @@ const StudentHomeDashboard = () => {
 
         {/* SECOND ROW */}
         <Box gridColumn="span 12" display="flex" gap="20px" sx={{ height: '350px' }}>
-          {/* Upcoming Schedule */}
-          <Box flex={1} backgroundColor={colors.primary[400]} p="20px" sx={{ overflowY: 'auto' }}>
-            <Typography variant="h5" fontWeight="600" mb="15px">
-              Upcoming Schedule
-            </Typography>
-            {schedules.map((schedule, index) => (
-              <Card key={index} sx={{ mb: 2 }}>
-                <CardContent>
-                  <Typography variant="h6">{schedule.course}</Typography>
-                  <Typography>{schedule.date}</Typography>
-                  <Typography>{schedule.time}</Typography>
-                  <Typography>Location: {schedule.location}</Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+      {/* Upcoming Schedule */}
+      <Box
+      flex={1}
+      backgroundColor={colors.primary[400]}
+      p="20px"
+      sx={{ overflowY: 'auto' }}
+    >
+      <Typography variant="h5" fontWeight="600" mb="15px">
+        Upcoming Schedule
+      </Typography>
+      {timeTable
+        .filter((schedule) => {
+          const scheduleDateTime = new Date(`${schedule.date}T${schedule.time}`);
+          return scheduleDateTime > new Date(); // Only include upcoming schedules
+        })
+        .sort((a, b) => {
+          const dateA = new Date(`${a.date}T${a.time}`);
+          const dateB = new Date(`${b.date}T${b.time}`);
+          return dateA - dateB; // Sort by date and time
+        })
+        .map((schedule, index) => (
+          <Card key={schedule.id} sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="h6">{schedule.topic}</Typography>
+              <Typography>{schedule.date}</Typography>
+              <Typography>{schedule.time}</Typography>
+              <Typography>Location: {schedule.location}</Typography>
+            </CardContent>
+          </Card>
+        ))}
+    </Box>
+
 
           {/* Assignments */}
-          <Box flex={1} backgroundColor={colors.primary[400]} p="20px" sx={{ overflowY: 'auto' }}>
+          <Box
+            flex={1}
+            backgroundColor={colors.primary[400]}
+            p="20px"
+            sx={{ overflowY: 'auto' }}
+          >
             <Typography variant="h5" fontWeight="600" mb="15px">
               Assignments
             </Typography>
@@ -140,7 +197,12 @@ const StudentHomeDashboard = () => {
           </Box>
 
           {/* Useful Resources */}
-          <Box flex={1} backgroundColor={colors.primary[400]} p="20px" sx={{ overflowY: 'auto' }}>
+          <Box
+            flex={1}
+            backgroundColor={colors.primary[400]}
+            p="20px"
+            sx={{ overflowY: 'auto' }}
+          >
             <Typography variant="h5" fontWeight="600" mb="15px">
               Useful Resources
             </Typography>
@@ -164,6 +226,7 @@ const StudentHomeDashboard = () => {
             width="30%"
             backgroundColor={colors.primary[400]}
             p="20px"
+            
             display="flex"
             flexDirection="column"
             alignItems="center"
@@ -188,56 +251,16 @@ const StudentHomeDashboard = () => {
           </Box>
 
           {/* Messages (2/3 width) */}
-          <Box width="70%" display="flex" backgroundColor={colors.primary[400]}>
-            {/* Messenger List */}
-            <Box width="30%" backgroundColor={colors.primary[400]} p="10px" overflow="auto">
-              {messages.map((msg, i) => (
-                <Box
-                  key={i}
-                  display="flex"
-                  alignItems="center"
-                  mb="15px"
-                  p="10px"
-                  sx={{
-                    cursor: 'pointer',
-                    backgroundColor: selectedMessenger?.name === msg.name ? colors.greenAccent[500] : 'inherit',
-                  }}
-                  onClick={() => handleMessengerClick(msg)}
-                >
-                  <Avatar src={msg.picture} alt={msg.name} sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography variant="h6">{msg.name}</Typography>
-                    <Typography variant="body2">{msg.role}</Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
+          <Box width='70%'>
 
-            {/* Conversation Window */}
-            <Box width="70%" p="20px" backgroundColor={colors.primary[400]}>
-              {selectedMessenger ? (
-                <Box>
-                  <Typography variant="h6" mb="10px">
-                    Conversation with {selectedMessenger.name}
-                  </Typography>
-                  <Box display="flex" flexDirection="column" gap="10px">
-                    {selectedMessenger.conversation.map((text, i) => (
-                      <Typography
-                        key={i}
-                        sx={{
-                          color: text.isSentByUser ? colors.greenAccent[500] : 'white',
-                        }}
-                      >
-                        {text.message}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Box>
-              ) : (
-                <Typography>Select a messenger to view the conversation</Typography>
-              )}
-            </Box>
+          <ChatComponent 
+            messages={messages} 
+            selectedMessenger={selectedMessenger} 
+            handleMessengerClick={handleMessengerClick} 
+          />
+
           </Box>
+        
         </Box>
       </Box>
     </Box>

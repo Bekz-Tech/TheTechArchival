@@ -68,7 +68,8 @@ const Topbar = () => {
   const notificationsId = isNotificationsOpen ? 'simple-popover' : undefined;
 
   return (
-    <Box display="flex" justifyContent="space-between" p={2}>
+    <Box display="flex" justifyContent="space-between" p={2}
+    >
       {/* SEARCH BAR */}
       <Box display="flex" backgroundColor={colors.primary[400]} borderRadius="3px">
         <InputBase sx={{ pl: 2, flex: 1 }} placeholder="Search" />
@@ -78,20 +79,20 @@ const Topbar = () => {
       </Box>
 
       {/* ICONS */}
-      <Box display="flex">
-        <IconButton onClick={colorMode.toggleColorMode} style={{ color: colors.greenAccent[500] }}>
+      <Box display="flex" sx={{ color:  theme.palette.mode === "light" ? colors.grey[100]: colors.greenAccent[700] }}>
+        <IconButton onClick={colorMode.toggleColorMode} >
           {theme.palette.mode === "dark" ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
         </IconButton>
         <IconButton onClick={handleOpenNotifications}>
           <Badge badgeContent={unreadCount} color="error">
-            <NotificationsOutlinedIcon style={{ color: colors.greenAccent[700] }} />
+            <NotificationsOutlinedIcon  />
           </Badge>
         </IconButton>
         <IconButton onClick={handleOpenSettings}>
-          <SettingsOutlinedIcon style={{ color: colors.greenAccent[700] }} />
+          <SettingsOutlinedIcon  />
         </IconButton>
         <IconButton onClick={handleOpenProfile}>
-          <PersonOutlinedIcon style={{ color: colors.greenAccent[700] }} />
+          <PersonOutlinedIcon  />
         </IconButton>
       </Box>
 
