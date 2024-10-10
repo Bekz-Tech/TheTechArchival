@@ -120,9 +120,9 @@ const SignIn = () => {
                         >
                             Continue
                         </LoadingButton>
-<ButtonNavigate>
-    Registration
-</ButtonNavigate>
+                        <ButtonNavigate to= "/registration">Registration</ButtonNavigate>
+
+
 
 
 

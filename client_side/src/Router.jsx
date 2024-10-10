@@ -4,6 +4,7 @@ import SignInPage from './pages/signin';
 import ChatbotComponent from './components/chatbot';
 import Testimonials from './components/Testimonials';
 import DashboardHome from './pages/dashboard';
+import pinVerification from './pinVerification';
 
 function MyRoute() {
   return (
@@ -14,6 +15,7 @@ function MyRoute() {
           <Route path="/chatbot" element={<ChatbotComponent />} />
           <Route path="/testimonials" element={<Testimonials />} />
           <Route path="/dashboard/*" element={<DashboardHome />} />
+          <Route path='/registration' element = {<pinVerification/>} />
         </Routes>
       </Router>
   );
