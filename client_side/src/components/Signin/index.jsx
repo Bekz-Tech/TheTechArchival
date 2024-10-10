@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../../images/logo.svg';
 import { NavLogo } from './SigninElements';
+import { ButtonNavigate } from '../ButtonElement';
 import {
     Container,
     FormWrap,
@@ -119,6 +120,16 @@ const SignIn = () => {
                         >
                             Continue
                         </LoadingButton>
+<ButtonNavigate>
+    Registration
+</ButtonNavigate>
+
+
+
+
+
+
+
                         <Text>Forgot password?</Text>
                     </Form>
                 </FormContent>
