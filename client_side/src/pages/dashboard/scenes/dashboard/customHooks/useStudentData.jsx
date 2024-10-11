@@ -127,11 +127,6 @@ const useStudentData = () => {
     };
   }, [courses, timeTable, studentData]); // Depend on courses, timeTable, and studentData arrays
 
-  console.log('Time Table:', timeTable);
-  console.log('Attendance Rate:', attendanceRate);
-  console.log('Outstandings:', outstandings);
-  console.log('Next Class:', nextClass);
-
   return {
     completedCourses,
     remainingCourses,

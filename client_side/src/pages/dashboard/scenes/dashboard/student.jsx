@@ -7,10 +7,7 @@ import {
   mockRecommendations,
   mockResources,
   mockNextLecture,
-  mockMessages,
-  mockAttendanceData,
-  mockCourseProgressData,
-  mockPaymentData,
+
 } from '../../data/mockData';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SchoolIcon from '@mui/icons-material/School';
@@ -18,16 +15,13 @@ import ProgressCircle from '../../components/ProgressCircle';
 import ChatComponent from '../../components/chatComponent';
 import useStudentData from './customHooks/useStudentData';
 
-const StudentHomeDashboard = () => {
+const StudentHomeDashboard = ({user}) => {
+  console.log(user)
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  const [schedules, setSchedules] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
   const [resources, setResources] = useState([]);
-  const [nextLecture, setNextLecture] = useState(null);
-  const [messages, setMessages] = useState([]);
   const [selectedMessenger, setSelectedMessenger] = useState(null);
   const {progressPercentage, attendanceRate, outstandings, nextClass, timeTable} = useStudentData();
 
@@ -35,12 +29,8 @@ const StudentHomeDashboard = () => {
     let isMounted = true;
     setTimeout(() => {
       if (isMounted) {
-        setSchedules(mockSchedules);
         setAssignments(mockAssignments);
-        setRecommendations(mockRecommendations);
         setResources(mockResources);
-        setNextLecture(mockNextLecture);
-        setMessages(mockMessages);
       }
     }, 1000);
 
@@ -250,17 +240,15 @@ const StudentHomeDashboard = () => {
             </Typography>
           </Box>
 
-          {/* Messages (2/3 width) */}
-          <Box width='70%'>
-
-          <ChatComponent 
-            messages={messages} 
-            selectedMessenger={selectedMessenger} 
-            handleMessengerClick={handleMessengerClick} 
-          />
-
+               {/* Messages (2/3 width) */}
+               <Box width="70%">
+            {user && user.userId ? (
+              <ChatComponent loggedInUserId={user.userId} />
+            ) : (
+              <Typography>No user data available for chat.</Typography>
+            )}
           </Box>
-        
+
         </Box>
       </Box>
     </Box>

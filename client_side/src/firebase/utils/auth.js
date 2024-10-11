@@ -109,6 +109,7 @@ const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl) 
       idCardUrl,
       createdAt: formatDate(new Date()),
       updatedAt: formatDate(new Date()),
+      messages: []
     };
 
     let userDoc = { ...baseUserDoc };

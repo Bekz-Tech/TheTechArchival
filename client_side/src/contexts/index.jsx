@@ -4,9 +4,10 @@ import { NotificationProvider } from './notifications';
 
 export const GlobalContext = ({ children }) => {
   return (
-    <NotificationProvider>
+       <NotificationProvider>
       {/* Add other providers here as needed */}
       {children}
     </NotificationProvider>
+   
   );
 };

@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import Admin from './admin';
 import Student from './student';
 import Instructor from './instrcutor';
+import { db } from '../../../../firebase/config';
+
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -17,6 +19,7 @@ const Dashboard = () => {
     const currentUser = JSON.parse(sessionStorage.getItem('btech_user'));
     setUser(currentUser);
   }, []);
+
 
 
   return (
@@ -43,11 +46,11 @@ const Dashboard = () => {
 
       {/* GRID & CHARTS */}
       {user.role === "admin" || user.role === "superadmin" ?
-      <Admin />
+      <Admin user={user}/>
       :user.role === "student" ?
-      <Student />
+      <Student user={user}/>
       :user.role === "instructor" ?
-        <Instructor />
+        <Instructor user={user}/>
         :
       null
       }
