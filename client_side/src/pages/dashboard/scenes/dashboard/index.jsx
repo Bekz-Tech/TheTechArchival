@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import Admin from './admin';
 import Student from './student';
 import Instructor from './instrcutor';
-import { db } from '../../../../firebase/config';
 
 
 const Dashboard = () => {

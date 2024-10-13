@@ -32,6 +32,7 @@ const InfoSection = ({
     dark2
 }) => {
     const imgRef = useRef(null);
+    console.log(imgRef);
 
     useEffect(() => {
         const observer = new IntersectionObserver(

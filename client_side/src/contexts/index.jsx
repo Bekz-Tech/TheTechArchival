@@ -1,5 +1,5 @@
 import React from 'react';
-import { NotificationProvider } from './notifications';
+import  NotificationProvider  from './notifications';
 // Import other providers as needed
 
 export const GlobalContext = ({ children }) => {

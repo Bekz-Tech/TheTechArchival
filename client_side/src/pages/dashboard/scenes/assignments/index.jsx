@@ -1,23 +1,17 @@
-import React, { useEffect, useState } from 'react';
 import Student from './student';
 import Instructor from './instructor';
-import { getUserDetails } from '../../../../utils/constants';
+import useSessionStorage from '../../../../hooks/useSessionStorage';
 
 const Assignment = () => {
-  const [userRole, setUserRole] = useState(null);
-
-  useEffect(() => {
     // Fetch user data from localStorage
-    const btechUser = getUserDetails();
-    if (btechUser && btechUser.role) {
-      setUserRole(btechUser.role);
-    }
-  }, []);
+    const btechUser = useSessionStorage().memoizedUserDetails;
+    const userRole = btechUser.role;
+  
 
   // Render based on user role
   return (
     <div>
-      {userRole === 'student' ? <Student /> : <Instructor />}
+      {userRole === 'student' ? <Student/> : <Instructor user = {btechUser}/>}
     </div>
   );
 };

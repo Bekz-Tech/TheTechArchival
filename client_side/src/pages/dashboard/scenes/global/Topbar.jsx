@@ -8,32 +8,24 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsPopover from '../../components/notificationPopper';
-import { NotificationContext } from '../../../../contexts/notifications';
-import DownloadIdButton from '../../components/IdCards'
-import { getUserDetails } from '../../../../utils/constants';
+import { NotificationContext } from '../../../../contexts/notifications'; // Import the NotificationContext
+import DownloadIdButton from '../../components/IdCards';
+import useSessionStoarge from '../../../../hooks/useSessionStorage';
 
 const Topbar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
-  const { notifications, unreadCount, markAllAsRead } = useContext(NotificationContext);
+  const { notifications, unreadCount, markNotificationAsRead } = useContext(NotificationContext); // Access notifications and unreadCount
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
-  const [userDetails, setUserDetails] = useState({});
   const [editDetails, setEditDetails] = useState({});
 
+  console.log(useSessionStoarge().memoizedUserDetails)
 
-  useEffect(() => {
-
-    const user = getUserDetails();
-    if (user) {
-      setUserDetails(user);
-      setEditDetails(user);
-    }
-
-  }, []);
+    const userDetails = useSessionStoarge().memoizedUserDetails;
 
 
   const handleOpenSettings = () => setSettingsOpen(true);
@@ -44,6 +36,14 @@ const Topbar = () => {
 
   const handleOpenNotifications = (event) => {
     setNotificationsAnchorEl(event.currentTarget);
+    // Mark notifications as read when opening the popover
+    notifications.forEach(notification => {
+      if (!notification.isRead) { // Assuming isRead is a property of notification
+        markNotificationAsRead(notification.id, userDetails.userId); // Call the function to mark notification as read
+
+        console.log(notification.id)
+      }
+    });
   };
 
   const handleCloseNotifications = () => {
@@ -68,8 +68,7 @@ const Topbar = () => {
   const notificationsId = isNotificationsOpen ? 'simple-popover' : undefined;
 
   return (
-    <Box display="flex" justifyContent="space-between" p={2}
-    >
+    <Box display="flex" justifyContent="space-between" p={2}>
       {/* SEARCH BAR */}
       <Box display="flex" backgroundColor={colors.primary[400]} borderRadius="3px">
         <InputBase sx={{ pl: 2, flex: 1 }} placeholder="Search" />
@@ -79,20 +78,20 @@ const Topbar = () => {
       </Box>
 
       {/* ICONS */}
-      <Box display="flex" sx={{ color:  theme.palette.mode === "light" ? colors.grey[100]: colors.greenAccent[700] }}>
-        <IconButton onClick={colorMode.toggleColorMode} >
+      <Box display="flex" sx={{ color: theme.palette.mode === "light" ? colors.grey[100] : colors.greenAccent[700] }}>
+        <IconButton onClick={colorMode.toggleColorMode}>
           {theme.palette.mode === "dark" ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
         </IconButton>
         <IconButton onClick={handleOpenNotifications}>
           <Badge badgeContent={unreadCount} color="error">
-            <NotificationsOutlinedIcon  />
+            <NotificationsOutlinedIcon />
           </Badge>
         </IconButton>
         <IconButton onClick={handleOpenSettings}>
-          <SettingsOutlinedIcon  />
+          <SettingsOutlinedIcon />
         </IconButton>
         <IconButton onClick={handleOpenProfile}>
-          <PersonOutlinedIcon  />
+          <PersonOutlinedIcon />
         </IconButton>
       </Box>
 
@@ -100,6 +99,7 @@ const Topbar = () => {
       <NotificationsPopover
         anchorEl={notificationsAnchorEl}
         handleClose={handleCloseNotifications}
+        notifications={notifications} // Pass the notifications to the popover
       />
 
       {/* Settings Modal */}
@@ -149,7 +149,7 @@ const Topbar = () => {
             fullWidth
             margin="normal"
           />
-          {userDetails.role === "student"  || userDetails.role === "instrctor" ? <DownloadIdButton userId = {userDetails.userId} /> : null}
+          {userDetails.role === "student" || userDetails.role === "instructor" ? <DownloadIdButton userId={userDetails.userId} /> : null}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProfile}>Cancel</Button>

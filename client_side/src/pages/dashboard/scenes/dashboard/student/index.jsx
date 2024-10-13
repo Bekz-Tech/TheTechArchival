@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, useTheme, Card, CardContent, Avatar } from '@mui/material';
-import { tokens } from '../../theme';
+import { tokens } from '../../../theme';
 import {
   mockSchedules,
   mockAssignments,
@@ -8,12 +8,12 @@ import {
   mockResources,
   mockNextLecture,
 
-} from '../../data/mockData';
+} from '../../../data/mockData';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SchoolIcon from '@mui/icons-material/School';
-import ProgressCircle from '../../components/ProgressCircle';
-import ChatComponent from '../../components/chatComponent';
-import useStudentData from './customHooks/useStudentData';
+import ProgressCircle from '../../../components/ProgressCircle';
+import ChatComponent from '../../../components/chatComponent';
+import useStudentData from './useStudentData';
 
 const StudentHomeDashboard = ({user}) => {
   console.log(user)

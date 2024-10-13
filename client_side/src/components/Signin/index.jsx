@@ -26,6 +26,9 @@ const SignIn = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+
+        let isMounted = true;
+
         const checkUserDetailsInLocalStorage = async () => {
             const userDetails = sessionStorage.getItem('btech_user');
             if (userDetails) {
@@ -33,41 +36,56 @@ const SignIn = () => {
                 navigate('/dashboard'); // Redirect to dashboard if user details exist
             }
         };
-
+        
         checkUserDetailsInLocalStorage();
+        return () => {
+            isMounted = false;
+        }
     }, [navigate]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
         setIsSubmitting(true);
-
+    
+        let isMounted = true; // Track if component is still mounted
+    
         try {
             // Sign in with email and password using Firebase Authentication
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-
+    
             // Fetch user details from Firestore based on authenticated user's email
             const usersCollectionRef = collection(db, 'users');
             const q = query(usersCollectionRef, where('email', '==', user.email));
             const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
+    
+            if (!querySnapshot.empty && isMounted) {
                 // If user details found, update state user details
                 const userDoc = querySnapshot.docs[0];
                 setUserDetails(userDoc.data());
                 sessionStorage.setItem('btech_user', JSON.stringify(userDoc.data())); // Store user details in local storage
                 navigate('/dashboard'); // Redirect to dashboard or another page upon successful sign-in
-            } else {
+            } else if (isMounted) {
                 setError('User details not found');
             }
         } catch (error) {
-            console.error('Error signing in:', error);
-            setError(`Failed to sign in: ${error.message}`);
+            if (isMounted) {
+                console.error('Error signing in:', error);
+                setError(`Failed to sign in: ${error.message}`);
+            }
         } finally {
-            setIsSubmitting(false);
+            if (isMounted) {
+                setIsSubmitting(false);
+            }
         }
+    
+        // Cleanup function
+        return () => {
+            isMounted = false; // Set to false to prevent state updates after unmounting
+        };
     };
+    
 
     const handleSocialLogin = async (provider) => {
         setError('');

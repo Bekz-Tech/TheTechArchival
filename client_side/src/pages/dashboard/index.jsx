@@ -48,6 +48,7 @@ function DashboardHome() {
           const storedUser = JSON.parse(sessionStorage.getItem('btech_user'));
           if (storedUser) {
             setUserRole(storedUser.role);
+
           }
         }
       } catch (error) {
@@ -128,7 +129,7 @@ function DashboardHome() {
               padding: "20px", // Add padding
             }}
           >
-            <Topbar setIsSidebar={setIsSidebar} />
+            <Topbar  userData = {userData}/>
             <Routes>
               <Route path="/" element={<Dashboard userData={userData} />} />
               {userRole && renderRoutesBasedOnRole(userRole)}

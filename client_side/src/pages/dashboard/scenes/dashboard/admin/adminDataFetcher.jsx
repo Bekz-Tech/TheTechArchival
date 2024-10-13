@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchAndStoreUsers, fetchEnquiries, fetchTimetables, fetchPayments } from '../../../../firebase/utils'; // Adjust the import path as needed
+import { fetchAndStoreUsers, fetchEnquiries, fetchTimetables, fetchPayments } from '../../../../../firebase/utils'; // Adjust the import path as needed
 
 const useFetchData = () => {
   const [userData, setUserData] = useState([]);

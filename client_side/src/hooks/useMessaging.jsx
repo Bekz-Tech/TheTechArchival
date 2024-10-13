@@ -1,137 +1,134 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { db } from '../firebase/config';
 import { doc, onSnapshot, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
-import { getUserDetails } from "../utils/constants";
+import { getAuth } from 'firebase/auth';
 
 const useMessaging = (userId) => {
   const [messages, setMessages] = useState([]);
   const [selectedMessenger, setSelectedMessenger] = useState(null);
   const [newMessage, setNewMessage] = useState('');
+  const auth = getAuth(); // Get the Firebase auth instance
+  const isMountedRef = useRef(true);
 
-  // Fetch messages from Firestore
+  // Memoizing the document reference for the user's messages
+  const messagingRef = useMemo(() => doc(db, 'users', userId), [userId]);
+
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, 'users', userId), (doc) => {
-      const userData = doc.data();
-      if (userData) {
-        setMessages(userData.messages || []);
-        updateMessageDeliveredStatus(userData.messages);
-      }
-    });
+    isMountedRef.current = true; // Component is mounted
 
-    return () => unsubscribe();
-  }, [userId]);
-
-  // Update delivered status for messages
-  const updateMessageDeliveredStatus = async (messages) => {
-    const updatedMessages = messages.map((msg) => {
-      if (msg.receiver.senderId === userId && !msg.delivered) {
-        return { ...msg, delivered: true };
-      }
-      return msg;
-    });
-
-    const hasUndeliveredMessages = updatedMessages.some(
-      (msg, index) => msg.delivered && !messages[index].delivered
-    );
-
-    if (hasUndeliveredMessages) {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { messages: updatedMessages });
-    }
-  };
-
-  // Fetch the full details of the selected messenger
-  const fetchMessengerDetails = async (messengerId) => {
-    const userDoc = await getDoc(doc(db, 'users', messengerId));
-    if (userDoc.exists()) {
-      return { ...userDoc.data(), id: userDoc.id };
-    } else {
-      console.error(`User with ID ${messengerId} does not exist.`);
-      return null;
-    }
-  };
-
-  // When a messenger is selected, fetch their details and mark messages as read
-  useEffect(() => {
-    const updateMessagesAsRead = async () => {
-      if (selectedMessenger && selectedMessenger.id) {
-        const updatedMessages = messages.map((msg) => {
-          if (msg.receiver.senderId === userId && msg.sender.senderId === selectedMessenger.id && !msg.read) {
-            return { ...msg, read: true };
-          }
-          return msg;
-        });
-
-        const hasUnreadMessages = updatedMessages.some(
-          (msg, index) => msg.read && !messages[index].read
-        );
-
-        if (hasUnreadMessages) {
-          const userRef = doc(db, 'users', userId);
-          await updateDoc(userRef, { messages: updatedMessages });
+    const unsubscribe = onSnapshot(messagingRef, (doc) => {
+      if (isMountedRef.current) {
+        const userData = doc.data();
+        if (userData) {
+          const updatedMessages = userData.messages || [];
+          setMessages((prevMessages) => {
+            if (JSON.stringify(prevMessages) !== JSON.stringify(updatedMessages)) {
+              return updatedMessages;
+            }
+            return prevMessages;
+          });
         }
       }
+    });
+
+    return () => {
+      isMountedRef.current = false; // Component is unmounted
+      unsubscribe();
     };
+  }, [messagingRef]);
 
-    updateMessagesAsRead();
-  }, [selectedMessenger, messages, userId]);
-
-  // Set selected messenger and fetch their full details
-  const handleMessengerClick = async (messengerId) => {
-    const messengerDetails = await fetchMessengerDetails(messengerId);
-    if (messengerDetails) {
-      setSelectedMessenger(messengerDetails);
+  const fetchMessengerDetails = useCallback(async (messengerId) => {
+    const messengerRef = doc(db, 'users', messengerId);
+    const messengerSnap = await getDoc(messengerRef);
+    if (messengerSnap.exists()) {
+      return { id: messengerId, ...messengerSnap.data() };
+    } else {
+      console.error('No such document!');
+      return null;
     }
-  };
+  }, []); // No dependencies needed
 
-  // Send a message
-  const handleSendMessage = async () => {
+  const markMessagesAsRead = useCallback(async (messageIds) => {
+    const updatePromises = messageIds.map(async (id) => {
+      const messageToUpdate = messages.find((msg) => msg.timestamp === id);
+      if (messageToUpdate && !messageToUpdate.read) {
+        const updatedMessage = { ...messageToUpdate, read: true };
+        await updateMessageInFirestore(updatedMessage);
+      }
+    });
+
+    await Promise.all(updatePromises);
+    if (isMountedRef.current) {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) => (messageIds.includes(msg.timestamp) ? { ...msg, read: true } : msg))
+      );
+    }
+  }, [messages]);
+
+  const handleSendMessage = useCallback(async () => {
     if (newMessage.trim() && selectedMessenger) {
-      const senderDoc = await getUserDetails();
+      const timestamp = new Date().toISOString();
       const message = {
         message: newMessage,
         isSentByUser: true,
-        timestamp: new Date().toISOString(),
-        delivered: false, // Initially false, updated later
+        timestamp,
+        delivered: true, // Assume it's delivered for the sender
         read: false,
-        sender: {
-          name: `${senderDoc.firstName} ${senderDoc.lastName}`,
-          role: senderDoc.role,
-          picture: senderDoc.profilePictureUrl,
-          senderId: userId,
-        },
-        receiver: {
-          name: `${selectedMessenger.firstName} ${selectedMessenger.lastName}`,
-          role: selectedMessenger.role,
-          picture: selectedMessenger.profilePictureUrl,
-          senderId: selectedMessenger.id,
-        },
+        sender: { senderId: userId },
+        receiver: { senderId: selectedMessenger.id },
       };
 
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        messages: [...messages, message],
-      });
+      await updateDoc(userRef, { messages: arrayUnion(message) });
+
+      // Check if the receiver is currently logged in
+      const receiverAuth = auth.currentUser; // Get the current authenticated user
+      const isReceiverLoggedIn = receiverAuth && receiverAuth.uid === selectedMessenger.id;
 
       const receiverRef = doc(db, 'users', selectedMessenger.id);
       await updateDoc(receiverRef, {
-        messages: arrayUnion({
-          ...message,
-          isSentByUser: false,
+        messages: arrayUnion({ 
+          ...message, 
+          isSentByUser: false, 
+          delivered: isReceiverLoggedIn, // Set delivered based on receiver's login status
         }),
       });
 
-      setNewMessage('');
+      // Clear the input field after sending the message
+      setNewMessage(''); 
     }
-  };
+  }, [newMessage, selectedMessenger, userId, auth]);
+
+  const updateMessageInFirestore = useCallback(async (message) => {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, { messages: arrayUnion(message) });
+  }, [userId]);
+
+  const handleMessengerClick = useCallback(async (messengerId) => {
+    const messengerDetails = await fetchMessengerDetails(messengerId);
+    
+    if (messengerDetails) {
+      setSelectedMessenger(messengerDetails);
+
+      const messageIdsToMarkAsRead = messages
+        .filter((msg) => msg.receiver.senderId === userId && msg.sender.senderId === messengerId && !msg.read)
+        .map((msg) => msg.timestamp);
+
+      // Only mark messages as read if there are any unread messages
+      if (messageIdsToMarkAsRead.length > 0) {
+        await markMessagesAsRead(messageIdsToMarkAsRead);
+      }
+    }
+  }, [userId, markMessagesAsRead]); // Removed `fetchMessengerDetails` from dependencies since it's defined above
 
   return {
     messages,
     selectedMessenger,
-    handleMessengerClick,
     newMessage,
     setNewMessage,
     handleSendMessage,
+    handleMessengerClick,
+    markMessagesAsRead,
   };
 };
 

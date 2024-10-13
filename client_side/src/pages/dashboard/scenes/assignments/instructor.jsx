@@ -6,7 +6,7 @@ import Header from '../../components/Header';
 import Modal from '../../components/modal';
 import TableComponent from '../../../../components/table'; // Adjust the import path as needed
 import { addAssignmentToInstructors } from '../../../../firebase/utils/postRequest';
-import { getUserDetails } from '../../../../utils/constants'; // Assume this fetches user details
+import useSessionStoarge from '../../../../hooks/useSessionStorage'; // Assume this fetches user details
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility'; // For view submissions button
@@ -25,22 +25,19 @@ const Assignment = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [courses, setCourses] = useState([]); // State to hold list of courses
-  const [userDetails, setUserDetails] = useState({}); // State to hold user details
   const [viewSubmissionsModal, setViewSubmissionsModal] = useState(false); // Modal for viewing submissions
 
   // Fetch user details and assignments
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async ({user: userDetails}) => {
       try {
-        const userDetailss = await getUserDetails();  // Fetch user details
-        setUserDetails(userDetailss);  // Set user details
   
         // Use the response directly to set courses and assignments
-        if (userDetailss.courses) {
-          setCourses(userDetailss.courses);  // Set courses from the fetched userDetails
-          console.log('Courses set:', userDetailss.courses);
+        if (userDetails.courses) {
+          setCourses(userDetails.courses);  // Set courses from the fetched userDetails
+          console.log('Courses set:', userDetails.courses);
   
-          const allAssignments = userDetailss.courses.flatMap(course => course.assignments || []);
+          const allAssignments = userDetails.courses.flatMap(course => course.assignments || []);
           setAssignments(sortAssignments(allAssignments));
         } else {
           console.error('No courses found in user details.');

@@ -6,7 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { storage, db } from '../../../firebase/config'; // Assuming Firestore is configured in this file
 import { Button, Card, CardContent, CardMedia, Typography, Grid } from '@mui/material';
 import logo from '../../../assets/idCompanyLogo.jpeg'; // Default company logo
-import { getUserDetails } from '../../../utils/constants';
+import useSessionStoarge from '../../../hooks/useSessionStorage';
 
 // IDCard component (not exported, used internally for generating the card)
 const IDCard = ({ idCardRef, userData }) => {
@@ -127,7 +127,7 @@ const DownloadIdButton = ({ userId }) => {
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const storedUser = getUserDetails();
+    const storedUser = useSessionStoarge().memoizedUserDetails;
     setUserData(storedUser);
   }, []);
 

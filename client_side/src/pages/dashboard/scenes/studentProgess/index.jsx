@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Typography, useTheme, LinearProgress } from "@mui/material";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
-import useStudentData from "../dashboard/customHooks/useStudentData"; // Import your custom hook
+import useStudentData from "../dashboard/student/useStudentData"; // Import your custom hook
 
 const StudentProgress = () => {
   const theme = useTheme();

@@ -5,7 +5,7 @@ import Header from '../../components/Header';
 import Modal from '../../components/modal';
 import TableComponent from '../../../../components/table';
 import { tokens } from '../../theme';
-import { getUserDetails } from '../../../../utils/constants';
+import useSessionStoarge from '../../../../hooks/useSessionStorage';
 import {
   addTimetableToInstructors,
   deleteTimetable,
@@ -13,7 +13,7 @@ import {
   fetchUserDetailsByEmailAndRole,
 } from '../../../../firebase/utils';
 
-const Instructor = () => {
+const Instructor = ({user : userDetails}) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -31,7 +31,6 @@ const Instructor = () => {
   const [scheduleToDelete, setScheduleToDelete] = useState(null);
 
   useEffect(() => {
-    const userDetails = getUserDetails();
 
     if (userDetails && Array.isArray(userDetails.programsAssigned)) {
       setCourses(userDetails.programsAssigned); // Populate courses with programsAssigned array
@@ -111,7 +110,7 @@ const Instructor = () => {
   };
 
   const handleConfirmDelete = async () => {
-    const userDetails = getUserDetails();
+    const userDetails = useSessionStoarge().memoizedUserDetails;
     const course = userDetails.courses.find((course) =>
       course.timetable.some((t) => t.id === scheduleToDelete.id)
     );
@@ -136,7 +135,7 @@ const Instructor = () => {
   };
 
 const handleSubmit = async () => {
-  const userDetails = getUserDetails();
+  const userDetails = useSessionStoarge().memoizedUserDetails;
   const userId = userDetails.userId;
   const findCourse = userDetails.courses.find(course => course.courseName === selectedCourse)
   const courseId = findCourse.courseId; 

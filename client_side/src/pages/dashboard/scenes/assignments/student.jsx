@@ -5,7 +5,6 @@ import { useTheme } from '@mui/material';
 import Header from '../../components/Header';
 import Modal from '../../components/modal';
 import TableComponent from '../../../../components/table';
-import { fetchUserDetailsByEmailAndRole } from '../../../../firebase/utils';
 
 const Assignment = () => {
   const theme = useTheme();

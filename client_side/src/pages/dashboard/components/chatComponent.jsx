@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography, Avatar, TextField, Button, useTheme } from '@mui/material';
 import { tokens } from '../theme';
-import useMessaging from '../../../hooks/useMessaging'; // Adjust this import based on your directory structure
+import useMessaging from '../../../hooks/useMessaging';
 
 const ChatComponent = ({ loggedInUserId }) => {
   const theme = useTheme();
@@ -14,25 +14,44 @@ const ChatComponent = ({ loggedInUserId }) => {
     newMessage,
     setNewMessage,
     handleSendMessage,
-  } = useMessaging(loggedInUserId);
+    markMessagesAsRead,
+  } = useMessaging(loggedInUserId); // Pass auth to the hook
 
-  // Format timestamp to "October 5, 2024 7:00pm" format
+  console.log(messages)
+
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
     const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
     const optionsTime = { hour: 'numeric', minute: 'numeric', hour12: true };
-
-    const formattedDate = date.toLocaleDateString(undefined, optionsDate);
-    const formattedTime = date.toLocaleTimeString([], optionsTime).replace(':00', '').toLowerCase(); // Remove seconds and adjust format
-
-    return `${formattedDate} ${formattedTime}`; // Combine date and time
+    return `${date.toLocaleDateString(undefined, optionsDate)} ${date.toLocaleTimeString([], optionsTime).replace(':00', '').toLowerCase()}`;
   };
 
-  // Extract messengers from messages array, excluding the logged-in user
   const uniqueMessengers = Array.from(new Set(messages
     .map(msg => msg.sender.senderId)
-    .filter(senderId => senderId !== loggedInUserId) // Filter out logged-in user
+    .filter(senderId => senderId !== loggedInUserId)
   )).map(senderId => messages.find(msg => msg.sender.senderId === senderId).sender);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (selectedMessenger) {
+      const messageIdsToMarkAsRead = messages
+        .filter(msg => 
+          msg.receiver.senderId === loggedInUserId && 
+          msg.sender.senderId === selectedMessenger.senderId && 
+          !msg.read
+        )
+        .map(msg => msg.timestamp);
+
+      if (isMounted) {
+        markMessagesAsRead(messageIdsToMarkAsRead);
+      }
+    };
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <Box display="flex" backgroundColor={colors.primary[400]} height="100%">
@@ -48,7 +67,7 @@ const ChatComponent = ({ loggedInUserId }) => {
         <Typography variant="h5" fontWeight="600" mb="10px" color="white">
           Messengers
         </Typography>
-        {uniqueMessengers.length > 0 ? ( // Check if there are any unique messengers
+        {uniqueMessengers.length > 0 ? (
           uniqueMessengers.map((messenger) => (
             <Box
               key={messenger.senderId}
@@ -81,11 +100,11 @@ const ChatComponent = ({ loggedInUserId }) => {
 
       {/* Conversation Window */}
       <Box 
-          width="70%" p="20px" 
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          flexDirection="column"
-          justifyContent="space-between"
+        width="70%" p="20px" 
+        backgroundColor={colors.primary[400]}
+        display="flex"
+        flexDirection="column"
+        justifyContent="space-between"
       >
         {selectedMessenger ? (
           <Box height='100%'>
@@ -101,15 +120,14 @@ const ChatComponent = ({ loggedInUserId }) => {
               paddingBottom="20px"
               borderTop={`1px solid ${colors.grey[700]}`}
             >
-              {/* Displaying messages between the logged-in user and selected messenger */}
               {messages.filter(msg => 
                 (msg.sender.senderId === selectedMessenger.id || msg.receiver.senderId === selectedMessenger.id)
               ).map((text, i) => (
-                <Box key={i} display="flex" flexDirection="column" alignItems={text.isSentByUser ? 'flex-end' : 'flex-start'}>
+                <Box key={i} display="flex" flexDirection="column" alignItems={text.sender.senderId === loggedInUserId ? 'flex-end' : 'flex-start'}>
                   <Typography
                     sx={{
-                      color: text.isSentByUser ? colors.greenAccent[500] : 'white',
-                      backgroundColor: text.isSentByUser ? colors.grey[800] : colors.grey[900],
+                      color: text.sender.senderId === loggedInUserId ? colors.greenAccent[500] : 'white',
+                      backgroundColor: text.sender.senderId === loggedInUserId ? colors.grey[800] : colors.grey[900],
                       borderRadius: '8px',
                       p: '10px',
                       maxWidth: '70%',
@@ -118,8 +136,9 @@ const ChatComponent = ({ loggedInUserId }) => {
                   >
                     {text.message}
                   </Typography>
-                  <Typography variant="caption" color={colors.grey[500]} alignSelf="flex-end">
-                    {formatTimestamp(text.timestamp)} | {text.delivered ? 'Delivered' : 'Not Delivered'} | {text.read ? 'Read' : 'Unread'}
+                  <Typography variant="caption" color={colors.grey[500]} alignSelf={text.sender.senderId === loggedInUserId ? 'flex-end' : 'flex-start'}>
+                    {formatTimestamp(text.timestamp)} 
+                    {text.sender.senderId === loggedInUserId ? ` | ${text.delivered ? 'Delivered' : 'Not Delivered'} | ${text.read ? 'Read' : 'Unread'}` : ''}
                   </Typography>
                 </Box>
               ))}
@@ -129,11 +148,17 @@ const ChatComponent = ({ loggedInUserId }) => {
                 variant="outlined"
                 placeholder="Type a message..."
                 fullWidth
+                onChange={(e) => {
+                  console.log("New message text:", e.target.value); // Debugging line
+                  setNewMessage(e.target.value);
+                }}
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)} // Update input field state
                 sx={{ mr: 1, backgroundColor: colors.grey[800] }}
               />
-              <Button variant="contained" onClick={handleSendMessage} color="primary">
+              <Button variant="contained" onClick={() => {
+                  console.log("Sending message:", newMessage); // Debugging line
+                  handleSendMessage();
+                }} color="primary">
                 Send
               </Button>
             </Box>

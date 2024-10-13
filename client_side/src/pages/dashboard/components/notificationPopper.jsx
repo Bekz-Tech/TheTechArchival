@@ -17,7 +17,7 @@ import { tokens } from '../theme'; // Adjust path according to your project stru
 const NotificationsPopover = ({ anchorEl, handleClose }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode); // Access colors based on current theme mode
-  const { notifications, unreadCount, markAllAsRead, markNotificationAsRead } = useContext(NotificationContext);
+  const { notifications, unreadCount, markAllNotificationsAsRead, markNotificationAsRead } = useContext(NotificationContext);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -108,7 +108,7 @@ const NotificationsPopover = ({ anchorEl, handleClose }) => {
               </Typography>
             </Box>
           ))}
-          <Button onClick={markAllAsRead} variant="outlined" color="primary" fullWidth>
+          <Button onClick={markAllNotificationsAsRead} variant="outlined" color="primary" fullWidth>
             Mark all as read
           </Button>
         </Box>

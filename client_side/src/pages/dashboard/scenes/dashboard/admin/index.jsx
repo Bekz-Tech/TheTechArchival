@@ -1,15 +1,14 @@
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
-import { tokens } from '../../theme';
+import { tokens } from '../../../theme';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import EmailIcon from '@mui/icons-material/Email';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import LineChart from '../../components/LineChart';
+import LineChart from '../../../components/LineChart';
 import SchoolIcon from '@mui/icons-material/School';
-import BarChart from '../../components/BarChart';
-import StatBox from '../../components/StatBox';
-import ProgressCircle from '../../components/ProgressCircle';
-import { mockTransactions } from '../../data/mockData';
+import BarChart from '../../../components/BarChart';
+import StatBox from '../../../components/StatBox';
+import ProgressCircle from '../../../components/ProgressCircle';
 import useFetchData from './adminDataFetcher'; // Import the custom hook
 
 const Admin = () => {

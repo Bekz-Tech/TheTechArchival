@@ -10,7 +10,7 @@ import {
 import PropTypes from "prop-types";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
-import useStudentData from "../dashboard/customHooks/useStudentData";
+import useStudentData from "../dashboard/student/useStudentData";
 
 const StudentPayment = ({ payments = [] }) => {
   const theme = useTheme();

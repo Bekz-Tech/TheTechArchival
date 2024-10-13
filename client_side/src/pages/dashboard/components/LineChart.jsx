@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { useTheme, Box } from '@mui/material';
 import { tokens } from '../theme';
-import { getAllUserDetails } from '../../../utils/constants'; // Adjust the import path as necessary
+import useSessionStoarge from '../../../hooks/useSessionStorage'; // Adjust the import path as necessary
 
 const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
   const [lineData, setLineData] = useState([]);
@@ -14,11 +14,11 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
     const hue = (index * 360) / 10 % 360;
     return `hsl(${hue}, 70%, 60%)`;
   };
+  const data = useSessionStoarge().memoizedAllUserDetails; // Get user data from sessionStorage
 
   useEffect(() => {
     const fetchData = () => {
       try {
-        const data = getAllUserDetails(); // Get user data from sessionStorage
 
         if (data && data.length > 0) {
           const months = [

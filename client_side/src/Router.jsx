@@ -4,6 +4,7 @@ import SignInPage from './pages/signin';
 import ChatbotComponent from './components/chatbot';
 import Testimonials from './components/Testimonials';
 import DashboardHome from './pages/dashboard';
+import Loader from './utils/loader';
 
 function MyRoute() {
   return (

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Box, Typography, Divider, useTheme } from '@mui/material';
 import { tokens } from '../../theme';
 import TableComponent from '../../../../components/table';
-import useStudentData from '../dashboard/customHooks/useStudentData'; 
-import { getUserDetails } from '../../../../utils/constants';
+import useStudentData from '../dashboard/student/useStudentData'; 
+import useSessionStoarge from '../../../../hooks/useSessionStorage';
 
 const TimeTable = () => {
   const { timeTable } = useStudentData(); // Use the timeTable from the hook
@@ -55,7 +55,7 @@ const TimeTable = () => {
       <Divider />
       <TableComponent
         columns={columns}
-        tableHeader={`${getUserDetails().program} Schedule`}
+        tableHeader={`${useSessionStoarge().memoizedUserDetails.program} Schedule`}
         data={schedules} // Use the schedules from the timeTable
         sortBy={sortBy}
         sortDirection={sortDirection}

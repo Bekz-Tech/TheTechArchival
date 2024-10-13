@@ -25,7 +25,7 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import profileImg from "../../../../images/profile-placeholder.png";
 import EmailIcon from '@mui/icons-material/Email';
 import { logout } from "../../../../firebase/utils";
-import { getUserDetails } from "../../../../utils/constants";
+import useSessionStoarge from "../../../../hooks/useSessionStorage";
 import { useNavigate } from "react-router-dom";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -52,7 +52,6 @@ const Sidebar = () => {
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -60,12 +59,7 @@ const Sidebar = () => {
     navigate("/");
   };
 
-  useEffect(() => {
-    const userDetails = getUserDetails(navigate);
-    if (userDetails) {
-      setUser(userDetails);
-    }
-  }, [navigate]);
+    const user = useSessionStoarge().memoizedUserDetails;
 
   if (!user) {
     return null; // or a loading spinner, or some fallback UI

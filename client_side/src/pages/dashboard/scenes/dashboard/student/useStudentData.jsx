@@ -1,12 +1,12 @@
 import { useMemo, useState, useEffect } from 'react';
-import { getUserDetails } from '../../../../../utils/constants';
+import useSessionStoarge from '../../../../../hooks/useSessionStorage';
 
 const useStudentData = () => {
   const [studentData, setStudentData] = useState({});
   const [timeTable, setTimeTable] = useState([]);
 
   useEffect(() => {
-    const userDetails = getUserDetails();
+    const userDetails = useSessionStoarge().memoizedUserDetails;
     setStudentData(userDetails);
 
     if (userDetails.assignedInstructor) {
