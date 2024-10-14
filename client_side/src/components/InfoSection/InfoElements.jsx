@@ -39,6 +39,11 @@ export const InfoWrapper = styled.div`
     justify-content: center;
     overflow-y: visible;
     align-items: center;
+    text-align: center; /* Center align text */
+
+    @media screen and (max-width: 768px) {
+        text-align: center; /* Align text to the center on small screens */
+    }
 `;
 
 export const InfoRow = styled.div`
@@ -54,6 +59,7 @@ export const InfoRow = styled.div`
 
     @media screen and (max-width: 768px) {
         grid-template-areas: ${({ imgStart }) => (imgStart ? `'col1' 'col2'` : `'col1 col1' 'col2 col2'`)};
+        text-align: center; /* Center text on smaller screens */
     }
 `;
 
@@ -74,6 +80,12 @@ export const Column2 = styled.div`
 export const TextWrapper = styled.div`
     max-width: 600px;
     margin-right: ${({ imgStart }) => (imgStart ? '5%' : '0')};
+    text-align: left;
+
+    @media screen and (max-width: 768px) {
+        text-align: center; /* Center text on smaller screens */
+        margin-right: 0;
+    }
 `;
 
 export const TopLine = styled.p`
@@ -85,6 +97,7 @@ export const TopLine = styled.p`
     text-transform: uppercase;
     margin-bottom: 16px !important;
     margin-top: 10%;
+
     @media screen and (max-width: 480px) {
         margin-top: 0;
     }
@@ -108,11 +121,19 @@ export const Subtitle = styled.p`
     font-size: 18px;
     line-height: 24px;
     color: ${({ darkText }) => (darkText ? '#010606' : '#fff')};
+
+    @media screen and (max-width: 768px) {
+        max-width: 100%;
+    }
 `;
 
 export const BtnWrap = styled.div`
     display: flex;
     justify-content: flex-start;
+
+    @media screen and (max-width: 768px) {
+        justify-content: center; /* Center button on smaller screens */
+    }
 `;
 
 export const ImgWrap = styled.div`

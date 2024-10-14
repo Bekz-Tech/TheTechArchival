@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { Link as LinkR } from 'react-router-dom'
-import { Link as LinkS} from 'react-scroll'
+import { Link as LinkS } from 'react-scroll'
 
 export const Nav = styled.nav`
     background: ${({scrollNav}) => (scrollNav ? 'white' : 'black')};
@@ -13,7 +13,15 @@ export const Nav = styled.nav`
     top: 0;
     z-index: 10;
     transition: 0.8s all ease;
-`
+
+    @media screen and (max-width: 768px) {
+        height: 70px;
+    }
+
+    @media screen and (max-width: 480px) {
+        height: 60px;
+    }
+`;
 
 export const NavbarContainer = styled.div`
     display: flex;
@@ -23,8 +31,28 @@ export const NavbarContainer = styled.div`
     width: 100%;
     padding: 0 50px;
 
+    @media screen and (max-width: 1280px) {
+        padding: 0 40px;
+    }
+
+    @media screen and (max-width: 1024px) {
+        padding: 0 35px;
+    }
+
     @media screen and (max-width: 768px) {
-    padding: 0 30px;
+        padding: 0 30px;
+    }
+
+    @media screen and (max-width: 480px) {
+        padding: 0 20px;
+    }
+
+    @media screen and (max-width: 375px) {
+        padding: 0 15px;
+    }
+
+    @media screen and (max-width: 320px) {
+        padding: 0 10px;
     }
 `;
 
@@ -39,13 +67,31 @@ export const NavLogo = styled(LinkR)`
     text-decoration: none;
     gap: 15px !important;
 
-    @media screen and (max-width: 768px) {
-    font-size: 1.4rem;
+    @media screen and (max-width: 1280px) {
+        font-size: 1.5rem;
+    }
 
+    @media screen and (max-width: 1024px) {
+        font-size: 1.4rem;
+    }
+
+    @media screen and (max-width: 768px) {
+        font-size: 1.4rem;
+    }
+
+    @media screen and (max-width: 480px) {
+        font-size: 1.3rem;
+    }
+
+    @media screen and (max-width: 375px) {
+        font-size: 1.2rem;
+    }
+
+    @media screen and (max-width: 320px) {
+        font-size: 1.1rem;
     }
 `;
 
-// Menu icon container for mobile, it appears only with max-width: 768px
 export const MobileIcon = styled.div`
     display: none;
 
@@ -61,7 +107,6 @@ export const MobileIcon = styled.div`
     }
 `;
 
-// NavMenu for browser: it disappears when max-width: 768px
 export const NavMenu = styled.ul`
     color: ${({scrollNav}) => (scrollNav ? '#00000' : '#fff')};
     display: flex;
@@ -70,6 +115,14 @@ export const NavMenu = styled.ul`
     text-align: center;
     margin-right: -22px;
     gap: 50px;
+
+    @media screen and (max-width: 1280px) {
+        gap: 40px;
+    }
+
+    @media screen and (max-width: 1024px) {
+        gap: 30px;
+    }
 
     @media screen and (max-width: 768px) {
         display: none;
@@ -90,9 +143,6 @@ export const NavLinks = styled(LinkS)`
     cursor: pointer;
     font-weight: bold;
 
-    /*  &: is used to insert styling for pseudo class selectors like
-        :active, :hover, :focus in one big css block */
-
     &.active {
         border-bottom: 3px solid rgb(87,65,217);
         padding-bottom: 0.2em;
@@ -104,7 +154,6 @@ export const NavLinks = styled(LinkS)`
     }
 `;
 
-// NavBtn for browser: it disappears when max-width: 768px
 export const NavBtn = styled.nav`
     display: flex;
     align-items: center;
@@ -113,10 +162,10 @@ export const NavBtn = styled.nav`
         display: none;
     }
 `;
-export const NavBtnLink = styled(LinkR)`
 
+export const NavBtnLink = styled(LinkR)`
     border-radius: 50px;
-    background:  ${({scrollNav}) => (scrollNav ? 'black' : 'rgb(87,65,217)')};
+    background: ${({scrollNav}) => (scrollNav ? 'black' : 'rgb(87,65,217)')};
     white-space: nowrap;
     padding: 10px 22px;
     color: #fff;
@@ -132,5 +181,9 @@ export const NavBtnLink = styled(LinkR)`
         transition: all 0.2s ease-in-out;
         background: #fff;
         color: #010606;
+    }
+
+    @media screen and (max-width: 768px) {
+        display: none;
     }
 `;

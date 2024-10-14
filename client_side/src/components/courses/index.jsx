@@ -35,7 +35,7 @@ const CardDescription = styled.p`
   transform: translateY(100%);
   opacity: 0;
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  z-index: 3; /* Ensure description is above everything else */
+  z-index: 3;
 `;
 
 const Card = styled.div`
@@ -49,20 +49,16 @@ const Card = styled.div`
   overflow: hidden;
   height: auto;
   cursor: pointer;
-  z-index: 2; /* Ensure card is above the overlay */
+  z-index: 2;
 
   &:hover {
     transform: scale(1.05);
-    background: rgba(0, 0, 0, 1); /* Dark background on hover */
+    background: rgba(0, 0, 0, 1);
     color: #fff;
   }
 
   &:hover ${CardDescription} {
     transform: translateY(0);
-    opacity: 1;
-  }
-
-  &:hover::before {
     opacity: 1;
   }
 
@@ -73,7 +69,7 @@ const Card = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0); /* Transparent initially */
+    background: rgba(0, 0, 0, 0);
     transition: background 0.3s;
     z-index: 1;
   }
@@ -85,7 +81,7 @@ const Container = styled.div`
   min-height: 100vh;
   position: relative;
   overflow: hidden;
-    padding: 3% 0;
+  padding: 3% 0;
 
   &:before {
     content: "";
@@ -94,7 +90,7 @@ const Container = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1;
     pointer-events: none;
   }
@@ -103,10 +99,38 @@ const Container = styled.div`
 const CardContainer = styled.div`
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 50px;
   padding: 1% 30px;
   z-index: 2;
+
+  @media (max-width: 1280px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  @media (max-width: 375px) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 320px) {
+    grid-template-columns:1fr;
+    gap: 10px;
+  }
 `;
 
 const CardImage = styled.img`
@@ -114,15 +138,31 @@ const CardImage = styled.img`
   height: 230px;
   border-radius: 10px;
   position: relative;
-  z-index: 2; /* Ensure image is above the dark overlay */
+  z-index: 2;
+  }
 `;
 
 const CardTitle = styled.h2`
   font-size: 1.5em;
   margin-bottom: 5px;
-  position: relative;
   margin-top: 1%;
-  z-index: 2; /* Ensure title is above the dark overlay */
+  z-index: 2;
+
+  @media (max-width: 768px) {
+    font-size: 1.2em;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1em;
+  }
+
+  @media (max-width: 375px) {
+    font-size: 0.9em;
+  }
+
+  @media (max-width: 320px) {
+    font-size: 0.8em;
+  }
 `;
 
 const CardHeader = styled.h1`
@@ -130,9 +170,25 @@ const CardHeader = styled.h1`
   margin-bottom: 15px;
   text-align: center;
   color: white;
-  position: relative;
   font-weight: 700;
-  z-index: 2; /* Ensure title is above the dark overlay */
+  z-index: 2;
+  border:2px solid red;
+
+  @media (max-width: 768px) {
+    font-size: 2em;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.8em;
+  }
+
+  @media (max-width: 375px) {
+    font-size: 1.5em;
+  }
+
+  @media (max-width: 320px) {
+    font-size: 1.5em;
+  }
 `;
 
 const Courses = () => {
