@@ -4,6 +4,7 @@ import bgImage from '../../images/infobg.jpg';
 export const InfoContainer = styled.div`
     color: #fff;
     display: grid;
+    height:auto;
     align-items: center !important;
     position: relative; /* Required for positioning the pseudo-element */
     background: ${({ lightBg }) =>
@@ -11,6 +12,7 @@ export const InfoContainer = styled.div`
             ? '#f9f9f9'
             : `url(${bgImage}) no-repeat center center fixed`};
     background-size: ${({ lightBg }) => (lightBg ? 'auto' : 'cover')};
+    
 
     @media screen and (max-width: 768px) {
         padding: 10% 0;
@@ -34,6 +36,7 @@ export const InfoWrapper = styled.div`
     display: grid;
     z-index: 2; /* Ensure content is above the dark overlay */
     min-height: 100vh;
+    height:auto;
     margin-right: auto;
     margin-left: auto;
     justify-content: center;
@@ -60,6 +63,7 @@ export const InfoRow = styled.div`
     @media screen and (max-width: 768px) {
         grid-template-areas: ${({ imgStart }) => (imgStart ? `'col1' 'col2'` : `'col1 col1' 'col2 col2'`)};
         text-align: center; /* Center text on smaller screens */
+        height: auto;
     }
 `;
 
