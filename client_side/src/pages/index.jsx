@@ -8,6 +8,8 @@ import Footer from '../components/Footer';
 import Testimonials from '../components/Testimonials';
 import Courses from '../components/courses';
 
+
+
 const Home = () => {
     const [isOpen, setIsOpen] = useState(false);
 
