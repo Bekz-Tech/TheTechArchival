@@ -90,7 +90,7 @@ const Container = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.5); /* Background overlay */
     z-index: 1;
     pointer-events: none;
   }
@@ -139,7 +139,6 @@ const CardImage = styled.img`
   border-radius: 10px;
   position: relative;
   z-index: 2;
-  }
 `;
 
 const CardTitle = styled.h2`
@@ -171,8 +170,8 @@ const CardHeader = styled.h1`
   text-align: center;
   color: white;
   font-weight: 700;
-  z-index: 2;
-  border:2px solid red;
+  z-index: 3; 
+  position: relative; /* Keep it out of the overlay's influence */
 
   @media (max-width: 768px) {
     font-size: 2em;

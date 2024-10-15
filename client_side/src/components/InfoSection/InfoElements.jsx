@@ -33,16 +33,15 @@ export const InfoContainer = styled.div`
 `;
 
 export const InfoWrapper = styled.div`
-    display: grid;
-    z-index: 2; /* Ensure content is above the dark overlay */
+     display: grid;
+    z-index: 2;
     min-height: 100vh;
-    height:auto;
-    margin-right: auto;
-    margin-left: auto;
+    height: auto;
+    margin: 0; /* Remove auto margins */
     justify-content: center;
     overflow-y: visible;
     align-items: center;
-    text-align: center; /* Center align text */
+    text-align: center;
 
     @media screen and (max-width: 768px) {
         text-align: center; /* Align text to the center on small screens */
@@ -85,6 +84,7 @@ export const TextWrapper = styled.div`
     max-width: 600px;
     margin-right: ${({ imgStart }) => (imgStart ? '5%' : '0')};
     text-align: left;
+    
 
     @media screen and (max-width: 768px) {
         text-align: center; /* Center text on smaller screens */
@@ -102,8 +102,17 @@ export const TopLine = styled.p`
     margin-bottom: 16px !important;
     margin-top: 10%;
 
+    @media screen and (max-width: 320px) {
+        margin-top: 5%;
+    }
+    @media screen and (max-width: 375px) {
+        margin-top: 5%;
+    }
     @media screen and (max-width: 480px) {
-        margin-top: 0;
+        margin-top: 5%;
+    }
+    @media screen and (max-width: 768px) {
+        margin-top: 5%;
     }
 `;
 
@@ -144,6 +153,7 @@ export const ImgWrap = styled.div`
     height: 100%;
     display: grid;
     align-items: center;
+    
 `;
 
 export const Img = styled.img`
