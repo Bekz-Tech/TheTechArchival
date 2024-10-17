@@ -17,6 +17,8 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth, googleProvider } from '../../firebase/config'; // Ensure auth and db are correctly imported
 import LoadingButton from '../loadingButton'; // Adjust the path as needed
 
+import CodeGenerator from '../../userAuth/pinGeneration';
+
 const SignIn = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -137,6 +139,7 @@ const SignIn = () => {
                         >
                             Continue
                         </LoadingButton>
+                        <CodeGenerator />
                         <Text>Forgot password?</Text>
                     </Form>
                 </FormContent>
