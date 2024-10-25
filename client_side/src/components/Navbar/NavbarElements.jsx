@@ -114,23 +114,27 @@ export const NavBtn = styled.nav`
     }
 `;
 export const NavBtnLink = styled(LinkR)`
+  border-radius: 50px;
+  background: ${({ scrollNav }) => (scrollNav ? "black" : "rgb(87,65,217)")};
+  white-space: nowrap;
+  // padding: 10px 22px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  width: 120px;
+  height: 50px;
+  text-align: center;
+  display: grid;
+  place-content: center;
 
-    border-radius: 50px;
-    background:  ${({scrollNav}) => (scrollNav ? 'black' : 'rgb(87,65,217)')};
-    white-space: nowrap;
-    padding: 10px 22px;
-    color: #fff;
-    font-size: 16px;
-    font-weight: bold;
-    outline: none;
-    border: none;
-    cursor: pointer;
+  &:hover {
     transition: all 0.2s ease-in-out;
-    text-decoration: none;
-
-    &:hover {
-        transition: all 0.2s ease-in-out;
-        background: #fff;
-        color: #010606;
-    }
+    background: #fff;
+    color: #010606;
+  }
 `;

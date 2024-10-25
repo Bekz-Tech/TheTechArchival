@@ -29,6 +29,7 @@ import StudentPayment from "./scenes/studentPayment";
 import InstructorReviews from "./scenes/instructorReviews";
 import StudentManagement from "./scenes/studentManagement/studentManagement";
 import { tokens } from "./theme";
+import OfflineStudentTable from "./scenes/offlineStudent/offlineStudent";
 
 function DashboardHome() {
   const [theme, colorMode] = useMode();
@@ -70,7 +71,10 @@ function DashboardHome() {
           <>
             <Route path="/team" element={<Team />} />
             <Route path="/contacts" element={<Contacts />} />
-            <Route path="/financialManagement" element={<FinancialManagement />} />
+            <Route
+              path="/financialManagement"
+              element={<FinancialManagement />}
+            />
             <Route path="/form" element={<Form />} />
             <Route path="/bar" element={<Bar />} />
             <Route path="/pie" element={<Pie />} />
@@ -81,6 +85,7 @@ function DashboardHome() {
             <Route path="/courseManagement" element={<CourseManagement />} />
             <Route path="/feedbacks" element={<Feedbacks />} />
             <Route path="/support" element={<Support />} />
+            <Route path="/offlineStudents" element={<OfflineStudentTable />} />
           </>
         );
 

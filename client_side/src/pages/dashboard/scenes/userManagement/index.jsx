@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Box, useTheme, IconButton, Typography, TextField, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import {
+  Box,
+  useTheme,
+  IconButton,
+  Typography,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Tabs,
+  Tab,
+} from "@mui/material";import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Dropdown from '../../../../components/dropdown';
 import { SignUpStudent, SignUpInstructor, SignUpAdmin } from '../../../signUp';
@@ -15,10 +26,10 @@ const UserManagement = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState("");
   const [userData, setUserData] = useState([]);
-  const [sortBy, setSortBy] = useState('id');
-  const [sortDirection, setSortDirection] = useState('asc');
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDirection, setSortDirection] = useState("asc");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -27,10 +38,45 @@ const UserManagement = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [signUpDialogOpen, setSignUpDialogOpen] = useState(false);
   const [instructors, setInstructors] = useState([]);
-  const [selectedInstructor, setSelectedInstructor] = useState('');
+  const [selectedInstructor, setSelectedInstructor] = useState("");
   const [profileImage, setProfileImage] = useState(null);
-  const [profileImageUrl, setProfileImageUrl] = useState('');
-  const [selectedProgram, setSelectedProgram] = useState('');
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState("");
+  const [tabIndex, setTabIndex] = useState(0);
+
+  // Mock data for offline students
+  const offlineStudentsMockData = [
+    {
+      id: "1",
+      sn: 1,
+      role: "student",
+      userId: "S12345",
+      name: "John Doe",
+      phoneNumber: "123-456-7890",
+      program: "Computer Science",
+      registeredDate: "2024-01-15",
+    },
+    {
+      id: "2",
+      sn: 2,
+      role: "student",
+      userId: "S12346",
+      name: "Jane Smith",
+      phoneNumber: "123-456-7891",
+      program: "Biology",
+      registeredDate: "2024-01-16",
+    },
+    {
+      id: "3",
+      sn: 3,
+      role: "student",
+      userId: "S12347",
+      name: "Emily Johnson",
+      phoneNumber: "123-456-7892",
+      program: "Mathematics",
+      registeredDate: "2024-01-17",
+    },
+  ];
 
   const handleImageUpload = async (file) => {
     if (!file) return;
@@ -48,7 +94,7 @@ const UserManagement = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const storedUsers = sessionStorage.getItem('btech_users');
+      const storedUsers = sessionStorage.getItem("btech_users");
       if (storedUsers) {
         setUserData(JSON.parse(storedUsers));
       } else {
@@ -66,8 +112,8 @@ const UserManagement = () => {
   };
 
   const handleSortChange = (columnId) => {
-    const isAsc = sortBy === columnId && sortDirection === 'asc';
-    setSortDirection(isAsc ? 'desc' : 'asc');
+    const isAsc = sortBy === columnId && sortDirection === "asc";
+    setSortDirection(isAsc ? "desc" : "asc");
     setSortBy(columnId);
   };
 
@@ -86,15 +132,15 @@ const UserManagement = () => {
 
   const handleEdit = (user) => {
     setEditUserDetailsState(user);
-    setProfileImageUrl(user.profilePicture || '');
+    setProfileImageUrl(user.profilePicture || "");
     setEditDialogOpen(true);
-    
+
     setSelectedProgram(user.program);
-    
+
     const filteredInstructors = userData.filter(
-      instructor => 
-        instructor.role === 'instructor' && 
-        Array.isArray(instructor.programsAssigned) && 
+      (instructor) =>
+        instructor.role === "instructor" &&
+        Array.isArray(instructor.programsAssigned) &&
         instructor.programsAssigned.includes(user.program)
     );
 
@@ -103,14 +149,14 @@ const UserManagement = () => {
 
   const handleProgramChange = (program) => {
     setSelectedProgram(program);
-    
+
     const filteredInstructors = userData.filter(
-      instructor => 
-        instructor.role === 'instructor' && 
-        Array.isArray(instructor.programsAssigned) && 
+      (instructor) =>
+        instructor.role === "instructor" &&
+        Array.isArray(instructor.programsAssigned) &&
         instructor.programsAssigned.includes(program)
     );
-    
+
     setInstructors(filteredInstructors);
   };
 
@@ -125,7 +171,7 @@ const UserManagement = () => {
 
       const updatedUserDetails = {
         ...editUserDetailsState,
-        profilePicture: imageUrl
+        profilePicture: imageUrl,
       };
 
       if (selectedInstructor) {
@@ -134,13 +180,13 @@ const UserManagement = () => {
 
       await updateUserDetails(editUserDetailsState.id, updatedUserDetails);
 
-      const updatedUserData = userData.map(user =>
+      const updatedUserData = userData.map((user) =>
         user.id === editUserDetailsState.id ? updatedUserDetails : user
       );
       setUserData(updatedUserData);
       setEditDialogOpen(false);
     } catch (error) {
-      console.error('Error updating user details:', error);
+      console.error("Error updating user details:", error);
     }
   };
 
@@ -148,44 +194,55 @@ const UserManagement = () => {
     if (!selectedUser) return;
     try {
       await deleteUser(selectedUser.id);
-      const updatedUserData = userData.filter(user => user.id !== selectedUser.id);
+      const updatedUserData = userData.filter(
+        (user) => user.id !== selectedUser.id
+      );
       setUserData(updatedUserData);
       setConfirmDialogOpen(false);
       setSelectedUser(null);
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error("Error deleting user:", error);
     }
   };
 
   const columns = [
-    { id: 'sn', label: 'S/N', width: 90 },
-    { 
-      id: 'userId', 
-      label: 'User ID', 
+    { id: "sn", label: "S/N", width: 90 },
+    {
+      id: "userId",
+      label: "User ID",
       width: 100,
       renderCell: (row) => (
-        <Typography sx={{
-          width: '100px', // Adjust the width according to your requirement
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          display: 'block',
-        }}
+        <Typography
+          sx={{
+            width: "100px", // Adjust the width according to your requirement
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            display: "block",
+          }}
         >{`${row.userId}`}</Typography>
       ),
     },
-    { id: 'name', label: 'Name', flex: 1 },
-    { id: 'phoneNumber', label: 'Phone Number', flex: 1 },
-    { id: 'role', label: 'Role', width: 150 },
-    { id: 'program', label: 'Program', width: 150 },
-    { id: 'registeredDate', label: 'Registered Date', flex: 1 },
+    { id: "name", label: "Name", flex: 1 },
+    { id: "phoneNumber", label: "Phone Number", flex: 1 },
+    { id: "role", label: "Role", width: 150 },
+    { id: "program", label: "Program", width: 150 },
+    { id: "registeredDate", label: "Registered Date", flex: 1 },
     {
-      id: 'actions', label: 'Actions', width: 150, renderCell: (row) => (
+      id: "actions",
+      label: "Actions",
+      width: 150,
+      renderCell: (row) => (
         <div className="action-buttons">
           <IconButton onClick={() => handleEdit(row)}>
             <EditIcon />
           </IconButton>
-          <IconButton onClick={() => { setConfirmDialogOpen(true); setSelectedUser(row); }}>
+          <IconButton
+            onClick={() => {
+              setConfirmDialogOpen(true);
+              setSelectedUser(row);
+            }}
+          >
             <DeleteIcon />
           </IconButton>
         </div>
@@ -193,34 +250,30 @@ const UserManagement = () => {
     },
   ];
 
-
-
   console.log(userData);
 
   const formattedUserData = userData
-  .map((user, index) => ({
-    id: user.userId,
-    sn: index + 1,
-    role: user.role,
-    userId: user.role === "student"
-      ? (`${user.studentId}` || "N/A")
-      : user.role === "instructor"
-      ? (user.instructorId || "N/A")
-      : (user.userId || "N/A"),
-    name: `${user.firstName || 'N/A'} ${user.lastName || 'N/A'}`,
-    phoneNumber: user.phoneNumber || 'N/A',
-    program: user.program || 'N/A',
-    registeredDate: user.createdAt || 'N/A',
-  }))
-  .sort((a, b) => a.sn - b.sn); // Sorting by S/N in ascending order
-
-
-
+    .map((user, index) => ({
+      id: user.userId,
+      sn: index + 1,
+      role: user.role,
+      userId:
+        user.role === "student"
+          ? `${user.studentId}` || "N/A"
+          : user.role === "instructor"
+          ? user.instructorId || "N/A"
+          : user.userId || "N/A",
+      name: `${user.firstName || "N/A"} ${user.lastName || "N/A"}`,
+      phoneNumber: user.phoneNumber || "N/A",
+      program: user.program || "N/A",
+      registeredDate: user.createdAt || "N/A",
+    }))
+    .sort((a, b) => a.sn - b.sn); // Sorting by S/N in ascending order
 
   const getUniqueProgramsAssigned = () => {
     const assignedPrograms = [];
     userData.forEach((user) => {
-      if (user.role === 'instructor' && Array.isArray(user.programsAssigned)) {
+      if (user.role === "instructor" && Array.isArray(user.programsAssigned)) {
         assignedPrograms.push(...user.programsAssigned);
       }
     });
@@ -228,7 +281,11 @@ const UserManagement = () => {
   };
 
   const programsAssignedOptions = getUniqueProgramsAssigned();
-  console.log(userData)
+  
+
+   const handleTabChange = (event, newTabIndex) => {
+     setTabIndex(newTabIndex);
+   };
 
   return (
     <Box m="20px">
@@ -237,43 +294,66 @@ const UserManagement = () => {
       <Dropdown
         label="Add Users"
         options={[
-          { value: 'student', label: 'Student' },
-          { value: 'instructor', label: 'Instructor' },
-          { value: 'admin', label: 'Admin' }
+          { value: "student", label: "Student" },
+          { value: "instructor", label: "Instructor" },
+          { value: "admin", label: "Admin" },
         ]}
         onSelect={handleRoleSelect}
       />
 
-      <Box
-        m="20px 0 0 0"
-        height="75vh"
-      >
+      <Box>
+        <Tabs value={tabIndex} onChange={handleTabChange}>
+          <Tab label="Online Students" />
+          <Tab label="Offline Students" />
+        </Tabs>
+      </Box>
+
+      {tabIndex === 0 && (
+        <Box m="20px 0 0 0" height="75vh">
+          <TableComponent
+            columns={columns}
+            tableHeader="User Management"
+            data={formattedUserData}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSortChange={handleSortChange}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            onRowClick={handleRowClick}
+          />
+        </Box>
+      )}
+
+      {tabIndex === 1 && (
         <TableComponent
+          rows={offlineStudentsMockData}
           columns={columns}
-          tableHeader="User Management"
-          data={formattedUserData}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-          onSortChange={handleSortChange}
+          handleSortChange={handleSortChange}
+          handlePageChange={handlePageChange}
+          handleRowsPerPageChange={handleRowsPerPageChange}
           page={page}
           rowsPerPage={rowsPerPage}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-          onRowClick={handleRowClick}
         />
-      </Box>
+      )}
 
       {selectedUser && (
         <Modal noConfirm open={true} onClose={() => setSelectedUser(null)}>
           <Box p={2}>
             <Typography variant="h6">User Details</Typography>
             <Typography>User ID: {selectedUser.userId}</Typography>
-            <Typography>Name: {`${selectedUser.firstName} ${selectedUser.lastName}`}</Typography>
+            <Typography>
+              Name: {`${selectedUser.firstName} ${selectedUser.lastName}`}
+            </Typography>
             <Typography>Email: {selectedUser.email}</Typography>
             <Typography>Phone Number: {selectedUser.phoneNumber}</Typography>
             <Typography>Role: {selectedUser.role}</Typography>
             <Typography>Program: {selectedUser.program}</Typography>
-            <Typography>Registered Date: {selectedUser.createdAt ? selectedUser.createdAt : 'N/A'}</Typography>
+            <Typography>
+              Registered Date:{" "}
+              {selectedUser.createdAt ? selectedUser.createdAt : "N/A"}
+            </Typography>
           </Box>
         </Modal>
       )}
@@ -296,29 +376,49 @@ const UserManagement = () => {
         <Box>
           <TextField
             label="First Name"
-            value={editUserDetailsState.firstName || ''}
-            onChange={(e) => setEditUserDetailsState({ ...editUserDetailsState, firstName: e.target.value })}
+            value={editUserDetailsState.firstName || ""}
+            onChange={(e) =>
+              setEditUserDetailsState({
+                ...editUserDetailsState,
+                firstName: e.target.value,
+              })
+            }
             fullWidth
             margin="normal"
           />
           <TextField
             label="Last Name"
-            value={editUserDetailsState.lastName || ''}
-            onChange={(e) => setEditUserDetailsState({ ...editUserDetailsState, lastName: e.target.value })}
+            value={editUserDetailsState.lastName || ""}
+            onChange={(e) =>
+              setEditUserDetailsState({
+                ...editUserDetailsState,
+                lastName: e.target.value,
+              })
+            }
             fullWidth
             margin="normal"
           />
           <TextField
             label="Email"
-            value={editUserDetailsState.email || ''}
-            onChange={(e) => setEditUserDetailsState({ ...editUserDetailsState, email: e.target.value })}
+            value={editUserDetailsState.email || ""}
+            onChange={(e) =>
+              setEditUserDetailsState({
+                ...editUserDetailsState,
+                email: e.target.value,
+              })
+            }
             fullWidth
             margin="normal"
           />
           <TextField
             label="Phone Number"
-            value={editUserDetailsState.phoneNumber || ''}
-            onChange={(e) => setEditUserDetailsState({ ...editUserDetailsState, phoneNumber: e.target.value })}
+            value={editUserDetailsState.phoneNumber || ""}
+            onChange={(e) =>
+              setEditUserDetailsState({
+                ...editUserDetailsState,
+                phoneNumber: e.target.value,
+              })
+            }
             fullWidth
             margin="normal"
           />
@@ -326,10 +426,13 @@ const UserManagement = () => {
             <InputLabel id="program-select-label">Program</InputLabel>
             <Select
               labelId="program-select-label"
-              value={selectedProgram || ''}
+              value={selectedProgram || ""}
               onChange={(e) => {
                 handleProgramChange(e.target.value);
-                setEditUserDetailsState({ ...editUserDetailsState, program: e.target.value });
+                setEditUserDetailsState({
+                  ...editUserDetailsState,
+                  program: e.target.value,
+                });
               }}
             >
               {programsAssignedOptions.map((program) => (
@@ -343,7 +446,7 @@ const UserManagement = () => {
             <InputLabel id="instructor-select-label">Instructor</InputLabel>
             <Select
               labelId="instructor-select-label"
-              value={selectedInstructor || ''}
+              value={selectedInstructor || ""}
               onChange={(e) => setSelectedInstructor(e.target.value)}
             >
               {instructors.map((instructor) => (
@@ -360,15 +463,11 @@ const UserManagement = () => {
         </Box>
       </Modal>
 
-
-{/* user signUp modal */}
-      <Modal
-        open={signUpDialogOpen}
-        onClose={() => setSignUpDialogOpen(false)}
-      >
-        {selectedRole === 'student' && <SignUpStudent />}
-        {selectedRole === 'instructor' && <SignUpInstructor />}
-        {selectedRole === 'admin' && <SignUpAdmin />}
+      {/* user signUp modal */}
+      <Modal open={signUpDialogOpen} onClose={() => setSignUpDialogOpen(false)}>
+        {selectedRole === "student" && <SignUpStudent />}
+        {selectedRole === "instructor" && <SignUpInstructor />}
+        {selectedRole === "admin" && <SignUpAdmin />}
       </Modal>
     </Box>
   );
