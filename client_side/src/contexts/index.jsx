@@ -1,13 +1,13 @@
-import React from 'react';
-import  NotificationProvider  from './notifications';
-// Import other providers as needed
+// contexts.js or your context file
+import NotificationProvider from "./notifications"; // Your existing provider
+
 
 export const GlobalContext = ({ children }) => {
+
   return (
-       <NotificationProvider>
-      {/* Add other providers here as needed */}
-      {children}
+    <NotificationProvider>
+        {children}
     </NotificationProvider>
-   
   );
 };
+
