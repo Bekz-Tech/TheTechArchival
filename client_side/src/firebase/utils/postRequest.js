@@ -28,7 +28,8 @@ const addCourse = async (courseData) => {
       ...courseData,
       createdAt: formatDate(new Date()),
       cost: `₦ ${courseData.cost}` || 0, // Add cost field with default value if not provided
-      assignments: [] // Add default empty curriculum
+      assignments: [],// Add default empty curriculum
+      cohorts : []
 
     };
 

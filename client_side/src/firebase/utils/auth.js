@@ -9,10 +9,10 @@ const formatDate = (date) => {
 };
 
 // Function to generate a student ID
-const generateStudentId = async (program) => {
-  console.log(program)
+const generateStudentId = async (program, offline) => {
+  const studentCollection = offline ? 'offlineStuents' : 'users'
   try {
-    const studentsCollectionRef = collection(db, 'users');
+    const studentsCollectionRef = collection(db, studentCollection);
     const studentsQuery = query(studentsCollectionRef, where('role', '==', 'student'));
     const querySnapshot = await getDocs(studentsQuery);
 
@@ -92,8 +92,7 @@ const getInstructorsForProgram = async (program) => {
 };
 
 // Handle sign up
-const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl) => {
-  console.log(idCardUrl);
+const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl, offline) => {
   try {
     if (!formData.email || !formData.password) {
       throw new Error('Email and password are required');
@@ -115,35 +114,51 @@ const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl) 
     let userDoc = { ...baseUserDoc };
 
     if (role === 'student') {
-      const studentId = await generateStudentId(formData.program);
-      const existingAmount = 0;
-      const amountPaid = parseInt(formData.amountPaid) + existingAmount;
 
-      const program = formData.programsAssigned;
-      const instructors = program ? await getInstructorsForProgram(program) : [];
+      if (offline) {
+        const studentId = await generateStudentId(formData.program);
+        
+          userDoc = {
+            ...baseUserDoc,
+            studentId,
+            courses,
+          };
 
-      userDoc = {
-        ...baseUserDoc,
-        studentId,
-        learningSchedules: [],
-        instructors,
-        studentProgress: 0,
-        learningPlanClassesAndLessons: [],
-        chatsWithInstructor: [],
-        amountPaid,
-        courses,
-      };
+      } else {
+        const studentId = await generateStudentId(formData.program);
+        const existingAmount = 0;
+        const amountPaid = parseInt(formData.amountPaid) + existingAmount;
 
-      // Send payment details to payment collection
-      const paymentCollectionRef = collection(db, 'payments');
-      await setDoc(doc(paymentCollectionRef, user.uid), {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        createdAt: formatDate(new Date()),
-        amountPaid,
-        userId: user.uid,
-        // courseName: program
-      });
+        const program = formData.programsAssigned;
+        const instructors = program
+          ? await getInstructorsForProgram(program)
+          : [];
+
+        userDoc = {
+          ...baseUserDoc,
+          studentId,
+          learningSchedules: [],
+          instructors,
+          studentProgress: 0,
+          learningPlanClassesAndLessons: [],
+          chatsWithInstructor: [],
+          amountPaid,
+          courses,
+        };
+
+        // Send payment details to payment collection
+        const paymentCollectionRef = collection(db, "payments");
+        await setDoc(doc(paymentCollectionRef, user.uid), {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          createdAt: formatDate(new Date()),
+          amountPaid,
+          userId: user.uid,
+          // courseName: program
+        });
+      }
+
+  
     } else if (role === 'instructor') {
       const instructorId = await generateInstructorId();
       userDoc = {
@@ -184,7 +199,9 @@ const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl) 
     // Filter out undefined fields
     userDoc = Object.fromEntries(Object.entries(userDoc).filter(([_, v]) => v !== undefined));
 
-    const usersCollectionRef = collection(db, 'users');
+    const studentCollection = offline && role === 'student' ? 'offlineStuents' : 'users';
+
+    const usersCollectionRef = collection(db, studentCollection);
     await setDoc(doc(usersCollectionRef, user.uid), userDoc);
 
     console.log('User registered successfully');
