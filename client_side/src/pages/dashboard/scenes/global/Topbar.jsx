@@ -23,7 +23,6 @@ const Topbar = () => {
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
   const [editDetails, setEditDetails] = useState({});
 
-  console.log(useSessionStoarge().memoizedUserDetails)
 
     const userDetails = useSessionStoarge().memoizedUserDetails;
 

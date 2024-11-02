@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, getDocs, onSnapshot, collection, query, where, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import useSessionStorage from './useSessionStorage';
+import useSessionStoarge from './useSessionStorage';
 
 // Function to generate a unique ID
 const generateUniqueId = () => {
@@ -12,8 +12,9 @@ const generateUniqueId = () => {
 
 const useUserRegistration = () => {
   const [userNotifications, setUserNotifications] = useState([]);
-  const { memoizedUserDetails } = useSessionStorage();
-  const userId = memoizedUserDetails?.userId || null;
+ 
+  const userId = useSessionStoarge().memoizedUserDetails;
+  console.log(userId);
 
   // Function to fetch notifications for the logged-in user
   const fetchNotifications = useCallback(async () => {
@@ -30,13 +31,14 @@ const useUserRegistration = () => {
         const userData = userDoc.data();
         const notifications = userData.notifications || [];
         setUserNotifications(notifications);
+        console.log(notifications)
       } else {
         console.log('User document does not exist.');
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-  }, [userId]);
+  }, []);
 
   // Listen for new user registrations and notify admin/superadmin
   useEffect(() => {
@@ -98,7 +100,10 @@ const useUserRegistration = () => {
     return () => unsubscribeFromCollection();
   }, [fetchNotifications]);
 
+  console.log(userNotifications);
+
   return { userNotifications }; // Return the notifications
+
 };
 
 export default useUserRegistration;
