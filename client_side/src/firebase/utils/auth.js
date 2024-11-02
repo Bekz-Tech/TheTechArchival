@@ -1,5 +1,5 @@
 import { db, signOut, auth, createUserWithEmailAndPassword } from '../config';
-import { doc, setDoc, collection, query, where, getDocs, onSnapshot  } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getDocs, onSnapshot,orderBy, limit  } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 // Helper function to format date to a more readable format
@@ -8,30 +8,152 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('en-US', options);
 };
 
-// Function to generate a student ID
-const generateStudentId = async (program, offline) => {
-  const studentCollection = offline ? 'offlineStuents' : 'users'
-  try {
-    const studentsCollectionRef = collection(db, studentCollection);
-    const studentsQuery = query(studentsCollectionRef, where('role', '==', 'student'));
-    const querySnapshot = await getDocs(studentsQuery);
+function getCurrentTime() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  return `${hours}:${minutes}:${seconds}`;
+}
 
-    let maxSerial = 0;
+// Function to get instructors for a program
+const getInstructorsForProgram = async (program) => {
+  try {
+    const storedUsers = sessionStorage.getItem("btech_users");
+    if (storedUsers) {
+      const instructors = JSON.parse(storedUsers);
+      // Check if programsAssigned exists before calling includes
+      return instructors.filter(
+        (instructor) =>
+          instructor.programsAssigned &&
+          instructor.programsAssigned.includes(program)
+      );
+    }
+
+    const instructorsCollectionRef = collection(db, "users");
+    const instructorsQuery = query(
+      instructorsCollectionRef,
+      where("role", "==", "instructor"),
+      where("programsAssigned", "array-contains", program)
+    );
+    const querySnapshot = await getDocs(instructorsQuery);
+
+    const instructors = [];
     querySnapshot.forEach((doc) => {
-      const studentId = doc.data().userId;
-      const serial = parseInt(studentId.split('/').pop());
-      if (serial > maxSerial) {
-        maxSerial = serial;
-      }
+      const data = doc.data();
+      instructors.push({
+        instructorId: data.instructorId,
+        fullName: `${data.firstName} ${data.lastName}`,
+        program: program,
+        courses: data.courses,
+      });
     });
 
-    const newSerial = (maxSerial + 1).toString().padStart(2, '0');
-    return `btech/std/${program}/${newSerial}`;
+    sessionStorage.setItem("btech_users", JSON.stringify(instructors));
+    return instructors;
   } catch (error) {
-    console.error('Error generating student ID:', error);
+    console.error("Error fetching instructors:", error);
     throw error;
   }
 };
+
+
+//save student in mongodb
+const createStudent = async (
+  userId,
+  email,
+  passwordHash,
+  role,
+  firstName,
+  lastName,
+  idCardUrl,
+  studentId,
+  amountPaid,
+  program,
+  instructors,
+  profilePictureUrl
+) => {
+  const url = import.meta.env.VITE_FIREBASE_MONGO_STUDENTS; // Make sure this URL is correct
+
+  // Fetch instructors for the given program
+  const newInstructors = await getInstructorsForProgram(program);
+  const newStudent = {
+    userId,
+    email,
+    passwordHash,
+    role,
+    firstName,
+    lastName,
+    idCardUrl,
+    studentId,
+    amountPaid,
+    program,
+    newInstructors,
+    profilePictureUrl,
+  };
+
+  console.log(newStudent); // Log the new student object for debugging
+
+  try {
+    const response = await fetch("http://localhost:8000/students", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newStudent), // Stringify the object
+    });
+
+    if (!response.ok) {
+      throw new Error("Something went wrong posting data");
+    }
+
+    const data = await response.json(); // Parse the response JSON if needed
+    console.log("Student created successfully:", data); // Log the response
+  } catch (error) {
+    console.error("Error creating student:", error);
+  }
+};
+
+// Function to generate a student ID
+const generateStudentId = async (program, offline) => {
+  const studentCollection = offline ? "offlineStudents" : "users";
+  const studentsCollectionRef = collection(db, studentCollection);
+
+  try {
+    // Query to get the most recent registered student by updatedAt and time
+    const lastStudentQuery = query(
+      studentsCollectionRef,
+      where('role', '==', 'student'),
+      orderBy("time", "desc"),
+      orderBy("updatedAt", "desc"), // Secondary sort by date
+      limit(1)
+    );
+
+    const lastStudentSnapshot = await getDocs(lastStudentQuery);
+
+    if (lastStudentSnapshot.empty) {
+      // Return the default ID if no existing student is found
+      console.log('Query returned empty, returning default ID');
+      return `btech/std/${program}/112`;
+    }
+
+    // Extract last student ID and increment the serial number
+    const lastStudentId = lastStudentSnapshot.docs[0].data().studentId;
+    const idParts = lastStudentId.split("/");
+    const lastSerial = parseInt(idParts[idParts.length - 1], 10);
+    const newSerial = lastSerial + 1;
+
+    // Generate new student ID with incremented serial only
+    const newStudentId = `btech/std/${program}/${newSerial.toString().padStart(2, "0")}`;
+    return newStudentId;
+
+  } catch (error) {
+    console.error("Error generating unique student ID:", error);
+    throw error;
+  }
+};
+
+
+
 
 // Function to generate an instructor ID
 const generateInstructorId = async () => {
@@ -59,37 +181,7 @@ const generateInstructorId = async () => {
   }
 };
 
-// Function to get instructors for a program
-const getInstructorsForProgram = async (program) => {
-  try {
-    const storedUsers = sessionStorage.getItem('btech_users');
-    if (storedUsers) {
-      const instructors = JSON.parse(storedUsers);
-      return instructors.filter(instructor => instructor.programsAssigned.includes(program));
-    }
 
-    const instructorsCollectionRef = collection(db, 'users');
-    const instructorsQuery = query(instructorsCollectionRef, where('role', '==', 'instructor'), where('programsAssigned', 'array-contains', program));
-    const querySnapshot = await getDocs(instructorsQuery);
-
-    const instructors = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      instructors.push({
-        instructorId: data.instructorId,
-        fullName: `${data.firstName} ${data.lastName}`,
-        program: program,
-        courses: data.courses
-      });
-    });
-
-    sessionStorage.setItem('btech_users', JSON.stringify(instructors));
-    return instructors;
-  } catch (error) {
-    console.error('Error fetching instructors:', error);
-    throw error;
-  }
-};
 
 // Handle sign up
 const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl, offline) => {
@@ -108,7 +200,8 @@ const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl, 
       idCardUrl,
       createdAt: formatDate(new Date()),
       updatedAt: formatDate(new Date()),
-      messages: []
+      messages: [],
+      time: getCurrentTime()
     };
 
     let userDoc = { ...baseUserDoc };
@@ -116,13 +209,34 @@ const handleSignUp = async (formData, role, profilePicture, courses, idCardUrl, 
     if (role === 'student') {
 
       if (offline) {
+
+         const program = formData.programsAssigned;
+         const instructors = program
+           ? await getInstructorsForProgram(program)
+          : [];
+        
         const studentId = await generateStudentId(formData.program);
         
           userDoc = {
             ...baseUserDoc,
             studentId,
             courses,
-          };
+        };
+        
+        createStudent(
+          user.uid,
+          formData.email,
+          formData.password,
+          role,
+          formData.firstName,
+          formData.lastName,
+          idCardUrl,
+          studentId,
+          formData.amountPaid,
+          formData.program,
+          instructors,
+          profilePicture
+        );
 
       } else {
         const studentId = await generateStudentId(formData.program);

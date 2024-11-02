@@ -6,6 +6,7 @@ import useMessaging from '../../../hooks/useMessaging';
 const ChatComponent = ({ loggedInUserId }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  console.log("testing");
 
   const {
     messages,
