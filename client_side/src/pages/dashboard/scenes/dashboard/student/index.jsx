@@ -15,7 +15,7 @@ import ProgressCircle from '../../../components/ProgressCircle';
 import ChatComponent from '../../../components/chatComponent';
 import useStudentData from './useStudentData';
 
-const StudentHomeDashboard = ({user}) => {
+const Student = ({user}) => {
   console.log(user)
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -23,7 +23,9 @@ const StudentHomeDashboard = ({user}) => {
   const [assignments, setAssignments] = useState([]);
   const [resources, setResources] = useState([]);
   const [selectedMessenger, setSelectedMessenger] = useState(null);
-  const {progressPercentage, attendanceRate, outstandings, nextClass, timeTable} = useStudentData();
+  const { progressPercentage, attendanceRate, outstandings, nextClass, timeTable } = useStudentData();
+  
+  
 
   useEffect(() => {
     let isMounted = true;
@@ -255,4 +257,4 @@ const StudentHomeDashboard = ({user}) => {
   );
 };
 
-export default StudentHomeDashboard;
+export default Student;

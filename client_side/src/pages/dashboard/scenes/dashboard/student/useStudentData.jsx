@@ -5,11 +5,19 @@ const useStudentData = () => {
   const [studentData, setStudentData] = useState({});
   const [timeTable, setTimeTable] = useState([]);
 
-  useEffect(() => {
-    const userDetails = useSessionStoarge().memoizedUserDetails;
-    setStudentData(userDetails);
 
-    if (userDetails.assignedInstructor) {
+  useEffect(() => {
+    const userKey = "btech_user";
+    const storedUserDetails = JSON.parse(sessionStorage.getItem(userKey));
+    console.log(storedUserDetails)
+    setStudentData(storedUserDetails)
+  }, []);
+
+
+
+  useEffect(() => {
+    
+    if (studentData.assignedInstructor) {
       // Get all the timetables from the assigned instructor
       const matchedTimetables = userDetails.assignedInstructor.courses
         .filter(course => course.courseName === userDetails.program) // Match the student's program with instructor's courseName
@@ -135,6 +143,7 @@ const useStudentData = () => {
     attendanceRate, // Return the attendance rate
     outstandings, // Return the outstandings object
     nextClass, // Return the next class
+    studentData
   };
 };
 

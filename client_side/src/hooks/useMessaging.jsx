@@ -10,6 +10,8 @@ const useMessaging = (userId) => {
   const auth = getAuth(); // Get the Firebase auth instance
   const isMountedRef = useRef(true);
 
+
+
   // Memoizing the document reference for the user's messages
   const messagingRef = useMemo(() => doc(db, 'users', userId), [userId]);
 

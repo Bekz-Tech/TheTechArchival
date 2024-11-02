@@ -101,7 +101,7 @@ const Sidebar = () => {
     { title: "Feedbacks", to: "/dashboard/feedbacks", icon: <FeedbackIcon /> },
     { title: "Enquiries", to: "/dashboard/enquiries", icon: <EmailIcon /> },
     
-    { title: "Offline Students", to: "/dashboard/offlineStudents", icon: <PersonOutlinedIcon /> },
+    { title: "Generated codes", to: "/dashboard/offlineStudents", icon: <PersonOutlinedIcon /> },
   ];
 
   const studentMenuItems = [

@@ -21,6 +21,7 @@ import { deleteUser, updateUserDetails, fetchAndStoreUsers } from '../../../../f
 import Modal from '../../components/modal';
 import TableComponent from "../../../../components/table";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getOfflineUsers } from '../../../../firebase/utils/getRequest';
 
 const UserManagement = () => {
   const theme = useTheme();
@@ -43,40 +44,9 @@ const UserManagement = () => {
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("");
   const [tabIndex, setTabIndex] = useState(0);
+  const [offlineStudents, setOfflineStudents] = useState([]);
 
   // Mock data for offline students
-  const offlineStudentsMockData = [
-    {
-      id: "1",
-      sn: 1,
-      role: "student",
-      userId: "S12345",
-      name: "John Doe",
-      phoneNumber: "123-456-7890",
-      program: "Computer Science",
-      registeredDate: "2024-01-15",
-    },
-    {
-      id: "2",
-      sn: 2,
-      role: "student",
-      userId: "S12346",
-      name: "Jane Smith",
-      phoneNumber: "123-456-7891",
-      program: "Biology",
-      registeredDate: "2024-01-16",
-    },
-    {
-      id: "3",
-      sn: 3,
-      role: "student",
-      userId: "S12347",
-      name: "Emily Johnson",
-      phoneNumber: "123-456-7892",
-      program: "Mathematics",
-      registeredDate: "2024-01-17",
-    },
-  ];
 
   const handleImageUpload = async (file) => {
     if (!file) return;
@@ -94,7 +64,12 @@ const UserManagement = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log('called')
       const storedUsers = sessionStorage.getItem("btech_users");
+      const offlineUsers = await getOfflineUsers();
+      setOfflineStudents(offlineUsers);
+      
+
       if (storedUsers) {
         setUserData(JSON.parse(storedUsers));
       } else {
@@ -269,6 +244,22 @@ const UserManagement = () => {
       registeredDate: user.createdAt || "N/A",
     }))
     .sort((a, b) => a.sn - b.sn); // Sorting by S/N in ascending order
+  
+  
+console.log(offlineStudents)
+  //formattted offline student data
+  const formattedOfflineStudents = offlineStudents
+    .map((user, index) => ({
+      id: user.userId,
+      sn: index + 1,
+      role: user.role,
+      userId: user.studentId,
+      name: `${user.firstName || "N/A"} ${user.lastName || "N/A"}`,
+      phoneNumber: user.phoneNumber || "N/A",
+      program: user.program || "N/A",
+      registeredDate: user.createdAt || "N/A",
+    }))
+    .sort((a, b) => a.sn - b.sn); // Sorting by S/N in ascending order
 
   const getUniqueProgramsAssigned = () => {
     const assignedPrograms = [];
@@ -281,11 +272,12 @@ const UserManagement = () => {
   };
 
   const programsAssignedOptions = getUniqueProgramsAssigned();
-  
 
-   const handleTabChange = (event, newTabIndex) => {
-     setTabIndex(newTabIndex);
-   };
+  const handleTabChange = (event, newTabIndex) => {
+    setTabIndex(newTabIndex);
+  };
+
+  console.log(formattedOfflineStudents);
 
   return (
     <Box m="20px">
@@ -328,13 +320,17 @@ const UserManagement = () => {
 
       {tabIndex === 1 && (
         <TableComponent
-          rows={offlineStudentsMockData}
           columns={columns}
-          handleSortChange={handleSortChange}
-          handlePageChange={handlePageChange}
-          handleRowsPerPageChange={handleRowsPerPageChange}
+          tableHeader="User Management"
+          data={formattedOfflineStudents}
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onSortChange={handleSortChange}
           page={page}
           rowsPerPage={rowsPerPage}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+          onRowClick={handleRowClick}
         />
       )}
 
