@@ -137,6 +137,8 @@ export const Subtitle = styled.p`
 
     @media screen and (max-width: 768px) {
         max-width: 100%;
+        text-align: justify;
+        padding: 0 10px;
     }
 `;
 

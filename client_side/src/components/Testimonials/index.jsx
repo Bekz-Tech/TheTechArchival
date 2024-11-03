@@ -14,7 +14,7 @@ const StyledContainer = styled(Container)(({ theme }) => ({
   backgroundSize: 'cover',
   padding: theme.spacing(5),
   minWidth: '100vw',
-  height: '100vh',
+  height: 'auto',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
@@ -116,9 +116,10 @@ const Testimonials = () => {
         sx={{
           color: 'white',
           fontWeight: '700',
-          paddingBottom: '20px', // Adjusted padding
+          paddingBottom:'20px',
+          textAlign: 'justify', // Adjusted padding
           zIndex: '10',
-          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, // Responsive font size
+          fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2.5rem' }, // Responsive font size
         }}
       >
         What people say about us
@@ -126,7 +127,7 @@ const Testimonials = () => {
       <Swiper
         spaceBetween={30}
         slidesPerView={slidesPerView}
-        style={{ width: '100%', maxWidth: '90%' }}
+        style={{ width:'100%', maxWidth: '90%', marginBottom:'60px' }}
       >
         <SwiperSlide style={{ display: 'flex', justifyContent: 'center' }}>
           <StyledCard>

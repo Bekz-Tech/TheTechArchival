@@ -16,13 +16,13 @@ export const ServicesContainer = styled.div`
 
     @media screen and (max-width: 768px) {
         height: 1300px;
-        margin: -150px 120px;
+        margin: auto 120px;
         color: white;
     }
 
     @media screen and (max-width: 480px) {
         height: 1300px;
-        margin: -150px auto;
+        margin:  auto;
     }
 
     &:before {
@@ -49,8 +49,6 @@ export const ServicesWrapper = styled.div`
     padding: 0 50px;
     margin-bottom: 5em;
     z-index: 2; /* Ensure the content is above the dark overlay */
-
-
 `;
 
 export const ServicesCard = styled.div`
@@ -67,7 +65,6 @@ export const ServicesCard = styled.div`
     color: white;
     position: relative; /* Required for content layering */
     cursor: pointer;
-
 
     &:hover {
         transform: scale(1.02);
@@ -95,6 +92,12 @@ export const ServicesH1 = styled.h1`
 export const ServicesH2 = styled.h2`
     font-size: 1rem;
     margin-bottom: 10px;
+`;
+export const ServicesH3 = styled.h3`
+   @media screen and (max-width: 768px){
+   text-align: justify;
+   border: 2px solid red;
+   }
 `;
 
 export const ServicesP = styled.p`
