@@ -13,6 +13,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import SchoolIcon from '@mui/icons-material/School';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'; // Add this import for the Calendar icon
 import ProgressCircle from '../../components/ProgressCircle';
+import ChatComponent from '../../components/chatComponent';
 
 const Instructor = () => {
   const theme = useTheme();
@@ -181,6 +182,9 @@ const Instructor = () => {
             </Card>
           ))}
         </Box>
+      </Box>
+      <Box>
+        <ChatComponent />
       </Box>
     </Box>
   );

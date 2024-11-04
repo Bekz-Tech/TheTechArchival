@@ -126,11 +126,29 @@ const fetchPayments = memoize(async () => {
   }
 });
 
+const getOfflineUsers = memoize(async () => {
+  try {
+    const usersCollection = collection(db, 'offlineStuents');
+    const userSnapshot = await getDocs(usersCollection);
+    const userList = userSnapshot.docs.map(doc => doc.data());
+
+    // Store the user list in session storage with key 'babtech_users'
+    sessionStorage.setItem('btech_offlineUsers', JSON.stringify(userList));
+
+    return userList;
+  } catch (error) {
+    console.error('Error fetching and storing users:', error);
+    throw error;
+  }
+});
+
+
 export {
   fetchUserDetailsByEmailAndRole,
   fetchAndStoreUsers,
   fetchEnquiries,
   fetchCourses,
   fetchTimetables,
-  fetchPayments
+  fetchPayments,
+  getOfflineUsers
 };

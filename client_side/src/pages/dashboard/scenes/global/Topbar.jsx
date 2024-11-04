@@ -11,6 +11,7 @@ import NotificationsPopover from '../../components/notificationPopper';
 import { NotificationContext } from '../../../../contexts/notifications'; // Import the NotificationContext
 import DownloadIdButton from '../../components/IdCards';
 import useSessionStoarge from '../../../../hooks/useSessionStorage';
+import CodeGenerator from '../../../../generateCode/codeGenerator';
 
 const Topbar = () => {
   const theme = useTheme();
@@ -69,17 +70,38 @@ const Topbar = () => {
   return (
     <Box display="flex" justifyContent="space-between" p={2}>
       {/* SEARCH BAR */}
-      <Box display="flex" backgroundColor={colors.primary[400]} borderRadius="3px">
-        <InputBase sx={{ pl: 2, flex: 1 }} placeholder="Search" />
-        <IconButton type="button" sx={{ p: 1 }}>
-          <SearchIcon />
-        </IconButton>
+      <Box display="flex" justifyContent="space-between" p={2} alignItems='center'>
+        <Box
+          display="flex"
+          backgroundColor={colors.primary[400]}
+          borderRadius="3px"
+        >
+          <InputBase sx={{ pl: 2, flex: 1 }} placeholder="Search" />
+          <IconButton type="button" sx={{ p: 1 }}>
+            <SearchIcon />
+          </IconButton>
+        </Box>
+        {/* pin generation button */}
+        {(userDetails.role === "superadmin" ||
+          userDetails.role === "admin") && <CodeGenerator />}
       </Box>
 
       {/* ICONS */}
-      <Box display="flex" sx={{ color: theme.palette.mode === "light" ? colors.grey[100] : colors.greenAccent[700] }}>
+      <Box
+        display="flex"
+        sx={{
+          color:
+            theme.palette.mode === "light"
+              ? colors.grey[100]
+              : colors.greenAccent[700],
+        }}
+      >
         <IconButton onClick={colorMode.toggleColorMode}>
-          {theme.palette.mode === "dark" ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
+          {theme.palette.mode === "dark" ? (
+            <DarkModeOutlinedIcon />
+          ) : (
+            <LightModeOutlinedIcon />
+          )}
         </IconButton>
         <IconButton onClick={handleOpenNotifications}>
           <Badge badgeContent={unreadCount} color="error">
@@ -119,7 +141,7 @@ const Topbar = () => {
           <TextField
             label="First Name"
             name="firstName"
-            value={editDetails.firstName || ''}
+            value={editDetails.firstName || ""}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -127,7 +149,7 @@ const Topbar = () => {
           <TextField
             label="Last Name"
             name="lastName"
-            value={editDetails.lastName || ''}
+            value={editDetails.lastName || ""}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -135,7 +157,7 @@ const Topbar = () => {
           <TextField
             label="Email"
             name="email"
-            value={editDetails.email || ''}
+            value={editDetails.email || ""}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -143,16 +165,25 @@ const Topbar = () => {
           <TextField
             label="Phone Number"
             name="phoneNumber"
-            value={editDetails.phoneNumber || ''}
+            value={editDetails.phoneNumber || ""}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
           />
-          {userDetails.role === "student" || userDetails.role === "instructor" ? <DownloadIdButton userId={userDetails.userId} /> : null}
+          {userDetails.role === "student" ||
+          userDetails.role === "instructor" ? (
+            <DownloadIdButton userId={userDetails.userId} />
+          ) : null}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProfile}>Cancel</Button>
-          <Button onClick={handleSaveDetails} variant="contained" color="primary">Save</Button>
+          <Button
+            onClick={handleSaveDetails}
+            variant="contained"
+            color="primary"
+          >
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -69,18 +69,39 @@ const Sidebar = () => {
 
   const adminMenuItems = [
     { title: "Dashboard", to: "/dashboard", icon: <HomeOutlinedIcon /> },
-    { title: "User Management", to: "/dashboard/userManagement", icon: <PeopleOutlinedIcon /> },
-    { title: "Course Management", to: "/dashboard/courseManagement", icon: <ReceiptOutlinedIcon /> },
-    { title: "Content Management", to: "/dashboard/contentManagement", icon: <AssignmentIcon /> },
-    { title: "Financial Management", to: "/dashboard/fInancialManagement", icon: <ContactsOutlinedIcon /> },
+    {
+      title: "User Management",
+      to: "/dashboard/userManagement",
+      icon: <PeopleOutlinedIcon />,
+    },
+    {
+      title: "Course Management",
+      to: "/dashboard/courseManagement",
+      icon: <ReceiptOutlinedIcon />,
+    },
+    {
+      title: "Content Management",
+      to: "/dashboard/contentManagement",
+      icon: <AssignmentIcon />,
+    },
+    {
+      title: "Financial Management",
+      to: "/dashboard/fInancialManagement",
+      icon: <ContactsOutlinedIcon />,
+    },
     { title: "Team", to: "/dashboard/team", icon: <PersonOutlinedIcon /> },
     { title: "Analytics and Reporting", to: "s", icon: <MapOutlinedIcon /> },
     { title: "Growth & Innovation", to: "", icon: <TimelineOutlinedIcon /> },
-    { title: "Contacts", to: "/dashboard/contacts", icon: <SettingsOutlinedIcon /> },
+    {
+      title: "Contacts",
+      to: "/dashboard/contacts",
+      icon: <SettingsOutlinedIcon />,
+    },
     { title: "Support", to: "/dashboard/support", icon: <SupportAgentIcon /> },
     { title: "Feedbacks", to: "/dashboard/feedbacks", icon: <FeedbackIcon /> },
     { title: "Enquiries", to: "/dashboard/enquiries", icon: <EmailIcon /> },
-
+    
+    { title: "Generated codes", to: "/dashboard/offlineStudents", icon: <PersonOutlinedIcon /> },
   ];
 
   const studentMenuItems = [
