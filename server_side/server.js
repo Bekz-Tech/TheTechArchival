@@ -6,9 +6,20 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const dotenv = require("dotenv");
-const dbConnection  = require("./models/dbconns");
+const http = require("http"); // Import the HTTP server
+const dbConnection = require("./models/dbconns");
 const userRouter = require("./Routes/user");
-const Student = require("./models/schema/user"); // Import the student schema
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./configs/thetecharchival-firebase-adminsdk-1e78n-bf5af37d03.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+
+// Import the WebSocket logic
+const { videocallSignal } = require("./videoCall/websocketServer");
 
 dotenv.config();
 dbConnection();
@@ -30,8 +41,12 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use(userRouter);
 
+// Create the HTTP server from the Express app
+const server = http.createServer(app);
 
-// Starting the server
-app.listen(PORT, () => {
+videocallSignal(server);
+
+// Start the HTTP and WebSocket server
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
