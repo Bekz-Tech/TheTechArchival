@@ -183,9 +183,9 @@ const Instructor = () => {
           ))}
         </Box>
       </Box>
-      <Box>
+      {/* <Box>
         <ChatComponent />
-      </Box>
+      </Box> */}
     </Box>
   );
 };
