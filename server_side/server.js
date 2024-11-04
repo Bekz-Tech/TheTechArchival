@@ -10,6 +10,7 @@ const http = require("http"); // Import the HTTP server
 const dbConnection = require("./models/dbconns");
 const userRouter = require("./Routes/user");
 const admin = require("firebase-admin");
+const envConfig = require('./configs/dotenv')
 
 const serviceAccount = require("./configs/thetecharchival-firebase-adminsdk-1e78n-bf5af37d03.json");
 
@@ -26,7 +27,7 @@ dbConnection();
 
 // Initialize the Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = envConfig.PORT || 3000;
 const logFile = fs.createWriteStream(path.join(__dirname, "logFile.log"), {
   flags: "a",
 });

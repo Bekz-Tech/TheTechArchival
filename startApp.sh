@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Step 1: Open the folder containing the MongoDB data
 echo "Starting MongoDB..."
 mongod & # Start MongoDB in the background
