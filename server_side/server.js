@@ -18,7 +18,6 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-
 // Import the WebSocket logic
 const { videocallSignal } = require("./videoCall/websocketServer");
 
@@ -39,8 +38,17 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the Vite `dist` folder
+const distPath = path.join(__dirname, '../client_side','dist');
+app.use(express.static(distPath));
+
 // Routes
 app.use(userRouter);
+
+// Wildcard route to serve the index.html file for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
 
 // Create the HTTP server from the Express app
 const server = http.createServer(app);
