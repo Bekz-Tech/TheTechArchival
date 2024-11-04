@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../../images/logo.svg';
 import { NavLogo } from './SigninElements';
+import { Button } from '@mui/material';
 import {
     Container,
     FormWrap,
@@ -24,7 +25,8 @@ const SignIn = () => {
     const [userDetails, setUserDetails] = useState(null); // State to hold user details
     const [isSubmitting, setIsSubmitting] = useState(false); // State for loading
     const navigate = useNavigate();
-
+     const [codes, setCodes] = useState([]);
+    const newNavigate = useNavigate()
     useEffect(() => {
 
         let isMounted = true;
@@ -42,6 +44,10 @@ const SignIn = () => {
             isMounted = false;
         }
     }, [navigate]);
+
+    const handleNavigate = () => {
+    newNavigate('/code-authenticator'); // Navigate to the authentication page
+  };
 
     const handleSubmit = async (event) => {
         event.preventDefault();

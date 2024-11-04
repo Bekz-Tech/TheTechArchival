@@ -5,11 +5,12 @@ import { handleSignUp, fetchCourses, fetchAndStoreUsers} from '../../firebase/ut
 import { updateDoc, getDoc, doc} from 'firebase/firestore';
 import { db } from '../../firebase/config'; // Import your Firestore config
 
-const SignUpForm = ({ role }) => {
+const SignUpForm = ({ role, offline }) => {
     const [instructorOptions, setInstructorOptions] = useState([]);
     const [coursesOptions, setCoursesOptions] = useState(null);
     const [users, setUsers] = useState([]);
     const [courses, setCourses] = useState([]);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -32,7 +33,6 @@ const SignUpForm = ({ role }) => {
     const instructors = Array.isArray(users) ? users.filter(user => user.role === 'instructor') : [];
     const programs = Array.isArray(courses) ? courses.map(course => course.courseName) : [];
 
-
     const roleFields = {
         student: [
             { label: 'First Name', name: 'firstName', type: 'text', required: true },
@@ -48,6 +48,7 @@ const SignUpForm = ({ role }) => {
             { label: 'Emergency Contact Relationship', name: 'emergencyContactRelationship', type: 'text', required: true },
             { label: 'Emergency Contact Phone', name: 'emergencyContactPhone', type: 'tel', required: true },
             { label: 'Amount Paid', name: 'amountPaid', type: 'number', required: true },
+            { label: 'Cohort', name: 'cohort', type: !offline ? 'select' : "text", required: !offline ? true : false, options: !offline ? programs : '' }
         ],
         instructor: [
             { label: 'First Name', name: 'firstName', type: 'text', required: true },
@@ -74,8 +75,10 @@ const SignUpForm = ({ role }) => {
         const initialData = {};
         if (roleFields[role]) {
             roleFields[role].forEach(field => {
-                initialData[field.name] = field.name === 'program' ? '' : (field.type === 'number' ? 0 : '');
+                
+                initialData[field.name] = field.name === 'program' ? '' : (field.type === 'number' ?  0 : '');
             });
+            
         }
         return initialData;
     };
@@ -220,7 +223,14 @@ const SignUpForm = ({ role }) => {
             const userCourse = role === "student" ? studentCourses : coursesOptions;
 
             // Sign up the user with Firebase Auth and store user data in Firestore
-            const newUserRef = await handleSignUp(userData, role, profilePicture, userCourse, '');
+            let newUserRef = ''
+             if (!offline) {
+                newUserRef = await handleSignUp(userData, role, profilePicture, userCourse, '', false)
+            }
+            
+            if (offline) {
+                newUserRef = await handleSignUp(userData, role, profilePicture, userCourse, '', true);
+            }
 
             // If a student is assigned to an instructor, update the instructor's document
             if (role === 'student' && formData.assignedInstructor) {
@@ -240,47 +250,62 @@ const SignUpForm = ({ role }) => {
         }
     };
 
+    
+    
+
     return (
-        <Box>
-            <Typography variant="h4">Sign Up ({role.charAt(0).toUpperCase() + role.slice(1)})</Typography>
-            <form onSubmit={handleSubmit} ref={formRef}>
-                {roleFields[role]?.map((field, index) => (
-                    <Box key={index} sx={{ mb: 2 }}>
-                        {field.type === 'select' ? (
-                            <FormControl fullWidth>
-                                <InputLabel>{field.label}</InputLabel>
-                                <Select
-                                    name={field.name}
-                                    value={formData[field.name]}
-                                    onChange={handleChange}
-                                    required={field.required}
-                                >
-                                    {field.options?.map((option, idx) => (
-                                        <MenuItem key={idx} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        ) : (
-                            <TextField
-                                fullWidth
-                                label={field.label}
-                                name={field.name}
-                                type={field.type}
-                                value={formData[field.name]}
-                                onChange={handleChange}
-                                required={field.required}
-                                InputLabelProps={field.type === 'file' ? { shrink: true } : {}}
-                                InputProps={field.type === 'file' ? { inputProps: { accept: 'image/*' } } : {}}
-                            />
-                        )}
-                    </Box>
-                ))}
-                {error && <Alert severity="error">{error}</Alert>}
-                <Button type="submit" variant="contained" color="primary">Sign Up</Button>
-            </form>
-        </Box>
+      <Box>
+        <Typography variant="h4">
+          Sign Up ({role.charAt(0).toUpperCase() + role.slice(1)})
+        </Typography>
+        <form onSubmit={handleSubmit} ref={formRef}>
+          {roleFields[role]?.map((field, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
+              {field.type === "select" ? (
+                <FormControl fullWidth>
+                  <InputLabel>{field.label}</InputLabel>
+                  <Select
+                    name={field.name}
+                    value={formData[field.name]}
+                    onChange={handleChange}
+                    required={field.required}
+                  >
+                    {field.options?.map((option, idx) => (
+                      <MenuItem key={idx} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : (
+                field.label !== "Cohort" && (
+                  <TextField
+                    fullWidth
+                    label={field.label}
+                    name={field.name}
+                    type={field.type}
+                    value={formData[field.name]} // Value from formData if it's not Cohort
+                    onChange={handleChange}
+                    required={field.required}
+                    InputLabelProps={
+                      field.type === "file" ? { shrink: true } : {}
+                    }
+                    InputProps={
+                      field.type === "file"
+                        ? { inputProps: { accept: "image/*" } }
+                        : {}
+                    }
+                  />
+                )
+              )}
+            </Box>
+          ))}
+          {error && <Alert severity="error">{error}</Alert>}
+          <Button type="submit" variant="contained" color="primary">
+            Sign Up
+          </Button>
+        </form>
+      </Box>
     );
 };
 

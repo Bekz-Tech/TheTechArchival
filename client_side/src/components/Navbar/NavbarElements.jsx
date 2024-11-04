@@ -42,8 +42,6 @@ export const NavbarContainer = styled.div`
   height: 100%;
   width: 100%;
   padding: 0 50px;
-  max-width: 1100px;
-
   @media screen and (max-width: 1280px) {
     padding: 0 40px;
   }
@@ -149,31 +147,34 @@ export const NavLinks = styled(LinkS)`
   cursor: pointer;
   font-weight: bold;
 
-  &.active {
-    border-bottom: 3px solid rgb(87, 65, 217);
-    padding-bottom: 0.2em;
-  }
+    /*  &: is used to insert styling for pseudo class selectors like
+        :active, :hover, :focus in one big css block */
 
-  &:hover {
-    transition: all 0.2s ease-in-out;
-    color: rgb(87, 65, 217);
-  }
+    &.active {
+        border-bottom: 3px solid rgb(87,65,217);
+        padding-bottom: 0.2em;
+    }
+
+    &:hover {
+        transition: all 0.2s ease-in-out;
+        color: rgb(87,65,217);
+    }
 `;
 
 export const NavBtn = styled.nav`
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 
-  @media screen and (max-width: 768px) {
-    display: none;
-  }
+    @media screen and (max-width: 768px) {
+        display: none;
+    }
 `;
 
 export const NavBtnLink = styled(LinkR)`
   border-radius: 50px;
-  background: ${({ scrollNav }) => (scrollNav ? 'black' : 'rgb(87, 65, 217)')};
+  background: ${({ scrollNav }) => (scrollNav ? "black" : "rgb(87,65,217)")};
   white-space: nowrap;
-  padding: 10px 22px;
+  // padding: 10px 22px;
   color: #fff;
   font-size: 16px;
   font-weight: bold;
@@ -182,6 +183,11 @@ export const NavBtnLink = styled(LinkR)`
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   text-decoration: none;
+  width: 120px;
+  height: 45px;
+  text-align: center;
+  display: grid;
+  place-content: center;
 
   &:hover {
     transition: all 0.2s ease-in-out;
@@ -191,5 +197,10 @@ export const NavBtnLink = styled(LinkR)`
 
   @media screen and (max-width: 768px) {
     display: none;
+  }
+  &:hover {
+    transition: all 0.2s ease-in-out;
+    background: #fff;
+    color: #010606;
   }
 `;
