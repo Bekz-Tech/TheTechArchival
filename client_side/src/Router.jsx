@@ -7,7 +7,7 @@ import DashboardHome from './pages/dashboard';
 import Loader from './utils/loader';
 import CodeAuthenticator from './generateCode/codeAuthenticator';
 import OfflineSignUp from './pages/offlineSignUp';
-
+import VideoCall from './pages/VideoCalls';
 
 function MyRoute() {
   return (
@@ -20,6 +20,7 @@ function MyRoute() {
         <Route path="/dashboard/*" element={<DashboardHome />} />
         <Route path="/code-authenticator" element={<CodeAuthenticator />} />
         <Route path="/offlineSignup" element={<OfflineSignUp />} />
+        <Route path="/videoCall" element={<VideoCall />} />
       </Routes>
     </Router>
   );

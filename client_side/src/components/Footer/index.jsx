@@ -17,12 +17,15 @@ import {
     SocialIconLink,
 } from './FooterElements';
 import { animateScroll as scroll } from 'react-scroll';
+import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
     // Function from react-scroll
     const toggleHome = () => {
         scroll.scrollToTop();
     };
+
+    const navigate = useNavigate();
 
     return (
         <FooterContainer>
@@ -88,6 +91,7 @@ const Footer = () => {
                     </SocialMediaWrap>
                 </SocialMedia>
             </FooterWrap>
+            <button onClick={() => {navigate('./videoCall')}}> to videocall</button>
         </FooterContainer>
     );
 };
