@@ -4,6 +4,7 @@ import bgImage from '../../images/infobg.jpg';
 export const InfoContainer = styled.div`
     color: #fff;
     display: grid;
+    height:auto;
     align-items: center !important;
     position: relative; /* Required for positioning the pseudo-element */
     background: ${({ lightBg }) =>
@@ -11,6 +12,7 @@ export const InfoContainer = styled.div`
             ? '#f9f9f9'
             : `url(${bgImage}) no-repeat center center fixed`};
     background-size: ${({ lightBg }) => (lightBg ? 'auto' : 'cover')};
+    
 
     @media screen and (max-width: 768px) {
         padding: 10% 0;
@@ -31,14 +33,19 @@ export const InfoContainer = styled.div`
 `;
 
 export const InfoWrapper = styled.div`
-    display: grid;
-    z-index: 2; /* Ensure content is above the dark overlay */
+     display: grid;
+    z-index: 2;
     min-height: 100vh;
-    margin-right: auto;
-    margin-left: auto;
+    height: auto;
+    margin: 0; /* Remove auto margins */
     justify-content: center;
     overflow-y: visible;
     align-items: center;
+    text-align: center;
+
+    @media screen and (max-width: 768px) {
+        text-align: center; /* Align text to the center on small screens */
+    }
 `;
 
 export const InfoRow = styled.div`
@@ -54,6 +61,8 @@ export const InfoRow = styled.div`
 
     @media screen and (max-width: 768px) {
         grid-template-areas: ${({ imgStart }) => (imgStart ? `'col1' 'col2'` : `'col1 col1' 'col2 col2'`)};
+        text-align: center; /* Center text on smaller screens */
+        height: auto;
     }
 `;
 
@@ -74,6 +83,13 @@ export const Column2 = styled.div`
 export const TextWrapper = styled.div`
     max-width: 600px;
     margin-right: ${({ imgStart }) => (imgStart ? '5%' : '0')};
+    text-align: left;
+    
+
+    @media screen and (max-width: 768px) {
+        text-align: center; /* Center text on smaller screens */
+        margin-right: 0;
+    }
 `;
 
 export const TopLine = styled.p`
@@ -85,8 +101,18 @@ export const TopLine = styled.p`
     text-transform: uppercase;
     margin-bottom: 16px !important;
     margin-top: 10%;
+
+    @media screen and (max-width: 320px) {
+        margin-top: 5%;
+    }
+    @media screen and (max-width: 375px) {
+        margin-top: 5%;
+    }
     @media screen and (max-width: 480px) {
-        margin-top: 0;
+        margin-top: 5%;
+    }
+    @media screen and (max-width: 768px) {
+        margin-top: 5%;
     }
 `;
 
@@ -108,17 +134,28 @@ export const Subtitle = styled.p`
     font-size: 18px;
     line-height: 24px;
     color: ${({ darkText }) => (darkText ? '#010606' : '#fff')};
+
+    @media screen and (max-width: 768px) {
+        max-width: 100%;
+        text-align: justify;
+        padding: 0 10px;
+    }
 `;
 
 export const BtnWrap = styled.div`
     display: flex;
     justify-content: flex-start;
+
+    @media screen and (max-width: 768px) {
+        justify-content: center; /* Center button on smaller screens */
+    }
 `;
 
 export const ImgWrap = styled.div`
     height: 100%;
     display: grid;
     align-items: center;
+    
 `;
 
 export const Img = styled.img`
