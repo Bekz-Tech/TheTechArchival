@@ -66,4 +66,6 @@ node_modules/
 .env
 .env.production
 
+/home/nwabekeyi/TheTechArchival/startApp.sh
 
+/home/nwabekeyi/TheTechArchival/server_side/mergeDB.js
