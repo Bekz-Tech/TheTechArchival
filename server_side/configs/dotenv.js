@@ -7,5 +7,7 @@ module.exports = {
   NODE_ENV: process.env.NODE_ENV,
   MONGO_URI: process.env.MONGO_URI,
   PORT: process.env.PORT,
-  FIREBASE_ADMIN_SDK: JSON.parse(process.env.FIREBASE_ADMIN_SDK)
+  FIREBASE_ADMIN_SDK_PRIVAT_KEY: process.env.FIREBASE_ADMIN_SDK_PRIVAT_KEY,
+  FIREBASE_ADMIN_SDK_PRIVAT_KEY_ID: process.env.FIREBASE_ADMIN_SDK_PRIVAT_KEY_ID
+
 };
