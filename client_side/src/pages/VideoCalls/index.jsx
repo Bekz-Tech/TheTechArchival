@@ -16,7 +16,7 @@ const VideoCall = () => {
 
   useEffect(() => {
     const setupWebSocket = () => {
-      wsRef.current = new WebSocket('ws://localhost:5000');
+      wsRef.current = new WebSocket('wss://babtech-e-learning.onrender.com');
 
       wsRef.current.onmessage = handleSignalingMessage;
 

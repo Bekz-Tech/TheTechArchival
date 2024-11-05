@@ -46,7 +46,7 @@ const logFile = fs.createWriteStream(path.join(__dirname, "logFile.log"), {
 // Middleware functions
 app.use(helmet());
 app.use(morgan("dev", { stream: logFile }));
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: ["http://localhost:5173", "https://babtech-e-learning.onrender.com"] }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
