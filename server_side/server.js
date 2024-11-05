@@ -12,7 +12,7 @@ const userRouter = require("./Routes/user");
 const admin = require("firebase-admin");
 const envConfig = require('./configs/dotenv')
 
-const serviceAccount = require("./configs/thetecharchival-firebase-adminsdk-1e78n-bf5af37d03.json");
+const serviceAccount = envConfig.FIREBASE_ADMIN_SDK;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
