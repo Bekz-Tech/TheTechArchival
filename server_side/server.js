@@ -12,10 +12,22 @@ const userRouter = require("./Routes/user");
 const admin = require("firebase-admin");
 const envConfig = require('./configs/dotenv')
 
-const serviceAccount = envConfig.FIREBASE_ADMIN_SDK;
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(
+    {
+      "type": "service_account",
+      "project_id": "thetecharchival",
+      "private_key_id": envConfig.FIREBASE_ADMIN_SDK_PRIVAT_KEY_ID,
+      "private_key": envConfig.FIREBASE_ADMIN_SDK_PRIVAT_KEY,
+      "client_email": "firebase-adminsdk-1e78n@thetecharchival.iam.gserviceaccount.com",
+      "client_id": "116330513101239669723",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-1e78n%40thetecharchival.iam.gserviceaccount.com",
+    }
+  )
 });
 
 // Import the WebSocket logic
