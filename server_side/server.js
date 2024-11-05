@@ -44,7 +44,17 @@ const logFile = fs.createWriteStream(path.join(__dirname, "logFile.log"), {
 });
 
 // Middleware functions
-app.use(helmet());
+// Set up CSP using Helmet
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.googleapis.com"],
+    connectSrc: ["'self'", "https://firestore.googleapis.com", "https://your-signaling-server.com"],
+    imgSrc: ["'self'", "data:", "https://*"],
+    mediaSrc: ["'self'", "https://*"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://*.googleapis.com"],
+  },
+}));
 app.use(morgan("dev", { stream: logFile }));
 app.use(cors({ origin: ["http://localhost:5173", "https://babtech-e-learning.onrender.com"] }));
 app.use(express.json());
