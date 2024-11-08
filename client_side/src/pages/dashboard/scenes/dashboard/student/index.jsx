@@ -16,7 +16,7 @@ import ChatComponent from '../../../components/chatComponent';
 import useStudentData from './useStudentData';
 
 const Student = ({user}) => {
-  console.log(user)
+  console.log(user.assignedInstructor.lastName)
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -231,11 +231,11 @@ const Student = ({user}) => {
               sx={{ width: 120, height: 120, mb: 2 }}
             />
             <Typography variant="h6" fontWeight="600">
-              Instructor Name
+             {user.assignedInstructor.firstName} {user.assignedInstructor.lastName}
             </Typography>
-            <Typography variant="body1">Instructor Title</Typography>
+            
             <Typography variant="body2" color={colors.grey[500]}>
-              instructor.email@example.com
+            {user.assignedInstructor.email}
             </Typography>
             <Typography variant="body2" color={colors.grey[500]} mt="5px">
               Office Hours: Mon - Fri, 10am - 2pm
