@@ -5,14 +5,18 @@ const helmet = require("helmet"); // For setting HTTP headers for security
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
-const dotenv = require("dotenv");
 const http = require("http"); // Import the HTTP server
 const dbConnection = require("./models/dbconns");
 const userRouter = require("./Routes/user");
 const admin = require("firebase-admin");
 const envConfig = require('./configs/dotenv')
+const onlineUsers = require("./Routes/onlineUsers");
+const auth = require('./Routes/auth');
 
+// Import rate limiting middleware
+const rateLimit = require('express-rate-limit');
 
+// Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(
     {
@@ -33,7 +37,7 @@ admin.initializeApp({
 // Import the WebSocket logic
 const { videocallSignal } = require("./videoCall/websocketServer");
 
-dotenv.config();
+// Database connection
 dbConnection();
 
 // Initialize the Express app
@@ -42,6 +46,16 @@ const PORT = envConfig.PORT || 3000;
 const logFile = fs.createWriteStream(path.join(__dirname, "logFile.log"), {
   flags: "a",
 });
+
+// Rate limiting setup (global for all routes)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes window
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+
+// Apply rate limiting middleware globally
+app.use(limiter);
 
 // Middleware functions
 // Set up CSP using Helmet
@@ -66,6 +80,8 @@ app.use(express.static(distPath));
 
 // Routes
 app.use(userRouter);
+app.use(onlineUsers);
+app.use(auth);
 
 // Wildcard route to serve the index.html file for all other routes
 app.get('*', (req, res) => {
@@ -75,6 +91,7 @@ app.get('*', (req, res) => {
 // Create the HTTP server from the Express app
 const server = http.createServer(app);
 
+// Initialize WebSocket signaling logic
 videocallSignal(server);
 
 // Start the HTTP and WebSocket server

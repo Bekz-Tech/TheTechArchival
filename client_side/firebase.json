@@ -5,13 +5,27 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src '*' https://babtech-e-learning.onrender.com; connect-src 'self' https://babtech-e-learning.onrender.com; img-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+          }
+        ]
+      }
     ]
   },
   "storage": {
     "rules": "storage.rules",
     "cors": [
       {
-        "origin": ["http://localhost:5173"],
+        "origin": [
+          "http://localhost:5173", 
+          "https://babtech-e-learning.onrender.com"
+        ],
         "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "maxAgeSeconds": 3600
       }

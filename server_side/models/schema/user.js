@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema({
-  userId: { type: String, required: true, unique: true },
+  _id: { type: mongoose.Schema.Types.ObjectId, auto: true }, // Use default MongoDB ObjectId for userId
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true }, // Store hashed passwords
   role: { type: String, required: true, default: "student" },
@@ -20,6 +20,16 @@ const studentSchema = new mongoose.Schema({
     required: true,
   },
   profilePictureUrl: { type: String, required: false },
+});
+
+// Virtual field to expose _id as userId
+studentSchema.virtual("userId").get(function () {
+  return this._id.toHexString();
+});
+
+// Ensure that virtual fields are included in JSON output
+studentSchema.set("toJSON", {
+  virtuals: true,
 });
 
 const Student = mongoose.model("Student", studentSchema);
