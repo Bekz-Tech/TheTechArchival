@@ -19,7 +19,7 @@ const useStudentData = () => {
     
     if (studentData.assignedInstructor) {
       // Get all the timetables from the assigned instructor
-      const matchedTimetables = userDetails.assignedInstructor.courses
+      const matchedTimetables = user.assignedInstructor.courses
         .filter(course => course.courseName === userDetails.program) // Match the student's program with instructor's courseName
         .flatMap(course => course.timetable || []); // Collect all the timetables from matched courses
 
