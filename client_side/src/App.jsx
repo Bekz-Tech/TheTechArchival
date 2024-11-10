@@ -1,13 +1,21 @@
 import './App.css';
-// import LazyLoadImages from './utils/lazyLoadImages';
 import { GlobalContext } from './contexts';
 import MyRoute from './Router';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react'; // Import PersistGate
+
+// Import store and persistor from reduxStore
+import { store, persistor } from './reduxStore/store';
 
 function App() {
   return (
-    <GlobalContext>
-      <MyRoute />
-    </GlobalContext>
+    <Provider store={store}> {/* Provide Redux store */}
+      <PersistGate loading={null} persistor={persistor}> {/* Wait for persisted state */}
+        <GlobalContext>
+          <MyRoute />
+        </GlobalContext>
+      </PersistGate>
+    </Provider>
   );
 }
 

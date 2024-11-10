@@ -105,6 +105,8 @@ const instructorSchema = new mongoose.Schema({
   programsAssigned: { type: [String], default: [] },
   studentsAssigned: { type: [String], default: [] },
   courses: { type: [String], default: [] },
+  assigment: { type: [String], default: [] },
+  timeTable: { type: [String], default: [] },
   program: { type: String, default: '' },  // New program field
   role: { type: String, default: 'instructor' },
   notifications: [notificationSchema],  // Embedding notification schema
@@ -133,7 +135,9 @@ const studentSchema = new mongoose.Schema({
   role: { type: String, default: 'student' },
   notifications: [notificationSchema],  // Embedding notification schema
   messages: [messageSchema],            // Embedding message schema
-  studentProgress: { type: Number, default: 0 }
+  studentProgress: { type: Number, default: 0 },
+  assigment: { type: [String], default: [] },
+  timeTable: { type: [String], default: [] },
 });
 
 // Export Models

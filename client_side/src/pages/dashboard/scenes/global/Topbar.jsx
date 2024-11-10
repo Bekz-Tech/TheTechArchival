@@ -1,4 +1,5 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
+import { useSelector, useDispatch } from 'react-redux'; // Import Redux hooks
 import { Box, InputBase, IconButton, useTheme, Badge, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Typography } from "@mui/material";
 import { ColorModeContext, tokens } from "../../theme";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
@@ -10,23 +11,21 @@ import SearchIcon from "@mui/icons-material/Search";
 import NotificationsPopover from '../../components/notificationPopper';
 import { NotificationContext } from '../../../../contexts/notifications'; // Import the NotificationContext
 import DownloadIdButton from '../../components/IdCards';
-import useSessionStoarge from '../../../../hooks/useSessionStorage';
-import CodeGenerator from '../../../../generateCode/codeGenerator';
+import CodeGenerator from '../../../../generateCode/codeGenerator'; // Assuming this is a valid component
 
 const Topbar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const { notifications, unreadCount, markNotificationAsRead } = useContext(NotificationContext); // Access notifications and unreadCount
-
+  
+  // Access user and users from Redux store
+  const userDetails = useSelector((state) => state.users.user);
+  console.log(userDetails)
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
-  const [editDetails, setEditDetails] = useState({});
-
-
-    const userDetails = useSessionStoarge().memoizedUserDetails;
-
+  const [editDetails, setEditDetails] = useState(userDetails); // Initialize with userDetails from Redux
 
   const handleOpenSettings = () => setSettingsOpen(true);
   const handleCloseSettings = () => setSettingsOpen(false);
@@ -38,10 +37,8 @@ const Topbar = () => {
     setNotificationsAnchorEl(event.currentTarget);
     // Mark notifications as read when opening the popover
     notifications.forEach(notification => {
-      if (!notification.isRead) { // Assuming isRead is a property of notification
+      if (!notification.isRead) {
         markNotificationAsRead(notification.id, userDetails.userId); // Call the function to mark notification as read
-
-        console.log(notification.id)
       }
     });
   };
@@ -59,8 +56,8 @@ const Topbar = () => {
   };
 
   const handleSaveDetails = () => {
-    setUserDetails(editDetails);
-    localStorage.setItem('btech_user', JSON.stringify(editDetails));
+    // Save the details logic, you may want to dispatch an action to update the Redux store
+    // dispatch(updateUserDetails(editDetails)); // Example of dispatching an action
     handleCloseProfile();
   };
 
@@ -82,8 +79,7 @@ const Topbar = () => {
           </IconButton>
         </Box>
         {/* pin generation button */}
-        {(userDetails.role === "superadmin" ||
-          userDetails.role === "admin") && <CodeGenerator />}
+        {(userDetails.role === "superadmin" || userDetails.role === "admin") && <CodeGenerator />}
       </Box>
 
       {/* ICONS */}
@@ -170,10 +166,9 @@ const Topbar = () => {
             fullWidth
             margin="normal"
           />
-          {userDetails.role === "student" ||
-          userDetails.role === "instructor" ? (
+          {(userDetails.role === "student" || userDetails.role === "instructor") && (
             <DownloadIdButton userId={userDetails.userId} />
-          ) : null}
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProfile}>Cancel</Button>

@@ -6,21 +6,14 @@ import { useState, useEffect } from 'react';
 import Admin from './admin';
 import Student from './student';
 import Instructor from './instrcutor';
+import { useSelector, useDispatch } from 'react-redux'; // Import Redux hooks
+
 
 
 const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [user, setUser] = useState("");
-
-
-  useEffect(() => {
-    const currentUser = JSON.parse(sessionStorage.getItem('btech_user'));
-    setUser(currentUser);
-  }, []);
-
-
-
+const user = useSelector((state) => state.users.user)
   return (
     <Box m="20px">
       {/* HEADER */}

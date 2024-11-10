@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../../images/logo.svg';
 import { NavLogo } from './SigninElements';
 import { Button } from '@mui/material';
@@ -13,98 +13,46 @@ import {
     FormInput,
     Text
 } from './SigninElements';
-import { signInWithEmailAndPassword } from '../../firebase/config';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db, auth, googleProvider } from '../../firebase/config'; // Ensure auth and db are correctly imported
 import LoadingButton from '../loadingButton'; // Adjust the path as needed
+import useAuth from '../../hooks/useAuth'; // Import useAuth hook
+import { useSelector } from 'react-redux'; // Import useSelector to access Redux store
 
 const SignIn = () => {
+    const { user, loading, error, login, logout, allUser } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [userDetails, setUserDetails] = useState(null); // State to hold user details
-    const [isSubmitting, setIsSubmitting] = useState(false); // State for loading
+    const [isSubmitting, setIsSubmitting] = useState(false); // State for loading button
     const navigate = useNavigate();
-     const [codes, setCodes] = useState([]);
-    const newNavigate = useNavigate()
+
+    // Access user state from Redux store using useSelector
+    const currentUser = useSelector((state) => state.users.user);
+    console.log(currentUser);
+
+    // If user is already logged in, redirect to the dashboard
     useEffect(() => {
-
-        let isMounted = true;
-
-        const checkUserDetailsInLocalStorage = async () => {
-            const userDetails = sessionStorage.getItem('btech_user');
-            if (userDetails) {
-                console.log('User details found in localStorage:', JSON.parse(userDetails));
-                navigate('/dashboard'); // Redirect to dashboard if user details exist
-            }
-        };
-        
-        checkUserDetailsInLocalStorage();
-        return () => {
-            isMounted = false;
+        if (currentUser) {
+            navigate('/dashboard');
         }
-    }, [navigate]);
-
-    const handleNavigate = () => {
-    newNavigate('/code-authenticator'); // Navigate to the authentication page
-  };
+    }, [currentUser, navigate]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError('');
-        setIsSubmitting(true);
-    
-        let isMounted = true; // Track if component is still mounted
-    
-        try {
-            // Sign in with email and password using Firebase Authentication
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-    
-            // Fetch user details from Firestore based on authenticated user's email
-            const usersCollectionRef = collection(db, 'users');
-            const q = query(usersCollectionRef, where('email', '==', user.email));
-            const querySnapshot = await getDocs(q);
-    
-            if (!querySnapshot.empty && isMounted) {
-                // If user details found, update state user details
-                const userDoc = querySnapshot.docs[0];
-                setUserDetails(userDoc.data());
-                sessionStorage.setItem('btech_user', JSON.stringify(userDoc.data())); // Store user details in local storage
-                navigate('/dashboard'); // Redirect to dashboard or another page upon successful sign-in
-            } else if (isMounted) {
-                setError('User details not found');
-            }
-        } catch (error) {
-            if (isMounted) {
-                console.error('Error signing in:', error);
-                setError(`Failed to sign in: ${error.message}`);
-            }
-        } finally {
-            if (isMounted) {
-                setIsSubmitting(false);
-            }
+
+        if (!email || !password) {
+            alert("Please enter both email and password");
+            return;
         }
-    
-        // Cleanup function
-        return () => {
-            isMounted = false; // Set to false to prevent state updates after unmounting
-        };
-    };
-    
 
-    const handleSocialLogin = async (provider) => {
-        setError('');
+        setIsSubmitting(true); // Set loading state for submit button
 
         try {
-            // Implement your social login logic here
-            // Example using Google provider
-            // const userCredential = await signInWithPopup(auth, provider);
-            // const user = userCredential.user;
-            // await fetchUserData(user.email, 'student'); // Replace 'student' with the actual user role
-        } catch (error) {
-            console.error('Error with social login:', error);
-            setError(`Failed to sign in with social provider: ${error.message}`);
+            // Call the login function from useAuth hook
+            await login(email, password);
+            console.log('userloggin')
+        } catch (err) {
+            console.error('Error during login:', err);
+        } finally {
+            setIsSubmitting(false); // Set loading state to false after login attempt
         }
     };
 
@@ -134,12 +82,12 @@ const SignIn = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
-                        {error && <Text style={{ color: 'red' }}>{error}</Text>}
+                        {error && <Text style={{ color: 'red' }}>{error}</Text>} {/* Show error if present */}
                         <LoadingButton
                             type="submit"
                             variant="contained"
                             color="primary"
-                            isLoading={isSubmitting}
+                            isLoading={isSubmitting || loading} // Show loading state when submitting
                         >
                             Continue
                         </LoadingButton>
