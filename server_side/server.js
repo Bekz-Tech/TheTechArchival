@@ -12,6 +12,8 @@ const admin = require("firebase-admin");
 const envConfig = require('./configs/dotenv')
 const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
+const cookieParser = require('cookie-parser');
+
 
 // Import rate limiting middleware
 const rateLimit = require('express-rate-limit');
@@ -70,9 +72,12 @@ app.use(helmet.contentSecurityPolicy({
   },
 }));
 app.use(morgan("dev", { stream: logFile }));
-app.use(cors({ origin: ["http://localhost:5173", "https://babtech-e-learning.onrender.com"] }));
+app.use(cors({ origin: ["http://localhost:5173", "https://babtech-e-learning.onrender.com"],
+  credentials: true
+ }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Serve static files from the Vite `dist` folder
 const distPath = path.join(__dirname, '../client_side','dist');

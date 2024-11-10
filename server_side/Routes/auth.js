@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { login, refreshToken, logout } = require('../controller/auth/auth');
+const { login, refreshToken, logout } = require('../controller/auth');
 const authenticateToken = require('../middleware/verifyToken');
 
 // Login route
