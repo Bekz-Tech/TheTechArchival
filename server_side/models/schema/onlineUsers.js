@@ -86,8 +86,8 @@ const superAdminSchema = new mongoose.Schema({
   createdAt: { type: String, default: new Date().toISOString() },
   updatedAt: { type: String, default: new Date().toISOString() },
   idCardUrl: { type: String, default: '' },  // New idCardUrl field
-  notifications: [notificationSchema],  // Embedding notification schema
-  messages: [messageSchema]             // Embedding message schema
+  // notifications: [notificationSchema],  // Embedding notification schema
+  // messages: [messageSchema]             // Embedding message schema
 });
 
 // Instructor Schema

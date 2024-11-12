@@ -13,6 +13,9 @@ const envConfig = require('./configs/dotenv')
 const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
+const code = require('./Routes/codeRoutes')
+// const courses  = require('./Routes/courseRoutes')
+const assignment = require('./Routes/assignmentRoutes')
 
 
 // Import rate limiting middleware
@@ -80,13 +83,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve static files from the Vite `dist` folder
-const distPath = path.join(__dirname, '../client_side','dist');
+const distPath = path.join(__dirname, '../client_side','build');
 app.use(express.static(distPath));
 
 // Routes
 app.use(userRouter);
 app.use(onlineUsers);
 app.use(auth);
+app.use(code)
+app.use('/assignments', assignment);
 
 // Wildcard route to serve the index.html file for all other routes
 app.get('*', (req, res) => {
