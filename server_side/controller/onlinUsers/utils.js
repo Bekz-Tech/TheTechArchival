@@ -1,6 +1,39 @@
 const yup = require('yup');
 const dbx = require('../../configs/dropBox');
 const { Admin, SuperAdmin, Instructor, Student } = require('../../models/schema/onlineUsers');
+const mongoose = require('mongoose');
+
+// Assuming you have a Mongoose model for the `userIds` collection
+const UserId = mongoose.model('UserId', new mongoose.Schema({
+  userId: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+}));
+
+const generateUserId = async () => {
+  // Find the latest userId from the collection by sorting in descending order
+  const lastUserId = await UserId.findOne({}).sort({ userId: -1 });
+
+  let serialNumber = 1; // Default number if no userId exists yet
+
+  if (lastUserId) {
+    // Extract the current number from the last userId (e.g., "user/45" -> 45)
+    const lastSerialNumber = parseInt(lastUserId.userId.split('/').pop(), 10);
+
+    // Increment the number for the new userId
+    serialNumber = lastSerialNumber + 1;
+  }
+
+  // Format the new userId as `user/number`, with leading zeros if needed
+  const newUserId = `user/${serialNumber}`;
+
+  // Save the new userId in the userIds collection
+  const newUserIdEntry = new UserId({ userId: newUserId });
+  await newUserIdEntry.save();
+
+  // Return the newly generated userId
+  return newUserId;
+};
+
 
 // Function to upload file to Dropbox
 const uploadToDropbox = async (file, path) => {
@@ -118,10 +151,14 @@ const generateInstructorId = async () => {
   return `instructor/${serialNumber}`;
 };
 
+
+
 module.exports = {
   uploadToDropbox,
   generateInstructorId,
   generateStudentId,
   getModelByRole,
-  userValidationSchemas
+  userValidationSchemas,
+  generateUserId
+
 };

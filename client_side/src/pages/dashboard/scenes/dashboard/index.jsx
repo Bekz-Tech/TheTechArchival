@@ -2,18 +2,17 @@ import { Box, Button,useTheme } from '@mui/material';
 import { tokens } from '../../theme';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import Header from '../../components/Header'
-import { useState, useEffect } from 'react';
 import Admin from './admin';
-import Student from './student';
+// import Student from './student'
 import Instructor from './instrcutor';
-import { useSelector, useDispatch } from 'react-redux'; // Import Redux hooks
-
+import { useSelector} from 'react-redux'; // Import Redux hooks
 
 
 const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 const user = useSelector((state) => state.users.user)
+
   return (
     <Box m="20px">
       {/* HEADER */}
@@ -34,6 +33,9 @@ const user = useSelector((state) => state.users.user)
             Download Reports
           </Button>
         </Box>
+        <div onClick={() => {  navigate('dashbaord/messenger')}}>
+        </div>
+
       </Box>
 
       {/* GRID & CHARTS */}
@@ -46,7 +48,6 @@ const user = useSelector((state) => state.users.user)
         :
       null
       }
-
         </Box>
   );
 };
