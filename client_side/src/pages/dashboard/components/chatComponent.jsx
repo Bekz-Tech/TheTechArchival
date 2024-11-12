@@ -3,23 +3,21 @@ import { Box, Typography, Avatar, TextField, Button, useTheme } from '@mui/mater
 import { tokens } from '../theme';
 import useMessaging from '../../../hooks/useMessaging';
 
-const ChatComponent = ({ loggedInUserId }) => {
+const ChatComponent = ({ userId, role }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  console.log("testing");
 
   const {
     messages,
     selectedMessenger,
-    handleMessengerClick,
     newMessage,
     setNewMessage,
     handleSendMessage,
-    markMessagesAsRead,
-  } = useMessaging(loggedInUserId); // Pass auth to the hook
+    handleMessengerClick,
+    error,
+  } = useMessaging(userId, role);
 
-  console.log(messages)
-
+  // Format timestamp for chat messages
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
     const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -27,35 +25,14 @@ const ChatComponent = ({ loggedInUserId }) => {
     return `${date.toLocaleDateString(undefined, optionsDate)} ${date.toLocaleTimeString([], optionsTime).replace(':00', '').toLowerCase()}`;
   };
 
+  // List of unique messengers (users other than current user)
   const uniqueMessengers = Array.from(new Set(messages
-    .map(msg => msg.sender.senderId)
-    .filter(senderId => senderId !== loggedInUserId)
-  )).map(senderId => messages.find(msg => msg.sender.senderId === senderId).sender);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    if (selectedMessenger) {
-      const messageIdsToMarkAsRead = messages
-        .filter(msg => 
-          msg.receiver.senderId === loggedInUserId && 
-          msg.sender.senderId === selectedMessenger.senderId && 
-          !msg.read
-        )
-        .map(msg => msg.timestamp);
-
-      if (isMounted) {
-        markMessagesAsRead(messageIdsToMarkAsRead);
-      }
-    };
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    .map(msg => msg.senderId)
+    .filter(senderId => senderId !== userId)
+  )).map(senderId => messages.find(msg => msg.senderId === senderId).sender);
 
   return (
-    <Box display="flex" backgroundColor={colors.primary[400]} height="100%">
+    <Box display="flex" backgroundColor={colors.primary[400]} height="auto">
       {/* Messenger List */}
       <Box
         width="30%"
@@ -85,7 +62,7 @@ const ChatComponent = ({ loggedInUserId }) => {
                   backgroundColor: colors.greenAccent[700],
                 },
               }}
-              onClick={() => handleMessengerClick(messenger.senderId)}
+              onClick={() => handleMessengerClick(messenger.senderId)} // Handle messenger selection
             >
               <Avatar src={messenger.picture} alt={messenger.name} sx={{ mr: 2 }} />
               <Box>
@@ -122,50 +99,54 @@ const ChatComponent = ({ loggedInUserId }) => {
               borderTop={`1px solid ${colors.grey[700]}`}
             >
               {messages.filter(msg => 
-                (msg.sender.senderId === selectedMessenger.id || msg.receiver.senderId === selectedMessenger.id)
+                (msg.senderId === selectedMessenger.id || msg.receiverId === selectedMessenger.id)
               ).map((text, i) => (
-                <Box key={i} display="flex" flexDirection="column" alignItems={text.sender.senderId === loggedInUserId ? 'flex-end' : 'flex-start'}>
+                <Box key={i} display="flex" flexDirection="column" alignItems={text.senderId === userId ? 'flex-end' : 'flex-start'}>
                   <Typography
                     sx={{
-                      color: text.sender.senderId === loggedInUserId ? colors.greenAccent[500] : 'white',
-                      backgroundColor: text.sender.senderId === loggedInUserId ? colors.grey[800] : colors.grey[900],
-                      borderRadius: '8px',
-                      p: '10px',
-                      maxWidth: '70%',
-                      wordWrap: 'break-word',
+                      color: text.senderId === userId ? colors.greenAccent[500] : 'white',
+                      backgroundColor: text.senderId === userId ? colors.primary[500] : colors.grey[800],
+                      p: 1, borderRadius: '10px', maxWidth: '75%',
+                      textAlign: text.senderId === userId ? 'right' : 'left',
                     }}
                   >
                     {text.message}
                   </Typography>
-                  <Typography variant="caption" color={colors.grey[500]} alignSelf={text.sender.senderId === loggedInUserId ? 'flex-end' : 'flex-start'}>
-                    {formatTimestamp(text.timestamp)} 
-                    {text.sender.senderId === loggedInUserId ? ` | ${text.delivered ? 'Delivered' : 'Not Delivered'} | ${text.read ? 'Read' : 'Unread'}` : ''}
+                  <Typography
+                    sx={{
+                      color: colors.grey[400], fontSize: '0.8rem', mt: '5px',
+                    }}
+                  >
+                    {formatTimestamp(text.timestamp)}
                   </Typography>
                 </Box>
               ))}
             </Box>
-            <Box display="flex" alignItems="center" mt="10px">
+
+            {/* Message Input */}
+            <Box display="flex" gap="10px">
               <TextField
-                variant="outlined"
-                placeholder="Type a message..."
-                fullWidth
-                onChange={(e) => {
-                  console.log("New message text:", e.target.value); // Debugging line
-                  setNewMessage(e.target.value);
-                }}
                 value={newMessage}
-                sx={{ mr: 1, backgroundColor: colors.grey[800] }}
+                onChange={(e) => setNewMessage(e.target.value)}
+                fullWidth
+                placeholder="Type your message..."
+                sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-root': { backgroundColor: colors.primary[500] } }}
               />
-              <Button variant="contained" onClick={() => {
-                  console.log("Sending message:", newMessage); // Debugging line
-                  handleSendMessage();
-                }} color="primary">
+              <Button
+                onClick={handleSendMessage}
+                variant="contained"
+                color="primary"
+                sx={{
+                  padding: '10px', borderRadius: '8px',
+                  backgroundColor: colors.greenAccent[500],
+                }}
+              >
                 Send
               </Button>
             </Box>
           </Box>
         ) : (
-          <Typography color="white">Select a messenger to view the conversation</Typography>
+          <Typography color="white" variant="h6">Select a messenger to start chatting</Typography>
         )}
       </Box>
     </Box>
