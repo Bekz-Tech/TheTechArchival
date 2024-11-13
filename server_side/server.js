@@ -67,12 +67,13 @@ app.use(helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
     scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.googleapis.com"],
-    connectSrc: ["'self'", "https://firestore.googleapis.com", "https://your-signaling-server.com"],
+    connectSrc: ["'self'", "https://firestore.googleapis.com", "wss://babatech-e-learning.onrender.com"], // Allow WSS connection
     imgSrc: ["'self'", "data:", "https://*"],
     mediaSrc: ["'self'", "https://*"],
     styleSrc: ["'self'", "'unsafe-inline'", "https://*.googleapis.com"],
   },
 }));
+
 app.use(morgan("dev", { stream: logFile }));
 app.use(cors({ origin: ["http://localhost:5173", "https://babtech-e-learning.onrender.com"],
   credentials: true
