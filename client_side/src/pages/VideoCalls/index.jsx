@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
+import {endpoints} from '../../utils/constants'
+
 
 const VideoCall = () => {
   const localVideoRef = useRef(null);
@@ -10,14 +12,17 @@ const VideoCall = () => {
   const [offerReceived, setOfferReceived] = useState(null);
   const [loading, setLoading] = useState(false);
 
+
   const servers = {
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   };
 
+console.log(endpoints.WEBSOCKET_ENDPOINT)
+
   // Setup WebSocket connection
   useEffect(() => {
     const setupWebSocket = () => {
-      wsRef.current = new WebSocket('ws://localhost:5000'); // Ensure it's `ws://` for WebSocket connection
+      wsRef.current = new WebSocket(endpoints.WEBSOCKET_ENDPOINT); // Ensure it's `ws://` for WebSocket connection
 
       wsRef.current.onmessage = handleSignalingMessage;
 
