@@ -22,7 +22,7 @@ console.log(endpoints.WEBSOCKET_ENDPOINT)
   // Setup WebSocket connection
   useEffect(() => {
     const setupWebSocket = () => {
-      wsRef.current = new WebSocket(endpoints.WEBSOCKET_ENDPOINT); // Ensure it's `ws://` for WebSocket connection
+      wsRef.current = new WebSocket("wss://babatech-e-learning.onrender.com");
 
       wsRef.current.onmessage = handleSignalingMessage;
 
