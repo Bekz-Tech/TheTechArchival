@@ -1,0 +1,19 @@
+// Import environment variables from Vite
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const LOGIN_ENDPOINT = import.meta.env.VITE_LOGIN_ENDPOINT;
+const GETUSERS_ENDPOINT = import.meta.env.VITE_ALLUSERS_ENDPOINT;
+const USER_ENDPOINT = import.meta.env.VITE_USER_ENDPOINT;
+const LOGOUT = import.meta.env.VITE_FETCH_DATA_ENDPOINT;
+const REFRESH_TOKEN_ENDPOINT = import.meta.env.VITE_REFRESHTOKEN_ENDPOINT;
+
+
+const API_ENDPOINTS = {
+  LOGIN: `${BASE_URL}${LOGIN_ENDPOINT}`,
+  SIGNUP: `${BASE_URL}${SIGNUP_ENDPOINT}`,
+  USER: `${BASE_URL}${USER_ENDPOINT}`,
+  GET_USERS: `${BASE_URL}${GETUSERS_ENDPOINT}`,
+  LOGOUT: `${BASE_URL}${LOGOUT}`,
+  REFRESH_TOKEN: `${BASE_URL}${REFRESH_TOKEN_ENDPOINT}`,
+};
+
+export default API_ENDPOINTS;

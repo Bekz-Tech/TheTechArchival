@@ -13,8 +13,7 @@ const envConfig = require('./configs/dotenv')
 const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
-const { videocallSignal } = require("./websocket/videoSignal");
-const { messageSignal} = require("./websocket/messageSignal");
+const {webSocketSignal} = require("./websocket/webSocketSignal");
 
 
 // Import rate limiting middleware
@@ -98,8 +97,7 @@ app.get('*', (req, res) => {
 const server = http.createServer(app);
 
 // Initialize WebSocket signaling logic
-videocallSignal(server);
-messageSignal(server);
+webSocketSignal(server);
 
 
 // Start the HTTP and WebSocket server
