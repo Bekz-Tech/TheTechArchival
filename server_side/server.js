@@ -82,7 +82,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve static files from the Vite `dist` folder
-const distPath = path.join(__dirname, '../client_side','build');
+const distPath = path.join(__dirname, '../client_side','dist');
 app.use(express.static(distPath));
 
 // Routes
