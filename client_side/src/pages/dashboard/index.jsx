@@ -30,13 +30,25 @@ import InstructorReviews from "./scenes/instructorReviews";
 import StudentManagement from "./scenes/studentManagement/studentManagement";
 import { tokens } from "./theme";
 import OfflineStudentTable from "./scenes/offlineStudent/offlineStudent";
+import ChatComponent from "./components/chatComponent";
+import { useSelector } from "react-redux";
+import { useNavigate } from 'react-router-dom';
+import FloatingMessageIcon from "./components/floatingMessageIcon";
+
 
 function DashboardHome() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const [userData, setUserData] = useState(null);
-  const [userRole, setUserRole] = useState(null);
   const colors = tokens(theme.palette.mode);
+  const userRole = useSelector((state) => state.users.user).role
+  const navigate = useNavigate();
+
+
+  const handleMessage = ()  => {
+    navigate('/messenger');
+  }
+
 
   useEffect(() => {
     let isMounted = true;
@@ -69,12 +81,14 @@ function DashboardHome() {
       case "superadmin":
         return (
           <>
+            <Route path="/messenger" element={<ChatComponent />} />
             <Route path="/team" element={<Team />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route
               path="/financialManagement"
               element={<FinancialManagement />}
             />
+            <Route path="/messenger" element={<ChatComponent />} />
             <Route path="/form" element={<Form />} />
             <Route path="/bar" element={<Bar />} />
             <Route path="/pie" element={<Pie />} />
@@ -124,7 +138,9 @@ function DashboardHome() {
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div className="app">
+          <div style={{display: 'flex'}}>
+          <FloatingMessageIcon />
+
           <Sidebar isSidebar={isSidebar} />
           <Box
             className="content"

@@ -16,6 +16,8 @@ const cookieParser = require('cookie-parser');
 const code = require('./Routes/codeRoutes')
 // const courses  = require('./Routes/courseRoutes')
 const assignment = require('./Routes/assignmentRoutes')
+const { videocallSignal } = require("./websocket/videoSignal");
+const { messageSignal} = require("./websocket/messageSignal");
 
 
 // Import rate limiting middleware
@@ -40,7 +42,6 @@ admin.initializeApp({
 });
 
 // Import the WebSocket logic
-const { videocallSignal } = require("./videoCall/websocketServer");
 
 // Database connection
 dbConnection();
@@ -103,6 +104,8 @@ const server = http.createServer(app);
 
 // Initialize WebSocket signaling logic
 videocallSignal(server);
+messageSignal(server);
+
 
 // Start the HTTP and WebSocket server
 server.listen(PORT, () => {

@@ -3,7 +3,8 @@ const{
   generateInstructorId,
   generateStudentId,
   getModelByRole,
-  userValidationSchemas
+  userValidationSchemas,
+  generateUserId
 } = require('./utils')
 const yup = require('yup');
 const bcrypt = require('bcryptjs');
@@ -20,6 +21,8 @@ const createUser = async (req, res) => {
   try {
     // Validate incoming data
     await validationSchema.validate(req.body, { abortEarly: false });
+
+    req.body.userId = await generateUserId();
 
     const Model = getModelByRole(role);
 
