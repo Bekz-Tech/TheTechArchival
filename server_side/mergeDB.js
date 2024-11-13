@@ -1,39 +1,70 @@
 const mongoose = require('mongoose');
-const User = require('./models/schema/user'); // Adjust the path according to your project structure
+const dotenv = require('./configs/dotenv');
 
-async function upsertData() {
-    // Connection URIs
-    const localUri = 'mongodb://localhost:27017/users'; // Replace with your local DB URI
-    const atlasUri = 'mongodb+srv://chidi90simeon:NhHQ8lPLfsXSLU0F@babtech.8mtvjbk.mongodb.net/?retryWrites=true&w=majority&appName=babtech'
+// Load environment variables
+const atlasUri = dotenv.MONGO_ATLAS_URI;
+console.log(atlasUri);
 
-    try {
-        // Connect to local MongoDB
-        await mongoose.connect(localUri);
-        console.log('Connected to local MongoDB');
+async function upsertEntireDatabase() {
+  const localUri = 'mongodb://localhost:27017/users'; // Replace with your local DB URI
+  
+  try {
+    // Connect to local MongoDB using createConnection
+    const localConnection = mongoose.createConnection(localUri);
+    console.log('Connected to local MongoDB');
 
-        // Fetch all documents from the local database
-        const localDocuments = await User.find().lean(); // Use lean() for plain JS objects
+    // Wait for the connection to be open before proceeding
+    await new Promise((resolve, reject) => {
+      localConnection.once('open', resolve);
+      localConnection.on('error', reject);
+    });
 
-        // Close local connection before connecting to Atlas
-        await mongoose.disconnect();
-        console.log('Disconnected from local MongoDB');
+    // Get a list of all collections in the local database
+    const localDb = localConnection.db;
+    const collections = await localDb.listCollections().toArray();
+    
+    // Connect to MongoDB Atlas using createConnection
+    const atlasConnection = mongoose.createConnection(atlasUri);
+    console.log('Connected to MongoDB Atlas');
 
-        // Connect to MongoDB Atlas
-        await mongoose.connect(atlasUri);
-        console.log('Connected to MongoDB Atlas');
+    // Wait for the connection to be open before proceeding
+    await new Promise((resolve, reject) => {
+      atlasConnection.once('open', resolve);
+      atlasConnection.on('error', reject);
+    });
 
-        // Upsert documents into the Atlas collection
-        for (const doc of localDocuments) {
-            await User.updateOne({ _id: doc._id }, { $set: doc }, { upsert: true });
-            console.log(`Upserted document with _id: ${doc._id}`);
-        }
-    } catch (err) {
-        console.error(err);
-    } finally {
-        // Ensure to close the Atlas connection
-        await mongoose.disconnect();
-        console.log('Disconnected from MongoDB Atlas');
+    // Iterate over each collection in the local DB
+    for (const collection of collections) {
+      const collectionName = collection.name;
+      
+      // Get the documents from the local collection
+      const documents = await localDb.collection(collectionName).find().toArray();
+      
+      if (documents.length > 0) {
+        // Create bulk operations for upserting documents
+        const bulkOps = documents.map(doc => ({
+          updateOne: {
+            filter: { _id: doc._id }, // Use _id for upsert
+            update: { $set: doc }, // Upsert operation
+            upsert: true // Insert if document doesn't exist
+          }
+        }));
+
+        // Upsert the documents into the same collection in MongoDB Atlas
+        const atlasDb = atlasConnection.db;
+        await atlasDb.collection(collectionName).bulkWrite(bulkOps);
+        console.log(`Upserted ${documents.length} documents into collection: ${collectionName}`);
+      }
     }
+
+    console.log('Upsert operation completed!');
+  } catch (error) {
+    console.error('Error during upsert operation:', error);
+  } finally {
+    // Disconnect from both local and Atlas MongoDB after all operations are done
+    await mongoose.disconnect();
+    console.log('Disconnected from MongoDB');
+  }
 }
 
-upsertData().catch(console.error);
+upsertEntireDatabase();

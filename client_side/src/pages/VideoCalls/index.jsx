@@ -7,16 +7,17 @@ const VideoCall = () => {
   const peerConnectionRef = useRef(null);
   const [localStream, setLocalStream] = useState(null);
   const [clientId, setClientId] = useState(null);
-  const [offerReceived, setOfferReceived] = useState(null); // Track the latest offer
-  const [loading, setLoading] = useState(false); // Loading state for offer acceptance
+  const [offerReceived, setOfferReceived] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const servers = {
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   };
 
+  // Setup WebSocket connection
   useEffect(() => {
     const setupWebSocket = () => {
-      wsRef.current = new WebSocket('wss://babtech-e-learning.onrender.com');
+      wsRef.current = new WebSocket('ws://localhost:5000'); // Ensure it's `ws://` for WebSocket connection
 
       wsRef.current.onmessage = handleSignalingMessage;
 
@@ -24,7 +25,7 @@ const VideoCall = () => {
         console.log('WebSocket connected');
         const uniqueClientId = `client-${Date.now()}`;
         setClientId(uniqueClientId);
-        wsRef.current.send(JSON.stringify({ type: 'register', id: uniqueClientId }));
+        wsRef.current.send(JSON.stringify({ type: 'register', id: uniqueClientId, action: 'connectVideoClient' }));
       };
 
       wsRef.current.onerror = (error) => {
@@ -47,12 +48,28 @@ const VideoCall = () => {
     };
   }, []);
 
+  // Request access to media devices
+  const requestUserMedia = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720 }, // You can adjust video resolution
+        audio: true
+      });
+      return stream;
+    } catch (error) {
+      console.error("Error accessing media devices:", error);
+      alert("Unable to access camera or microphone. Please check your permissions.");
+      throw error;
+    }
+  };
+
+  // Handle signaling messages
   const handleSignalingMessage = async (event) => {
     const msg = JSON.parse(event.data);
     switch (msg.type) {
       case 'create-offer':
         console.log('Offer received from', msg.senderId);
-        setOfferReceived({ offer: msg.offer, senderId: msg.senderId });
+        setOfferReceived(msg);
         break;
       case 'accept-offer':
         console.log('Answer received:', msg.answer);
@@ -67,55 +84,58 @@ const VideoCall = () => {
     }
   };
 
+  // Handle offer from another client
   const handleOffer = async (offer) => {
-    const peerConnection = new RTCPeerConnection(servers);
-    peerConnectionRef.current = peerConnection;
-
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await requestUserMedia();
+      if (!stream) {
+        console.error("Media stream not available");
+        return;
+      }
+
       localVideoRef.current.srcObject = stream;
       setLocalStream(stream);
 
+      const peerConnection = new RTCPeerConnection(servers);
+      peerConnectionRef.current = peerConnection;
+
+      stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
+
       peerConnection.ontrack = (event) => {
-        console.log(event);
-        console.log('remote stream set')
+        console.log('Remote stream set');
         remoteVideoRef.current.srcObject = event.streams[0];
       };
 
-      stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
       await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
       console.log('Sending answer:', answer);
-      wsRef.current.send(
-        JSON.stringify({ type: 'accept-offer', answer, senderId: clientId })
-      );
+      wsRef.current.send(JSON.stringify({ type: 'accept-offer', answer, senderId: clientId }));
 
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          console.log('New ICE candidate:', event.candidate);
+          console.log('Sending ICE candidate:', event.candidate);
           wsRef.current.send(
             JSON.stringify({ type: 'ice-candidate', candidate: event.candidate, senderId: clientId })
           );
         }
       };
-
-  
     } catch (error) {
-      console.error('Error handling offer:', error);
+      console.error("Error handling offer:", error);
     }
   };
 
+  // Handle received answer
   const handleAnswer = async (answer) => {
     const peerConnection = peerConnectionRef.current;
     if (!peerConnection) return;
 
-    // Set the remote description to the received answer
     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
     console.log('Remote description set after receiving answer.');
   };
 
+  // Handle ICE candidates
   const handleNewICECandidate = async (candidate) => {
     const peerConnection = peerConnectionRef.current;
     if (peerConnection) {
@@ -123,17 +143,23 @@ const VideoCall = () => {
         await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         console.log('ICE candidate added:', candidate);
       } catch (error) {
-        console.error('Error adding received ICE candidate', error);
+        console.error("Error adding received ICE candidate", error);
       }
     }
   };
 
+  // Create offer
   const createOffer = async () => {
     const peerConnection = new RTCPeerConnection(servers);
     peerConnectionRef.current = peerConnection;
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await requestUserMedia();
+      if (!stream) {
+        console.error("Media stream not available");
+        return;
+      }
+
       localVideoRef.current.srcObject = stream;
       setLocalStream(stream);
 
@@ -142,13 +168,11 @@ const VideoCall = () => {
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
       console.log('Sending offer:', offer);
-      wsRef.current.send(
-        JSON.stringify({ type: 'create-offer', offer, senderId: clientId })
-      );
+      wsRef.current.send(JSON.stringify({ type: 'create-offer', offer, senderId: clientId }));
 
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          console.log('New ICE candidate:', event.candidate);
+          console.log('Sending ICE candidate:', event.candidate);
           wsRef.current.send(
             JSON.stringify({ type: 'ice-candidate', candidate: event.candidate, senderId: clientId })
           );
@@ -163,6 +187,7 @@ const VideoCall = () => {
     }
   };
 
+  // Close peer connection and stop media streams
   const closeConnections = () => {
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
@@ -176,15 +201,14 @@ const VideoCall = () => {
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
   };
 
+  // Accept the offer and start the connection
   const acceptOffer = async () => {
     if (offerReceived) {
       setLoading(true);
       console.log('Accepting offer from:', offerReceived.senderId);
       await handleOffer(offerReceived.offer);
-      setOfferReceived(null); // Reset after accepting
+      setOfferReceived(null);
       setLoading(false);
-
-    
     }
   };
 
@@ -196,7 +220,6 @@ const VideoCall = () => {
         <button onClick={createOffer}>Create Offer</button>
         <button onClick={closeConnections}>End Call</button>
       </div>
-      {/* Only show the Accept Offer button if an offer is received */}
       {offerReceived && (
         <div>
           <p>Offer from {offerReceived.senderId}:</p>
