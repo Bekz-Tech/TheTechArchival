@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const { Admin, SuperAdmin, Instructor, Student } = require('../../models/schema/onlineUsers');
 const { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } = require('../../configs/dotenv');
 
-
 // Helper function to find user by email and role
 const findUserByEmail = async (email) => {
   
