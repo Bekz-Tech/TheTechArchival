@@ -27,7 +27,8 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
-    }
+    };
+
 
     // Generate tokens
     const accessToken = createAccessToken(user);
@@ -82,7 +83,6 @@ const login = async (req, res) => {
     }
 
   
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Server error' });
