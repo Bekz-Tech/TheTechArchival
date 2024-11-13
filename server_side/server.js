@@ -14,6 +14,8 @@ const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
 const {webSocketSignal} = require("./websocket/webSocketSignal");
+const code = require("./Routes/codeRoutes");
+
 
 
 // Import rate limiting middleware
@@ -88,7 +90,7 @@ app.use(userRouter);
 app.use(onlineUsers);
 app.use(auth);
 app.use(code)
-app.use('/assignments', assignment);
+// app.use('/assignments', assignment);
 
 // Wildcard route to serve the index.html file for all other routes
 app.get('*', (req, res) => {
