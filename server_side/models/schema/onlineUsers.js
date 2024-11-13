@@ -71,7 +71,8 @@ const adminSchema = new mongoose.Schema({
   updatedAt: { type: String, default: new Date().toISOString() },
   idCardUrl: { type: String, default: '' },  // New idCardUrl field
   notifications: [notificationSchema],  // Embedding notification schema
-  messages: [messageSchema]             // Embedding message schema
+  messages: [messageSchema],             // Embedding message schema
+  userId: { type: String, required: true, unique: true }  // Added userId field
 });
 
 // SuperAdmin Schema
@@ -86,8 +87,10 @@ const superAdminSchema = new mongoose.Schema({
   createdAt: { type: String, default: new Date().toISOString() },
   updatedAt: { type: String, default: new Date().toISOString() },
   idCardUrl: { type: String, default: '' },  // New idCardUrl field
-  // notifications: [notificationSchema],  // Embedding notification schema
-  // messages: [messageSchema]             // Embedding message schema
+
+  notifications: [notificationSchema],  // Embedding notification schema
+  messages: [messageSchema],             // Embedding message schema
+  userId: { type: String, required: true, unique: true }  // Added userId field
 });
 
 // Instructor Schema
@@ -110,7 +113,9 @@ const instructorSchema = new mongoose.Schema({
   program: { type: String, default: '' },  // New program field
   role: { type: String, default: 'instructor' },
   notifications: [notificationSchema],  // Embedding notification schema
-  messages: [messageSchema]             // Embedding message schema
+  messages: [messageSchema] ,            // Embedding message schema
+  userId: { type: String, required: true, unique: true }  // Added userId field
+
 });
 
 // Student Schema
@@ -138,6 +143,7 @@ const studentSchema = new mongoose.Schema({
   studentProgress: { type: Number, default: 0 },
   assigment: { type: [String], default: [] },
   timeTable: { type: [String], default: [] },
+  userId: { type: String, required: true, unique: true }  // Added userId field
 });
 
 // Export Models
