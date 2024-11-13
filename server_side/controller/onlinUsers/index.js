@@ -7,7 +7,7 @@ const{
   generateUserId
 } = require('./utils')
 const yup = require('yup');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Create user
 const createUser = async (req, res) => {
