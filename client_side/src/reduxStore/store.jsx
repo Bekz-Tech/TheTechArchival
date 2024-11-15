@@ -22,14 +22,18 @@ const rootReducer = combineReducers({
 // Wrap your reducers with persistReducer
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// Configure Store with Redux Persist
+// Configure Store with Redux Persist and make sure devTools is enabled
 const store = configureStore({
   reducer: persistedReducer,
-  devTools: import.meta.env.VITE_ENABLE_DEVTOOLS === 'true', // Enable Redux DevTools conditionally
+  
+  // To ensure Redux DevTools are enabled, we hardcode `true` for testing
+  devTools: true, // Remove conditional to make sure DevTools works
+  
+  // Add middleware
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(logger), // Add redux-logger to the middleware chain
 });
 
 const persistor = persistStore(store); // Create a persistor
 
-export { store, persistor }; // Export both store and persistor
+export { store, persistor };

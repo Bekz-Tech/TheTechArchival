@@ -13,11 +13,9 @@ const envConfig = require('./configs/dotenv')
 const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
-const code = require('./Routes/codeRoutes')
-// const courses  = require('./Routes/courseRoutes')
-const assignment = require('./Routes/assignmentRoutes')
-const { videocallSignal } = require("./websocket/videoSignal");
-const { messageSignal} = require("./websocket/messageSignal");
+const {webSocketSignal} = require("./websocket/webSocketSignal");
+const code = require("./Routes/codeRoutes");
+
 
 
 // Import rate limiting middleware
@@ -69,12 +67,13 @@ app.use(helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
     scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.googleapis.com"],
-    connectSrc: ["'self'", "https://firestore.googleapis.com", "https://your-signaling-server.com"],
+    connectSrc: ["'self'", "https://firestore.googleapis.com", "wss://babatech-e-learning.onrender.com"], // Allow WSS connection
     imgSrc: ["'self'", "data:", "https://*"],
     mediaSrc: ["'self'", "https://*"],
     styleSrc: ["'self'", "'unsafe-inline'", "https://*.googleapis.com"],
   },
 }));
+
 app.use(morgan("dev", { stream: logFile }));
 app.use(cors({ origin: ["http://localhost:5173", "https://babtech-e-learning.onrender.com"],
   credentials: true
@@ -84,7 +83,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve static files from the Vite `dist` folder
-const distPath = path.join(__dirname, '../client_side','build');
+const distPath = path.join(__dirname, '../client_side','dist');
 app.use(express.static(distPath));
 
 // Routes
@@ -92,7 +91,7 @@ app.use(userRouter);
 app.use(onlineUsers);
 app.use(auth);
 app.use(code)
-app.use('/assignments', assignment);
+// app.use('/assignments', assignment);
 
 // Wildcard route to serve the index.html file for all other routes
 app.get('*', (req, res) => {
@@ -103,8 +102,7 @@ app.get('*', (req, res) => {
 const server = http.createServer(app);
 
 // Initialize WebSocket signaling logic
-videocallSignal(server);
-messageSignal(server);
+webSocketSignal(server);
 
 
 // Start the HTTP and WebSocket server
