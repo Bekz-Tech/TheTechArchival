@@ -5,7 +5,8 @@ const {
   getCourses,
   getCourseById,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  addCohort
 } = require('../controller/courseController');
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.put('/api/v1/courses/:courseId', updateCourse);
 
 // Route to delete a course by ID
 router.delete('/api/v1/courses/:courseId', deleteCourse);
+router.patch('api/v1/courses/:courseId/cohorts', addCohort);
 
 module.exports = router;
