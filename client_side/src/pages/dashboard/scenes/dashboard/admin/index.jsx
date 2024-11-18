@@ -9,114 +9,129 @@ import SchoolIcon from '@mui/icons-material/School';
 import BarChart from '../../../components/BarChart';
 import StatBox from '../../../components/StatBox';
 import ProgressCircle from '../../../components/ProgressCircle';
-import useFetchData from './adminDataFetcher'; // Import the custom hook
+import useAdminData from './useAdminData';
+import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
+import Loader from '../../../../../utils/loader';
 
 const Admin = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  
+  // Loading state to manage the data fetching
+  const [loading, setLoading] = useState(true);
+  
+  // Fetching WebSocket data using custom hook
+  useAdminData('http://localhost:5000');
+  
+  const usersData = useSelector((state) => state.adminData.usersData);
+  
+  // Effect to set loading state when WebSocket data is available
+  useEffect(() => {
+    if (usersData && usersData.allUsersData) {
+      setLoading(false);
+    }
+  }, [usersData]);
 
-  // Use the custom hook to fetch data
-  const { userData, unreadEnquiriesCount, totalRevenue, timeTable, isDataLoaded, payments } = useFetchData();
-
-  // Render loading state until data is loaded
-  if (!isDataLoaded) {
-    return <div>Loading...</div>; // Or any loading indicator you prefer
+  // Handle loading state
+  if (loading) {
+    return <Loader />; // You can add a spinner or other UI if needed
   }
-
-  // Function to check if a student is new (created in the last 24 hours)
-  const isNewStudent = (createdAt) => {
-    const createdDate = new Date(createdAt);
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
-    return createdDate >= oneDayAgo;
-  };
-
-  // Separate students and instructors
-  const students = userData.filter(user => user.role === 'student');
-  const instructors = userData.filter(user => user.role === 'instructor');
-  const newStudents = students.filter(student => isNewStudent(student.createdAt));
-
-  // Fix the transformDataForBarChart function
-  const transformDataForBarChart = (students) => {
-    const courseCounts = {};
-    const years = new Set();
   
-    students.forEach(student => {
-      const program = student.program || "Unknown Program";
-      if (!student.createdAt) {
-        console.error("No createdAt field");
-        return;
-      }
-  
-      const date = new Date(student.createdAt);
-      if (isNaN(date.getTime())) {
-        console.warn(`Skipping student with invalid date: ${student.createdAt}`);
-        return;
-      }
-  
-      const year = date.getFullYear();
-      years.add(year);
-  
-      if (!courseCounts[year]) {
-        courseCounts[year] = {};
-      }
-  
-      if (courseCounts[year][program]) {
-        courseCounts[year][program] += 1;
-      } else {
-        courseCounts[year][program] = 1;
-      }
-    });
-  
-    const sortedYears = Array.from(years).sort((a, b) => a - b);
-  
-    const formattedData = sortedYears.map(year => {
-      return {
-        year,
-        ...courseCounts[year] || {}
-      };
-    });
-  
-    return formattedData;
-  };
 
-  // Getting outstanding payments
-  const outstanding = () => {
-    let totalExpectedPayment = 0;
-    let totalOutstandingPayment = 0;
+  console.log(usersData);
 
-    const paymentDetails = students.map(student => {
-      const courseAmount = (student.courses || []).reduce((total, course) => {
-        const cost = parseFloat(course.cost) || 0;
-        return total + cost;
-      }, 0);
+  const students = usersData.allUsersData.Student.length;
+  const instructors = usersData.allUsersData.Instructor.length;
+  // const studentCount = usersData.
 
-      let paidAmount = 0;
-      if (Array.isArray(student.amountPaid)) {
-        paidAmount = student.amountPaid.reduce((total, paid) => total + paid, 0);
-      } else if (!isNaN(parseFloat(student.amountPaid))) {
-        paidAmount = parseFloat(student.amountPaid);
-      }
 
-      const outstandingPayment = courseAmount - paidAmount;
+  // // Separate students and instructors
+  // const students = userData.filter(user => user.role === 'student');
+  // const instructors = userData.filter(user => user.role === 'instructor');
+  // const newStudents = students.filter(student => isNewStudent(student.createdAt));
 
-      totalExpectedPayment += courseAmount;
-      totalOutstandingPayment += outstandingPayment;
+  // // Fix the transformDataForBarChart function
+  // const transformDataForBarChart = (students) => {
+  //   const courseCounts = {};
+  //   const years = new Set();
+  
+  //   students.forEach(student => {
+  //     const program = student.program || "Unknown Program";
+  //     if (!student.createdAt) {
+  //       console.error("No createdAt field");
+  //       return;
+  //     }
+  
+  //     const date = new Date(student.createdAt);
+  //     if (isNaN(date.getTime())) {
+  //       console.warn(`Skipping student with invalid date: ${student.createdAt}`);
+  //       return;
+  //     }
+  
+  //     const year = date.getFullYear();
+  //     years.add(year);
+  
+  //     if (!courseCounts[year]) {
+  //       courseCounts[year] = {};
+  //     }
+  
+  //     if (courseCounts[year][program]) {
+  //       courseCounts[year][program] += 1;
+  //     } else {
+  //       courseCounts[year][program] = 1;
+  //     }
+  //   });
+  
+  //   const sortedYears = Array.from(years).sort((a, b) => a - b);
+  
+  //   const formattedData = sortedYears.map(year => {
+  //     return {
+  //       year,
+  //       ...courseCounts[year] || {}
+  //     };
+  //   });
+  
+  //   return formattedData;
+  // };
 
-      return {
-        studentName: student.firstName + ' ' + student.lastName || 'Unknown',
-        courseAmount,
-        paidAmount,
-        outstandingPayment
-      };
-    });
+  // // Getting outstanding payments
+  // const outstanding = () => {
+  //   let totalExpectedPayment = 0;
+  //   let totalOutstandingPayment = 0;
 
-    return {
-      paymentDetails,
-      totalExpectedPayment,
-      totalOutstandingPayment
-    };
-  };
+  //   const paymentDetails = students.map(student => {
+  //     const courseAmount = (student.courses || []).reduce((total, course) => {
+  //       const cost = parseFloat(course.cost) || 0;
+  //       return total + cost;
+  //     }, 0);
+
+  //     let paidAmount = 0;
+  //     if (Array.isArray(student.amountPaid)) {
+  //       paidAmount = student.amountPaid.reduce((total, paid) => total + paid, 0);
+  //     } else if (!isNaN(parseFloat(student.amountPaid))) {
+  //       paidAmount = parseFloat(student.amountPaid);
+  //     }
+
+  //     const outstandingPayment = courseAmount - paidAmount;
+
+  //     totalExpectedPayment += courseAmount;
+  //     totalOutstandingPayment += outstandingPayment;
+
+  //     return {
+  //       studentName: student.firstName + ' ' + student.lastName || 'Unknown',
+  //       courseAmount,
+  //       paidAmount,
+  //       outstandingPayment
+  //     };
+  //   });
+
+  //   return {
+  //     paymentDetails,
+  //     totalExpectedPayment,
+  //     totalOutstandingPayment
+  //   };
+  // };
 
   return (
     <Box
@@ -134,7 +149,7 @@ const Admin = () => {
         justifyContent="center"
       >
         <StatBox
-          figure={students.length.toString()}
+          figure={students}
           subtitle="Students"
           icon={
             <GroupsIcon
@@ -151,7 +166,7 @@ const Admin = () => {
         justifyContent="center"
       >
         <StatBox
-          figure={instructors.length.toString()}
+          figure={instructors}
           subtitle="Instructors"
           icon={
             <SchoolIcon
@@ -168,7 +183,7 @@ const Admin = () => {
         justifyContent="center"
       >
         <StatBox
-          figure={newStudents.length.toString()}
+          figure={usersData.studentsIn24Hrs}
           subtitle="New Students (past day)"
           icon={
             <PersonAddIcon
@@ -185,7 +200,7 @@ const Admin = () => {
         justifyContent="center"
       >
         <StatBox
-          figure={unreadEnquiriesCount.toString()}
+          figure= "2"
           subtitle="Unread Enquiries"
           icon={
             <EmailIcon
@@ -221,7 +236,7 @@ const Admin = () => {
               fontWeight="bold"
               color={colors.greenAccent[500]}
             >
-              ₦{totalRevenue.toFixed(2)}
+              ₦0
             </Typography>
           </Box>
           <Box>
@@ -255,7 +270,7 @@ const Admin = () => {
           </Typography>
         </Box>
 
-        {timeTable.map((schedule) => (
+        {/* {timeTable.map((schedule) => (
           <Box
             key={`${schedule.id}/${schedule.time}/${schedule.userId}`}
             display="flex"
@@ -285,7 +300,7 @@ const Admin = () => {
               open
             </Box>
           </Box>
-        ))}
+        ))} */}
       </Box>
 
       {/* ROW 3 */}
@@ -308,27 +323,27 @@ const Admin = () => {
           mb="25px"
         >
           {(() => {
-            const { totalExpectedPayment, totalOutstandingPayment } = outstanding();
-            const percentageOutstanding = 
-              totalExpectedPayment !== 0
-                ? (totalOutstandingPayment / totalExpectedPayment) * 100
-                : 0;
+            // const { totalExpectedPayment, totalOutstandingPayment } = outstanding();
+            // const percentageOutstanding = 
+            //   totalExpectedPayment !== 0
+            //     ? (totalOutstandingPayment / totalExpectedPayment) * 100
+            //     : 0;
 
             return (
               <>
                 <ProgressCircle
                   size="125"
-                  progress={percentageOutstanding / 100}
+                  progress= "10"
                 />
                 <Typography
                   variant="h5"
                   color={colors.greenAccent[500]}
                   sx={{ pt: "20px" }}
                 >
-                  ₦{totalOutstandingPayment.toLocaleString()} outstanding payment
+                  ₦0 outstanding payment
                 </Typography>
                 <Typography>
-                  {percentageOutstanding.toFixed(2)}% of total expected payments
+                  0% of total expected payments
                 </Typography>
               </>
             );
@@ -337,7 +352,7 @@ const Admin = () => {
       </Box>
 
       {/* Course Registrations */}
-      <Box
+      {/* <Box
         gridColumn="span 4"
         gridRow="span 2"
         backgroundColor={colors.primary[400]}
@@ -351,14 +366,14 @@ const Admin = () => {
         </Typography>
         <Box height="250px" mt="-20px">
           <BarChart 
-            data={transformDataForBarChart(students)}
+            // data= '0'
             isDashboard={true}
           />
         </Box>
-      </Box>
+      </Box> */}
 
       {/* Payment Details */}
-      <Box
+      {/* <Box
         gridColumn="span 4"
         gridRow="span 2"
         backgroundColor={colors.primary[400]}
@@ -417,7 +432,7 @@ const Admin = () => {
             </Box>
           </Box>
         ))}
-      </Box>
+      </Box> */}
     </Box>
   );
 };

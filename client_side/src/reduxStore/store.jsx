@@ -5,6 +5,10 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage/session'; // Use sessionStorage
 import { combineReducers } from 'redux'; // Used to combine reducers with persistReducer
 import logger from 'redux-logger'; // Import redux-logger
+import adminDataReducer from './slices/adminDataSlice';
+import messageReducer from './slices/messageSlice';
+import streamReducer from './slices/videoCallSlice';
+
 
 // Redux Persist Config
 const persistConfig = {
@@ -15,8 +19,11 @@ const persistConfig = {
 
 // Combine reducers (ui slice is not persisted, so no need to include it in the persistConfig)
 const rootReducer = combineReducers({
-  users: usersReducer, // This is persisted
-  ui: uiReducer,       // This is not persisted
+  users: usersReducer,
+  ui: uiReducer,
+  adminData: adminDataReducer,
+  message: messageReducer,
+  stream: streamReducer,
 });
 
 // Wrap your reducers with persistReducer

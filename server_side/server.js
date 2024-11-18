@@ -13,8 +13,9 @@ const envConfig = require('./configs/dotenv')
 const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
-const {webSocketSignal} = require("./websocket/webSocketSignal");
+const {websocketSignal} = require("./websocketSignal");
 const code = require("./Routes/codeRoutes");
+
 
 
 
@@ -53,8 +54,8 @@ const logFile = fs.createWriteStream(path.join(__dirname, "logFile.log"), {
 
 // Rate limiting setup (global for all routes)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes window
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
@@ -91,6 +92,8 @@ app.use(userRouter);
 app.use(onlineUsers);
 app.use(auth);
 app.use(code)
+
+
 // app.use('/assignments', assignment);
 
 // Wildcard route to serve the index.html file for all other routes
@@ -102,7 +105,7 @@ app.get('*', (req, res) => {
 const server = http.createServer(app);
 
 // Initialize WebSocket signaling logic
-webSocketSignal(server);
+websocketSignal(server);
 
 
 // Start the HTTP and WebSocket server
