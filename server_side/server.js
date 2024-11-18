@@ -15,6 +15,8 @@ const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
 const {websocketSignal} = require("./websocketSignal");
 const code = require("./Routes/codeRoutes");
+const courseRouter = require("./Routes/courseRoutes");
+
 
 
 
@@ -91,7 +93,8 @@ app.use(express.static(distPath));
 app.use(userRouter);
 app.use(onlineUsers);
 app.use(auth);
-app.use(code)
+app.use(code);
+app.use(courseRouter)
 
 
 // app.use('/assignments', assignment);

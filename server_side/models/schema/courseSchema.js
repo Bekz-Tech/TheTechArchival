@@ -11,21 +11,22 @@ const assignmentSchema = new Schema({
   submissions: [String] // Array of submission IDs or file links
 });
 
-// Course Schema
 const courseSchema = new Schema({
   courseId: { type: String, unique: true, required: true },
   courseName: { type: String, required: true },
-  cost: { type: String, required: true },
+  cost: { type: Number, required: true },
   duration: { type: String, required: true },
   description: { type: String, required: true },
   startDate: { type: String, required: true },
-  assignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }], // Reference to Assignment documents
-  cohorts: [String], // Array of cohort names/IDs
+  cohorts: { type: [String], default: [] }, // Set default to an empty array
+  instructors: { type: [String], default: [] },
+
 }, { timestamps: true });
+
 
 
 // Model Exports
 const Assignment = mongoose.model("Assignment", assignmentSchema);
 const Course = mongoose.model("Course", courseSchema);
 
-module.exports = { Assignment, Course, Instructor };
+module.exports = { Assignment, Course };
