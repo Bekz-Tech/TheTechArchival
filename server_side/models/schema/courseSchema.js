@@ -1,39 +1,69 @@
-// const mongoose = require("mongoose");
-// const Schema = mongoose.Schema;
+const mongoose = require('mongoose');
 
-// // Assignment Schema
-// const assignmentSchema = new Schema({
-//   title: { type: String, required: true },
-//   description: { type: String },
-//   dueDate: { type: Date },
-//   courseId: { type: Schema.Types.ObjectId, ref: "Course" },  // Reference to Course
-//   createdBy: { type: Schema.Types.ObjectId, ref: "Instructor" }, // Reference to Instructor
-//   submissions: [String] // Array of submission IDs or file links
-// });
+const courseSchema = new mongoose.Schema({
+  courseId: {
+    type: String,
+    required: true,
+    unique: true, // Ensures courseId is unique
+  },
+  courseName: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  duration: {
+    type: String,
+    required: true,
+  },
+  startDate: {
+    type: Date,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now, // Automatically set the current date if not provided
+  },
+  cost: {
+    type: Number,
+    required: true,
+  },
+  curriculum: {
+    type: [
+      {
+        topic: {
+          type: String,
+          required: true,
+        },
+        overview: {
+          type: String,
+          required: true,
+        },
+        week: {
+          type: String,
+          required: true,
+        },
+        isCompleted: {
+          type: Boolean,
+          default: false, // Default to false, since it’s not completed initially
+        },
+      },
+    ],
+    default: [],
+  },
+  assignments: {
+    type: [String], // Array of assignment names or IDs
+    default: [],    // Default to an empty array
+  },
+  cohorts: {
+    type: [String], // Array of cohort names or IDs
+    default: [],    // Default to an empty array
+  },
+});
 
-// // Course Schema
-// const courseSchema = new Schema({
-//   courseId: { type: String, unique: true, required: true },
-//   courseName: { type: String, required: true },
-//   cost: { type: String, required: true },
-//   duration: { type: String, required: true },
-//   description: { type: String, required: true },
-//   startDate: { type: String, required: true },
-//   assignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }], // Reference to Assignment documents
-//   cohorts: [String], // Array of cohort names/IDs
-// }, { timestamps: true });
+// Create the model from the schema
+const Course = mongoose.model('Course', courseSchema);
 
-// // Instructor Schema
-// const instructorSchema = new Schema({
-//   userId: { type: String, unique: true, required: true },
-//   email: { type: String, unique: true, required: true },
-//   role: { type: String, enum: ["instructor", "admin"], default: "instructor" },
-//   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }] // Reference to Course documents
-// });
-
-// // Model Exports
-// const Assignment = mongoose.model("Assignment", assignmentSchema);
-// const Course = mongoose.model("Course", courseSchema);
-// const Instructor = mongoose.model("Instructor", instructorSchema);
-
-// module.exports = { Assignment, Course, Instructor };
+module.exports = Course;

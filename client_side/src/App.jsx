@@ -2,7 +2,7 @@ import './App.css';
 import { GlobalContext } from './contexts';
 import MyRoute from './Router';
 import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react'; // Import PersistGate
+import { PersistGate } from 'redux-persist/integration/react';
 
 // Import store and persistor from reduxStore
 import { store, persistor } from './reduxStore/store';

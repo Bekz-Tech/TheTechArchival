@@ -14,8 +14,15 @@ const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
 const code = require('./Routes/codeRoutes')
-// const courses  = require('./Routes/courseRoutes')
+const courses  = require('./Routes/courseRoutes')
 const assignment = require('./Routes/assignmentRoutes')
+const { videocallSignal } = require("./websocket/videoSignal");
+const { messageSignal} = require("./websocket/messageSignal");
+const invoice = require('./Routes/invoiceRoute')
+const expense = require('./Routes/expenseRoute')
+const revenue = require('./Routes/revenueRoute')
+const payment = require('./Routes/paymentRoute')
+const budget = require('./Routes/budgetRoute')
 
 
 // Import rate limiting middleware
@@ -40,7 +47,6 @@ admin.initializeApp({
 });
 
 // Import the WebSocket logic
-const { videocallSignal } = require("./videoCall/websocketServer");
 
 // Database connection
 dbConnection();
@@ -83,7 +89,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve static files from the Vite `dist` folder
-const distPath = path.join(__dirname, '../client_side','build');
+const distPath = path.join(__dirname, '../client_side','dist');
 app.use(express.static(distPath));
 
 // Routes
@@ -92,6 +98,12 @@ app.use(onlineUsers);
 app.use(auth);
 app.use(code)
 app.use('/assignments', assignment);
+app.use(courses)
+app.use(invoice)
+app.use(expense)
+app.use(revenue)
+app.use(payment)
+app.use(budget)
 
 // Wildcard route to serve the index.html file for all other routes
 app.get('*', (req, res) => {
@@ -103,6 +115,8 @@ const server = http.createServer(app);
 
 // Initialize WebSocket signaling logic
 videocallSignal(server);
+messageSignal(server);
+
 
 // Start the HTTP and WebSocket server
 server.listen(PORT, () => {

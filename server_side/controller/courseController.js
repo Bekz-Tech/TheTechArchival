@@ -1,4 +1,3 @@
-// controller/courseController.js
 const Course = require('../models/schema/courseSchema');
 
 // Controller to create a new course
@@ -10,11 +9,15 @@ exports.createCourse = async (req, res) => {
       cost,
       courseId,
       courseName,
-      createdAt,
       description,
       duration,
       startDate,
     } = req.body;
+
+    // Validate required fields
+    if (!courseId || !courseName || !description || !startDate) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
 
     // Check if courseId already exists
     const existingCourse = await Course.findOne({ courseId });
@@ -23,15 +26,15 @@ exports.createCourse = async (req, res) => {
     }
 
     const newCourse = new Course({
-      assignments,
-      cohorts,
-      cost,
+      assignments: assignments || [],
+      cohorts: cohorts || [],
+      cost: cost || 0,
       courseId,
       courseName,
-      createdAt,
       description,
-      duration,
+      duration: duration || 'Self-paced', // Example default
       startDate,
+      createdAt: new Date(), // Automatically set creation date
     });
 
     await newCourse.save();
@@ -74,30 +77,12 @@ exports.getCourseById = async (req, res) => {
 exports.updateCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const {
-      assignments,
-      cohorts,
-      cost,
-      courseName,
-      createdAt,
-      description,
-      duration,
-      startDate,
-    } = req.body;
+    const updateFields = req.body;
 
     const course = await Course.findOneAndUpdate(
       { courseId },
-      {
-        assignments,
-        cohorts,
-        cost,
-        courseName,
-        createdAt,
-        description,
-        duration,
-        startDate,
-      },
-      { new: true }  // Return the updated course
+      updateFields,
+      { new: true, runValidators: true } // Validate updates against schema
     );
 
     if (!course) {
