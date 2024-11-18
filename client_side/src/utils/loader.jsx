@@ -1,6 +1,6 @@
 import './loader.css'
 
-const LazyLoadImages = () => {
+const Loader = () => {
   
 
   return (
@@ -14,4 +14,4 @@ const LazyLoadImages = () => {
   );
 };
 
-export default LazyLoadImages;
+export default Loader;

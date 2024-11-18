@@ -49,38 +49,13 @@ const login = async (req, res) => {
       sameSite: 'None'
     });
 
-    // Fetch all users if logged-in user is admin or superadmin
-    if (role === 'admin' || role === 'superadmin') {
 
-      const adminModel = getModelByRole('admin');
-      const superAdminModel = getModelByRole('superadmin');
-      const instructorModel = getModelByRole('instructor');
-      const studentModel = getModelByRole('student');
-  
-      const admins = await adminModel.find();
-      const superAdmins = await superAdminModel.find();
-      const instructors = await instructorModel.find();
-      const students = await studentModel.find();
-
-
-      return res.status(200).json({
-        message: 'Login successful',
-        user: user,
-        users: {
-          admins,
-          superAdmins,
-          instructors,
-          students
-        }
-      });
-    }else{
         // Send response with only logged-in user details for other roles
     return res.status(200).json({
       message: 'Login successful',
       user: user
     });
 
-    }
 
   
   } catch (error) {

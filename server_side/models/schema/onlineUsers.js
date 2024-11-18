@@ -114,7 +114,9 @@ const instructorSchema = new mongoose.Schema({
   role: { type: String, default: 'instructor' },
   notifications: [notificationSchema],  // Embedding notification schema
   messages: [messageSchema] ,            // Embedding message schema
-  userId: { type: String, required: true, unique: true }  // Added userId field
+  userId: { type: String, required: true, unique: true },  // Added userId field
+  createdAt: { type: String, default: new Date().toISOString() },
+  updatedAt: { type: String, default: new Date().toISOString() },
 
 });
 
@@ -143,7 +145,9 @@ const studentSchema = new mongoose.Schema({
   studentProgress: { type: Number, default: 0 },
   assigment: { type: [String], default: [] },
   timeTable: { type: [String], default: [] },
-  userId: { type: String, required: true, unique: true }  // Added userId field
+  userId: { type: String, required: true, unique: true },  // Added userId field
+  createdAt: { type: String, default: new Date().toISOString() },
+  updatedAt: { type: String, default: new Date().toISOString() },
 });
 
 // Export Models
