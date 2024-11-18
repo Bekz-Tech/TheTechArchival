@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { useTheme, Box } from '@mui/material';
 import { tokens } from '../theme';
+import Loader from '../../../utils/loader';
 import useSessionStoarge from '../../../hooks/useSessionStorage'; // Adjust the import path as necessary
 
 const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
@@ -87,7 +88,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
   }, [isCustomLineColors, colors.primary, currentYear]);
 
   if (lineData.length === 0) {
-    return <Box>Loading data...</Box>;
+    return <Box width="98%" height="100%"><Loader /></Box>;
   }
 
   return (

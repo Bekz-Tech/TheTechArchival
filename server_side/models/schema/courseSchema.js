@@ -1,69 +1,32 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const courseSchema = new mongoose.Schema({
-  courseId: {
-    type: String,
-    required: true,
-    unique: true, // Ensures courseId is unique
-  },
-  courseName: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  duration: {
-    type: String,
-    required: true,
-  },
-  startDate: {
-    type: Date,
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now, // Automatically set the current date if not provided
-  },
-  cost: {
-    type: Number,
-    required: true,
-  },
-  curriculum: {
-    type: [
-      {
-        topic: {
-          type: String,
-          required: true,
-        },
-        overview: {
-          type: String,
-          required: true,
-        },
-        week: {
-          type: String,
-          required: true,
-        },
-        isCompleted: {
-          type: Boolean,
-          default: false, // Default to false, since it’s not completed initially
-        },
-      },
-    ],
-    default: [],
-  },
-  assignments: {
-    type: [String], // Array of assignment names or IDs
-    default: [],    // Default to an empty array
-  },
-  cohorts: {
-    type: [String], // Array of cohort names or IDs
-    default: [],    // Default to an empty array
-  },
+// Assignment Schema
+const assignmentSchema = new Schema({
+  title: { type: String, required: true },
+  description: { type: String },
+  dueDate: { type: Date },
+  courseId: { type: Schema.Types.ObjectId, ref: "Course" },  // Reference to Course
+  createdBy: { type: Schema.Types.ObjectId, ref: "Instructor" }, // Reference to Instructor
+  submissions: [String] // Array of submission IDs or file links
 });
 
-// Create the model from the schema
-const Course = mongoose.model('Course', courseSchema);
+const courseSchema = new Schema({
+  courseId: { type: String, unique: true, required: true },
+  courseName: { type: String, required: true },
+  cost: { type: Number, required: true },
+  duration: { type: String, required: true },
+  description: { type: String, required: true },
+  startDate: { type: String, required: true },
+  cohorts: { type: [String], default: [] }, // Set default to an empty array
+  instructors: { type: [String], default: [] },
 
-module.exports = Course;
+}, { timestamps: true });
+
+
+
+// Model Exports
+const Assignment = mongoose.model("Assignment", assignmentSchema);
+const Course = mongoose.model("Course", courseSchema);
+
+module.exports = { Assignment, Course };

@@ -65,6 +65,8 @@ node_modules/
 # dotenv environment variables file
 .env
 .env.production
+.env.development
+
 
 /home/nwabekeyi/TheTechArchival/startApp.sh
 

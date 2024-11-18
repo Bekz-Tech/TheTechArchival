@@ -42,39 +42,14 @@ function DashboardHome() {
   const [userData, setUserData] = useState(null);
   const colors = tokens(theme.palette.mode);
   const userRole = useSelector((state) => state.users.user).role
+  const users = useSelector((state) => state.users.allUser);
   const navigate = useNavigate();
 
 
   const handleMessage = ()  => {
     navigate('/messenger');
-  }
+  };
 
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchDataAndUpdateStorage = async () => {
-      try {
-        const users = await fetchAndStoreUsers();
-        if (isMounted) {
-          setUserData(users);
-          const storedUser = JSON.parse(sessionStorage.getItem('btech_user'));
-          if (storedUser) {
-            setUserRole(storedUser.role);
-
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching and storing users:', error);
-      }
-    };
-
-    fetchDataAndUpdateStorage();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const renderRoutesBasedOnRole = (role) => {
     switch (role) {

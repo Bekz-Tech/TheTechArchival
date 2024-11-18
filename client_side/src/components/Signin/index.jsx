@@ -18,11 +18,12 @@ import useAuth from '../../hooks/useAuth'; // Import useAuth hook
 import { useSelector } from 'react-redux'; // Import useSelector to access Redux store
 
 const SignIn = () => {
-    const { user, loading, error, login, logout, allUser } = useAuth();
+    const {loading, error, login, logout,} = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false); // State for loading button
     const navigate = useNavigate();
+    
 
     // Access user state from Redux store using useSelector
     const currentUser = useSelector((state) => state.users.user);

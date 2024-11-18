@@ -22,10 +22,17 @@ import Modal from '../../components/modal';
 import TableComponent from "../../../../components/table";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getOfflineUsers } from '../../../../firebase/utils/getRequest';
+import useAuth from '../../../../hooks/useAuth';
+import { useSelector } from 'react-redux';
 
 const UserManagement = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const students = useSelector((state) => state.adminData.usersData.allUsersData.Student);
+  const instrcutors = useSelector((state) => state.adminData.usersData.allUsersData.Instructor);
+
+  // const 
+
 
   const [selectedRole, setSelectedRole] = useState("");
   const [userData, setUserData] = useState([]);
@@ -227,7 +234,25 @@ const UserManagement = () => {
 
   console.log(userData);
 
-  const formattedUserData = userData
+  const studentData = students
+    .map((user, index) => ({
+      id: user.userId,
+      sn: index + 1,
+      role: user.role,
+      userId:
+        user.role === "student"
+          ? `${user.studentId}` || "N/A"
+          : user.role === "instructor"
+          ? user.instructorId || "N/A"
+          : user.userId || "N/A",
+      name: `${user.firstName || "N/A"} ${user.lastName || "N/A"}`,
+      phoneNumber: user.phoneNumber || "N/A",
+      program: user.program || "N/A",
+      registeredDate: user.createdAt || "N/A",
+    }))
+    .sort((a, b) => a.sn - b.sn); // Sorting by S/N in ascending order<
+
+    const instructorData = instrcutors
     .map((user, index) => ({
       id: user.userId,
       sn: index + 1,
@@ -295,7 +320,8 @@ console.log(offlineStudents)
 
       <Box>
         <Tabs value={tabIndex} onChange={handleTabChange}>
-          <Tab label="Online Students" />
+          <Tab label="Students" />
+          <Tab label="Instructors" />
           <Tab label="Offline Students" />
         </Tabs>
       </Box>
@@ -305,7 +331,7 @@ console.log(offlineStudents)
           <TableComponent
             columns={columns}
             tableHeader="User Management"
-            data={formattedUserData}
+            data={studentData}
             sortBy={sortBy}
             sortDirection={sortDirection}
             onSortChange={handleSortChange}
@@ -318,7 +344,25 @@ console.log(offlineStudents)
         </Box>
       )}
 
-      {tabIndex === 1 && (
+{tabIndex === 1 && (
+        <Box m="20px 0 0 0" height="75vh">
+          <TableComponent
+            columns={columns}
+            tableHeader="User Management"
+            data={instructorData}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSortChange={handleSortChange}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            onRowClick={handleRowClick}
+          />
+        </Box>
+      )}
+
+      {tabIndex === 2 && (
         <TableComponent
           columns={columns}
           tableHeader="User Management"

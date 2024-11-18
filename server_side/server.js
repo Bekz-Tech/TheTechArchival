@@ -13,16 +13,17 @@ const envConfig = require('./configs/dotenv')
 const onlineUsers = require("./Routes/onlineUsers");
 const auth = require('./Routes/auth');
 const cookieParser = require('cookie-parser');
-const code = require('./Routes/codeRoutes')
-const courses  = require('./Routes/courseRoutes')
+const {websocketSignal} = require("./websocketSignal");
+const code = require("./Routes/codeRoutes");
+const courseRouter = require("./Routes/courseRoutes");
 const assignment = require('./Routes/assignmentRoutes')
-const { videocallSignal } = require("./websocket/videoSignal");
-const { messageSignal} = require("./websocket/messageSignal");
 const invoice = require('./Routes/invoiceRoute')
 const expense = require('./Routes/expenseRoute')
 const revenue = require('./Routes/revenueRoute')
 const payment = require('./Routes/paymentRoute')
 const budget = require('./Routes/budgetRoute')
+const inquiry = require('./Routes/inquiryRoute')
+const feedback = require('./Routes/feedbackRoute')
 
 
 // Import rate limiting middleware
@@ -60,8 +61,8 @@ const logFile = fs.createWriteStream(path.join(__dirname, "logFile.log"), {
 
 // Rate limiting setup (global for all routes)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes window
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
@@ -74,12 +75,13 @@ app.use(helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
     scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.googleapis.com"],
-    connectSrc: ["'self'", "https://firestore.googleapis.com", "https://your-signaling-server.com"],
+    connectSrc: ["'self'", "https://firestore.googleapis.com", "wss://babatech-e-learning.onrender.com"], // Allow WSS connection
     imgSrc: ["'self'", "data:", "https://*"],
     mediaSrc: ["'self'", "https://*"],
     styleSrc: ["'self'", "'unsafe-inline'", "https://*.googleapis.com"],
   },
 }));
+
 app.use(morgan("dev", { stream: logFile }));
 app.use(cors({ origin: ["http://localhost:5173", "https://babtech-e-learning.onrender.com"],
   credentials: true
@@ -96,14 +98,15 @@ app.use(express.static(distPath));
 app.use(userRouter);
 app.use(onlineUsers);
 app.use(auth);
-app.use(code)
-app.use('/assignments', assignment);
-app.use(courses)
+app.use(code);
+app.use(courseRouter)
 app.use(invoice)
 app.use(expense)
 app.use(revenue)
 app.use(payment)
 app.use(budget)
+app.use(inquiry)
+app.use(feedback)
 
 // Wildcard route to serve the index.html file for all other routes
 app.get('*', (req, res) => {
@@ -114,8 +117,7 @@ app.get('*', (req, res) => {
 const server = http.createServer(app);
 
 // Initialize WebSocket signaling logic
-videocallSignal(server);
-messageSignal(server);
+websocketSignal(server);
 
 
 // Start the HTTP and WebSocket server

@@ -1,11 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { setLoading, setError } from '../reduxStore/slices/uiSlice';
-import { setUser, resetUser, setAllUser } from '../reduxStore/slices/usersSlice';
+import { setUser, resetUser} from '../reduxStore/slices/usersSlice';
 import { useEffect } from 'react';
+import {endpoints} from "../utils/constants"
 const useAuth = () => {
   const dispatch = useDispatch();
-  const { user, allUser } = useSelector((state) => state.users);
+  const { user} = useSelector((state) => state.users);
   const { loading, error } = useSelector((state) => state.ui);
+
 
   // Function to login the user
   const login = async (email, password) => {
@@ -32,14 +34,6 @@ const useAuth = () => {
       // Handle the response based on the user role
       dispatch(setUser(data.user)); // Set logged-in user data
       console.log(data);
-
-      if (data.users) {
-        dispatch(setAllUser(data.users)); // Store all users if logged-in user is admin/superadmin
-        console.log(data.users);
-      } else {
-        dispatch(setAllUser([])); // Set an empty array if not admin/superadmin
-
-      }
 
     } catch (err) {
       dispatch(setError(err.message)); // Handle any errors
@@ -97,7 +91,6 @@ const useAuth = () => {
     user,
     login,
     logout,
-    allUser,
     loading,
     error,
   };
