@@ -1,7 +1,14 @@
 const mongoose = require('mongoose');
+const {assignmentSchema} =require('./courseSchema')
 
 // Message Schema Definition
 const messageSchema = new mongoose.Schema({
+  id: { 
+    type: String,
+    required: true,
+    unique: true,  // Ensure the 'id' is unique for each notification
+    default: () => new mongoose.Types.ObjectId().toString() // Default to a new unique ObjectId as string
+  },
   delivered: { type: Boolean, default: false },
   isSentByUser: { type: Boolean, default: false },
   message: { type: String, required: true },
@@ -13,30 +20,36 @@ const messageSchema = new mongoose.Schema({
 
 // Notification Schema Definition
 const notificationSchema = new mongoose.Schema({
-  message: { 
+  id: { 
     type: String, 
-    required: true 
+    required: true, 
+    unique: true,  // Ensure the 'id' is unique for each notification
+    default: () => new mongoose.Types.ObjectId().toString() // Default to a new unique ObjectId as string
   },
-  timestamp: { 
-    type: Date, 
+  message: {
+    type: String,
+    required: true
+  },
+  timestamp: {
+    type: Date,
     default: Date.now // Use `Date` type for proper date handling
   },
-  type: { 
-    type: String, 
+  type: {
+    type: String,
     enum: ['info', 'warning', 'error', 'success'], // Specify types for easy categorization
     default: 'info' // Default to 'info' type
   },
-  recipient: { 
+  recipient: {
     type: mongoose.Schema.Types.ObjectId, // Store the recipient's user ID
     ref: 'User', // Reference to the User model (admin, superadmin, etc.)
     required: true
   },
-  readStatus: { 
-    type: Boolean, 
+  readStatus: {
+    type: Boolean,
     default: false // Track whether the notification has been read or not
   },
-  priority: { 
-    type: String, 
+  priority: {
+    type: String,
     enum: ['low', 'medium', 'high'], // Indicate notification priority
     default: 'medium' // Default to medium priority
   },
@@ -57,6 +70,8 @@ const notificationSchema = new mongoose.Schema({
 
 // Index for faster querying by recipient and read status
 notificationSchema.index({ recipient: 1, readStatus: 1 });
+
+
 
 // Admin Schema
 const adminSchema = new mongoose.Schema({
@@ -105,19 +120,16 @@ const instructorSchema = new mongoose.Schema({
   idCardUrl: { type: String, default: '' },  // New idCardUrl field
   instructorId: { type: String, required: true, unique: true },
   averageRating: { type: Number, default: 0 },
-  programsAssigned: { type: [String], default: [] },
+  programsAssigned: { type: String, required: true },
   studentsAssigned: { type: [String], default: [] },
-  courses: { type: [String], default: [] },
-  assigment: { type: [String], default: [] },
   timeTable: { type: [String], default: [] },
-  program: { type: String, default: '' },  // New program field
   role: { type: String, default: 'instructor' },
   notifications: [notificationSchema],  // Embedding notification schema
   messages: [messageSchema] ,            // Embedding message schema
   userId: { type: String, required: true, unique: true },  // Added userId field
   createdAt: { type: String, default: new Date().toISOString() },
   updatedAt: { type: String, default: new Date().toISOString() },
-
+  
 });
 
 // Student Schema
@@ -133,21 +145,19 @@ const studentSchema = new mongoose.Schema({
   studentId: { type: String, required: true, unique: true },
   averageRating: { type: Number, default: 0 },
   assignedInstructor: { type: [String], default: [] },
-  courses: { type: [String], default: [] },
   cohort: { type: String, default: '' },
   program: { type: String, default: '' },  // New program field
   emergencyContactName: { type: String, required: true },  // New emergency contact fields
-  emergencyContactRelationship: { type: String, required: true },
+  emergencyContactRelationship: { type: String, required: true},
   emergencyContactPhone: { type: String, required: true },
   role: { type: String, default: 'student' },
   notifications: [notificationSchema],  // Embedding notification schema
   messages: [messageSchema],            // Embedding message schema
   studentProgress: { type: Number, default: 0 },
-  assigment: { type: [String], default: [] },
-  timeTable: { type: [String], default: [] },
   userId: { type: String, required: true, unique: true },  // Added userId field
   createdAt: { type: String, default: new Date().toISOString() },
   updatedAt: { type: String, default: new Date().toISOString() },
+  amountPaid: { type: Number, require: true },
 });
 
 // Export Models

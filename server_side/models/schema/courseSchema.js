@@ -1,32 +1,47 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const { Schema } = mongoose; // Destructure Schema from mongoose
 
 // Assignment Schema
 const assignmentSchema = new Schema({
   title: { type: String, required: true },
   description: { type: String },
   dueDate: { type: Date },
-  courseId: { type: Schema.Types.ObjectId, ref: "Course" },  // Reference to Course
-  createdBy: { type: Schema.Types.ObjectId, ref: "Instructor" }, // Reference to Instructor
-  submissions: [String] // Array of submission IDs or file links
-});
+  submissions: [String], // Array of submission IDs or file links
+}, { _id: true }); // Auto-generate _id
 
+// Timetable Schema
+const timetableSchema = new Schema({
+  date: { type: Date, required: true },
+  time: { type: String, required: true },
+  location: { type: String, required: true },
+  topic: { type: String, required: true },
+  done: { type: Boolean, default: false }, // Default to false
+}, { _id: true }); // Auto-generate _id
+
+// Cohort Schema
+const cohortSchema = new Schema({
+  cohortName: { type: String, required: true },
+  instructor: { type: String, required: true },
+  assignments: { type: [assignmentSchema], default: [] }, // Array of assignments
+  students: { type: [String], default: [] }, // List of student IDs
+  timetable: { type: [timetableSchema], default: [] }, // Array of timetable objects
+}, { timestamps: true });
+
+// Course Schema
 const courseSchema = new Schema({
-  courseId: { type: String, unique: true, required: true },
   courseName: { type: String, required: true },
+  courseId: { type: String, required: true, unique: true }, // Add courseId field
   cost: { type: Number, required: true },
   duration: { type: String, required: true },
   description: { type: String, required: true },
-  startDate: { type: String, required: true },
-  cohorts: { type: [String], default: [] }, // Set default to an empty array
-  instructors: { type: [String], default: [] },
-
+  startDate: { type: Date, required: true },
+  cohorts: { type: [cohortSchema], default: [] }, // Array of cohort objects
+  instructors: { type: [String], default: [] }, // Array of instructor IDs
+  curriculum: { type: [String], default: [] }, // Curriculum topics
+  students: { type: [String], default: [] }, // List of student IDs
 }, { timestamps: true });
 
-
-
-// Model Exports
-const Assignment = mongoose.model("Assignment", assignmentSchema);
+// Models Export
 const Course = mongoose.model("Course", courseSchema);
 
-module.exports = { Assignment, Course };
+module.exports = { assignmentSchema, Course };

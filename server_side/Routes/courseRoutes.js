@@ -1,30 +1,17 @@
-// routes/courseRoutes.js
 const express = require('express');
-const {
-  createCourse,
-  getCourses,
-  getCourseById,
-  updateCourse,
-  deleteCourse,
-  addCohort
-} = require('../controller/courseController');
-
 const router = express.Router();
+const { addCourse, getCourses, updateCourse, deleteCourse, updateNotificationById } = require('../controller/courseController');  // Adjust path accordingly
 
-// Route to create a course
-router.post('/api/v1/courses', createCourse);
+// Add a new course
+router.post('/api/v1/courses', addCourse);
 
-// Route to get all courses
+// Get all courses
 router.get('/api/v1/courses', getCourses);
 
-// Route to get a course by ID
-router.get('/api/v1/courses/:courseId', getCourseById);
-
-// Route to update a course by ID
+// Update a specific course
 router.put('/api/v1/courses/:courseId', updateCourse);
 
-// Route to delete a course by ID
+// Delete a specific course
 router.delete('/api/v1/courses/:courseId', deleteCourse);
-router.patch('api/v1/courses/:courseId/cohorts', addCohort);
 
 module.exports = router;

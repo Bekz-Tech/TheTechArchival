@@ -8,13 +8,14 @@ import logger from 'redux-logger'; // Import redux-logger
 import adminDataReducer from './slices/adminDataSlice';
 import messageReducer from './slices/messageSlice';
 import streamReducer from './slices/videoCallSlice';
-
+import apiCallCheckReducer from './slices/apiCallCheck';
+import notificationReducer from './slices/notificationSlice';
 
 // Redux Persist Config
 const persistConfig = {
   key: 'root', // Key to store the persisted state
   storage, // sessionStorage is used here
-  whitelist: ['users'], // Only persist the 'users' slice (whitelist)
+  whitelist: ['users', 'adminData', 'apiCallCheck'], // Only persist certain slices
 };
 
 // Combine reducers (ui slice is not persisted, so no need to include it in the persistConfig)
@@ -24,21 +25,27 @@ const rootReducer = combineReducers({
   adminData: adminDataReducer,
   message: messageReducer,
   stream: streamReducer,
+  apiCallCheck: apiCallCheckReducer,
+  notifications: notificationReducer,
 });
 
 // Wrap your reducers with persistReducer
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// Configure Store with Redux Persist and make sure devTools is enabled
+// Configure Store with Redux Persist and handle non-serializable data
 const store = configureStore({
   reducer: persistedReducer,
   
-  // To ensure Redux DevTools are enabled, we hardcode `true` for testing
-  devTools: true, // Remove conditional to make sure DevTools works
+  devTools: true, // Keep Redux DevTools enabled
   
-  // Add middleware
+  // Customize the middleware to ignore non-serializable actions
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(logger), // Add redux-logger to the middleware chain
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore specific Redux Persist actions
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }).concat(logger), // Add redux-logger to the middleware chain
 });
 
 const persistor = persistStore(store); // Create a persistor

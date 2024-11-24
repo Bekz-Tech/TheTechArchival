@@ -9,7 +9,7 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsPopover from '../../components/notificationPopper';
-import { NotificationContext } from '../../../../contexts/notifications'; // Import the NotificationContext
+import { markAsRead } from '../../../../reduxStore/slices/notificationSlice'; // Import the markAsRead action
 import DownloadIdButton from '../../components/IdCards';
 import CodeGenerator from '../../../../generateCode/codeGenerator'; // Assuming this is a valid component
 
@@ -17,11 +17,12 @@ const Topbar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
-  const { notifications, unreadCount, markNotificationAsRead } = useContext(NotificationContext); // Access notifications and unreadCount
   
-  // Access user and users from Redux store
+  // Access notifications and unreadCount from Redux store
+  const { notifications, unreadCount } = useSelector((state) => state.notifications);
+  const dispatch = useDispatch();
+  
   const userDetails = useSelector((state) => state.users.user);
-  console.log(userDetails)
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
@@ -37,8 +38,8 @@ const Topbar = () => {
     setNotificationsAnchorEl(event.currentTarget);
     // Mark notifications as read when opening the popover
     notifications.forEach(notification => {
-      if (!notification.isRead) {
-        markNotificationAsRead(notification.id, userDetails.userId); // Call the function to mark notification as read
+      if (!notification.readStatus) {
+        dispatch(markAsRead(notification.id)); // Dispatch the markAsRead action
       }
     });
   };

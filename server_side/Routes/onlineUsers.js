@@ -18,4 +18,6 @@ router.patch('/api/v1/user', uploadImages, userController.patchUser);
 // Route for deleting a user
 router.delete('/api/v1/user', userController.deleteUser);
 
+router.patch('/notification/:notificationId', userController.updateNotificationById);
+
 module.exports = router;

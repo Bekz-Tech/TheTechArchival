@@ -20,7 +20,6 @@ const courseRouter = require("./Routes/courseRoutes");
 
 
 
-
 // Import rate limiting middleware
 const rateLimit = require('express-rate-limit');
 

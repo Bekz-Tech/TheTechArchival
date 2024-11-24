@@ -2,12 +2,30 @@ const yup = require('yup');
 const dbx = require('../../configs/dropBox');
 const { Admin, SuperAdmin, Instructor, Student } = require('../../models/schema/onlineUsers');
 const mongoose = require('mongoose');
+const Payment = require('../../models/schema/paymentSchema');
 
 // Assuming you have a Mongoose model for the `userIds` collection
 const UserId = mongoose.model('UserId', new mongoose.Schema({
   userId: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 }));
+
+
+// Helper function to generate a unique transaction ID
+const generateUniqueTransactionId = async () => {
+  const Payment = mongoose.model('Payment');
+  let transactionId;
+
+  while (true) {
+    transactionId = `TXN${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
+    const existingTransaction = await Payment.findOne({ transactionId });
+    if (!existingTransaction) break; // If unique, exit loop
+  }
+
+  return transactionId;
+};
+
+
 
 const generateUserId = async () => {
   // Find the latest userId from the collection by sorting in descending order
@@ -159,6 +177,7 @@ module.exports = {
   generateStudentId,
   getModelByRole,
   userValidationSchemas,
-  generateUserId
+  generateUserId,
+  generateUniqueTransactionId
 
 };

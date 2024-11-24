@@ -1,17 +1,22 @@
-const{
-  uploadToDropbox,
-  generateInstructorId,
-  generateStudentId,
-  getModelByRole,
-  userValidationSchemas,
-  generateUserId
-} = require('./utils')
+const { uploadToDropbox, 
+        generateUniqueTransactionId,  
+        generateInstructorId, 
+        generateStudentId, 
+        getModelByRole, 
+        userValidationSchemas, 
+        generateUserId 
+      } = require('./utils');
+      
 const yup = require('yup');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+const Course = require('../../models/schema/courseSchema');
+const Payment = require('../../models/schema/paymentSchema');
+const Chatroom = require('../../models/schema/chatRoom');
 
 // Create user
 const createUser = async (req, res) => {
-  const { role, program, password } = req.body;
+  const { role, program, password, cohort, amountPaid } = req.body;
   const validationSchema = userValidationSchemas[role];
 
   if (!validationSchema) {
@@ -36,7 +41,7 @@ const createUser = async (req, res) => {
 
     // Hash the password if provided
     if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10); // Hash with a salt of 10 rounds
+      const hashedPassword = await bcrypt.hash(password, 10);
       req.body.password = hashedPassword;
     }
 
@@ -57,6 +62,70 @@ const createUser = async (req, res) => {
     const newUser = new Model(req.body);
     await newUser.save();
 
+    // Payment generation for students
+    if (role === 'student' && amountPaid) {
+      const transactionId = await generateUniqueTransactionId();
+      const payment = new Payment({
+        userId: newUser._id,
+        amount: amountPaid,
+        method: "other", // Add logic to capture actual method if needed
+        status: "completed",
+        transactionId,
+      });
+      await payment.save();
+    }
+
+    // Handle cohorts and chatrooms
+    const CourseModel = mongoose.model('Course');
+    const ChatroomModel = mongoose.model('Chatroom');
+
+    if (role === 'student') {
+      // Add the user to the cohort's students array
+      await CourseModel.updateOne(
+        { "cohorts.cohortName": cohort },
+        { $addToSet: { "cohorts.$.students": newUser.userId, students: newUser.userId } }
+      );
+
+      // Add the student to the relevant chatroom
+      await ChatroomModel.updateOne(
+        { name: cohort },
+        { $addToSet: { participants: newUser.userId } }
+      );
+    } else if (role === 'instructor') {
+      // Add the instructor to the cohort
+      await CourseModel.updateOne(
+        { "cohorts.cohortName": cohort },
+        { $set: { "cohorts.$.instructor": newUser.userId } }
+      );
+
+      // Add the instructor to the relevant chatroom
+      await ChatroomModel.updateOne(
+        { name: cohort },
+        { $addToSet: { participants: newUser.userId } }
+      );
+    } else if (role === 'admin' || role === 'superadmin') {
+      // Add the user to all chatrooms
+      await ChatroomModel.updateMany(
+        {},
+        { $addToSet: { participants: newUser.userId } }
+      );
+    }
+
+    // Update Course for Instructor or Student
+    if (role === 'instructor') {
+      // Add instructor to the course's `instructors` array where program name matches
+      await CourseModel.updateOne(
+        { courseName: program }, // assuming `program` corresponds to `courseName` in the Course schema
+        { $addToSet: { instructors: newUser.userId } }
+      );
+    } else if (role === 'student') {
+      // Add student to the course's `students` array where program name matches
+      await CourseModel.updateOne(
+        { courseName: program }, // assuming `program` corresponds to `courseName` in the Course schema
+        { $addToSet: { students: newUser.userId } }
+      );
+    }
+
     return res.status(201).json({ message: `${role} created successfully`, user: newUser });
   } catch (error) {
     if (error instanceof yup.ValidationError) {
@@ -66,8 +135,14 @@ const createUser = async (req, res) => {
   }
 };
 
+
+
+
+
+
 // Get users by role
 const getUsers = async (req, res) => {
+  console.log('called')
   try {
     // Fetch all users from each role
     const adminModel = getModelByRole('admin');
@@ -168,10 +243,52 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Function to update notification by ID
+const updateNotificationById = async (req, res) => {
+  const { notificationId } = req.params; // Get notification ID from request parameters
+  const { message, type, priority, readStatus, actionLink, isDeleted } = req.body; // Get updated data from request body
+  
+  // Find the notification using the notification ID
+  try {
+    // Searching in all user types (Admin, SuperAdmin, Instructor, Student)
+    const userModels = [Admin, SuperAdmin, Instructor, Student];
+    
+    for (let model of userModels) {
+      const user = await model.findOne({ 'notifications.id': notificationId });
+
+      if (user) {
+        // Notification found, now update it
+        const notification = user.notifications.id(notificationId); // Access the specific notification by ID
+
+        // Update fields if provided in the request body
+        if (message) notification.message = message;
+        if (type) notification.type = type;
+        if (priority) notification.priority = priority;
+        if (readStatus !== undefined) notification.readStatus = readStatus;
+        if (actionLink) notification.actionLink = actionLink;
+        if (isDeleted !== undefined) notification.isDeleted = isDeleted;
+
+        // Save the updated user document
+        await user.save();
+
+        return res.status(200).json({ message: 'Notification updated successfully', notification });
+      }
+    }
+
+    // If notification ID was not found in any user
+    return res.status(404).json({ message: 'Notification not found' });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   createUser,
   getUsers,
   updateUser,
   patchUser,
   deleteUser,
+  updateNotificationById
 };

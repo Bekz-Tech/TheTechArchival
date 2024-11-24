@@ -5,6 +5,7 @@ const initialState = {
   usersData: {},
   error: null,
   connected: false,
+  allCourses: []
 };
 
 const adminDataSlice = createSlice({
@@ -20,10 +21,14 @@ const adminDataSlice = createSlice({
     setConnectionStatus: (state, action) => {
       state.connected = action.payload;
     },
+    setAllCourses: (state, action) => {
+      state.courses = action.payload;
+    },
+
   },
 });
 
-export const { setUsersData, setError, setConnectionStatus } = adminDataSlice.actions;
+export const { setUsersData, setAllCourses, setError, setConnectionStatus } = adminDataSlice.actions;
 
 export const selectadminDataState = (state) => state.adminData;
 

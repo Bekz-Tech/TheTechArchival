@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react';
  */
 const useApi = (url) => {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState('');
   const [error, setError] = useState(null);
 
   /**
@@ -15,9 +15,12 @@ const useApi = (url) => {
    * @param {string} method - The HTTP method (GET, POST, PUT, DELETE).
    * @param {Object|null} body - The request body (for POST, PUT methods).
    * @param {Object} config - Additional configurations like headers (optional).
+   * @param {string} url - The API endpoint to be called.
    */
   const callApi = useCallback(
     async (method = 'GET', body = null, config = {}) => {
+      console.log('called')
+
       setLoading(true);
       setError(null);
 
@@ -36,6 +39,7 @@ const useApi = (url) => {
 
       try {
         const response = await fetch(url, options);
+        console.log(response)
 
         // If the response is not ok (status not in the 200 range), throw an error
         if (!response.ok) {
@@ -44,16 +48,16 @@ const useApi = (url) => {
 
         // Parse the response data as JSON
         const responseData = await response.json();
-        setData(responseData);
+        console.log(responseData)
+        setData(responseData); // Only set if valid data is received
+        console.log(data)
 
       } catch (err) {
-        // Handle errors by setting the error state
         setError(err.message || 'Something went wrong');
       } finally {
         setLoading(false);
       }
-    },
-    [url] // The dependency array ensures that it updates if URL changes
+    },[] // No dependencies, so this won't change unless the component re-renders
   );
 
   return {

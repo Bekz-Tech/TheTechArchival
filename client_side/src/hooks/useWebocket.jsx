@@ -4,25 +4,29 @@ import { addMessage } from '../reduxStore/slices/messageSlice';
 import { setStreamStatus } from '../reduxStore/slices/videoCallSlice';
 import { setUsersData } from '../reduxStore/slices/adminDataSlice';
 import { setError, setLoading } from '../reduxStore/slices/uiSlice';
+import { addNotification } from '../reduxStore/slices/notificationSlice';  // Import the notification action
 
-const useWebSocket = (url, actionToSend = null) => {
+const useWebSocket = (actionToSend = null) => {
   const dispatch = useDispatch();
   const socket = useRef(null);
   const isConnected = useSelector((state) => state.stream.isConnected);
+  const user = useSelector((state) => state.users.user);
 
   useEffect(() => {
     if (socket.current) return;  // Prevent re-connection if already connected
 
-    console.log('Attempting to connect to WebSocket:', url);
+    console.log('Attempting to connect to WebSocket');
 
     // Dispatch loading state when attempting to connect
     dispatch(setLoading(true));
 
     // Create WebSocket connection
-    socket.current = new WebSocket(url);
+    socket.current = new WebSocket('http://localhost:5000'); // Replace with your WebSocket server URL
 
     socket.current.onopen = () => {
       console.log('WebSocket Connected');
+      
+      socket.current.send(JSON.stringify({ userId: user.userId, role: user.role }));
       dispatch(setLoading(false)); // Dispatch loading false once connection is successful
       dispatch(setStreamStatus({ isConnected: true })); // Ensure connection state is updated
 
@@ -47,7 +51,7 @@ const useWebSocket = (url, actionToSend = null) => {
 
     socket.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      const { action, message, content, users } = data;
+      const { action, message, content, users, notification } = data;
       console.log(action);
 
       // Handle different actions from the WebSocket
@@ -72,21 +76,21 @@ const useWebSocket = (url, actionToSend = null) => {
           dispatch(setStreamStatus({ action, message }));
           break;
 
-        case 'initialData':
+        case 'updatedUsers':
           if (users) {
-            console.log('Users:', users);
+            console.log('Updating users:', users);
             dispatch(setUsersData(users));
             console.log(users);
           }
           break;
 
-          case 'updatedUsers':
-            if (users) {
-              console.log('Updating users:', users);
-              dispatch(setUsersData(users));
-              console.log(users);
-            }
-            break;
+        case 'notification':
+          if (notification) {
+            console.log('New notification received:', notification);
+            // Dispatch the notification to Redux
+            dispatch(addNotification(notification));
+          }
+          break;
 
         default:
           console.log('Unknown action:', action);
@@ -99,7 +103,7 @@ const useWebSocket = (url, actionToSend = null) => {
         socket.current.close();
       }
     };
-  }, [url, actionToSend, dispatch]);
+  }, [dispatch, actionToSend, user]);
 
   // Send message to WebSocket server
   const sendMessage = (data) => {
