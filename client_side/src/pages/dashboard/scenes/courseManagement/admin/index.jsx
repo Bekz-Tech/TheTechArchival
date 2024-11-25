@@ -20,17 +20,16 @@ import EditIcon from '@mui/icons-material/Edit';
 import Header from "../../../components/Header";
 import Modal from "../../../components/modal";
 import useCourses from './useCourses';
-
+import { AddCurriculumModal,
+        AddCourseModal,
+        AddCohortModal
+} from './courseModals';
 
 const Admin = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  // const courses = useSelector((state) => state.adminData.courses.courses);
-  // console.log(courses);
-  
   const {
     courses,
-    formValues,
     addCourseModalOpen,
     updateCurriculumModalOpen,
     selectedCourse,
@@ -49,8 +48,17 @@ const Admin = () => {
     closeUpdateCurriculumModal,
     openCourseDetailsModal,
     closeCourseDetailsModal,
-    closeAddMessageModal
+    closeAddMessageModal,
+    openCohortAddModal,
+    closeCohortAddModal,
+    openAddCurriculumModal,
+    closeAddCurriculumModal,
+    cohortAddModalOpen
   } = useCourses();
+
+  const addCohort = () => { 
+    openCohortAddModal();
+  }
 
   return (
     <Grid container spacing={3} px={3}>
@@ -94,89 +102,72 @@ const Admin = () => {
         </Paper>
       </Grid>
 
-      {/* Modals */}
-      <Modal open={addCourseModalOpen} onClose={closeAddCourseModal} title="Add New Course">
-        <TextField
-          label="Course Name"
-          name="courseName"
-          value={formValues.courseName}
-          onChange={handleChange}
-        />
-        <TextField
-          label="Course Description"
-          name="courseDescription"
-          value={formValues.courseDescription}
-          onChange={handleChange}
-        />
-        <TextField
-          label="Duration"
-          name="duration"
-          value={formValues.duration}
-          onChange={handleChange}
-        />
-        <TextField
-          label="Start Date"
-          name="startDate"
-          value={formValues.startDate}
-          onChange={handleChange}
-        />
-        <TextField
-          label="Cost"
-          name="cost"
-          value={formValues.cost}
-          onChange={handleChange}
-        />
-        <Button onClick={handleAddCourse} variant="contained" color="primary">
-          Add Course
-        </Button>
-      </Modal>
-
-      <Modal open={updateCurriculumModalOpen} onClose={closeUpdateCurriculumModal} title="Update Curriculum">
-        <Grid container spacing={2}>
-          {formValues.curriculum.map((item, index) => (
-            <Grid item xs={12} key={index}>
-              <TextField
-                label="Topic"
-                name={`curriculum[${index}].topic`}
-                value={item.topic}
-                onChange={(e) => handleCurriculumChange(index, 'topic', e.target.value)}
-              />
-              <TextField
-                label="Overview"
-                name={`curriculum[${index}].overview`}
-                value={item.overview}
-                onChange={(e) => handleCurriculumChange(index, 'overview', e.target.value)}
-              />
-              <TextField
-                label="Week"
-                name={`curriculum[${index}].week`}
-                value={item.week}
-                onChange={(e) => handleCurriculumChange(index, 'week', e.target.value)}
-              />
-              <Button onClick={() => removeCurriculumField(index)} color="secondary">
-                Remove
-              </Button>
-            </Grid>
-          ))}
-          <Button onClick={addCurriculumField}>Add Curriculum</Button>
-          <Button onClick={handleUpdateCurriculum}>Save Curriculum</Button>
-        </Grid>
-      </Modal>
-
-      <Modal open={addMessageModal} onClose={closeAddMessageModal} title="Add Message">
-        <TextField
-          label="Message"
-          name="message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <Button onClick={() => {/* Handle add message */}} variant="contained" color="primary">
-          Add Message
-        </Button>
-      </Modal>
-
+      {/* Course Details Modal */}
       <Modal open={selectedCourse !== null} onClose={closeCourseDetailsModal} title={selectedCourse?.courseName}>
-        {/* Course details */}
+        {selectedCourse && (
+          <Box>
+            <Typography variant="h6">Course Name</Typography>
+            <Typography>{selectedCourse.courseName}</Typography>
+
+            <Typography variant="h6">Description</Typography>
+            <Typography>{selectedCourse.description}</Typography>
+
+            <Typography variant="h6">Duration</Typography>
+            <Typography>{selectedCourse.duration}</Typography>
+
+            <Typography variant="h6">Start Date</Typography>
+            <Typography>{new Date(selectedCourse.startDate).toLocaleDateString()}</Typography>
+
+            <Typography variant="h6">Cost</Typography>
+            <Typography>{selectedCourse.cost}</Typography>
+
+            <Typography variant="h6">Cohorts</Typography>
+            {selectedCourse.cohorts.length > 0 ? (
+              selectedCourse.cohorts.map((cohort, index) => (
+                <Typography key={index}>Cohort {index + 1}</Typography>
+              ))
+            ) : (
+              <Typography>No Cohorts available</Typography>
+            )}
+
+            <Typography variant="h6">Curriculum</Typography>
+            {selectedCourse.curriculum.length > 0 ? (
+              selectedCourse.curriculum.map((curriculumItem, index) => (
+                <Box key={index} mb={2}>
+                  <Typography variant="body1">Week {curriculumItem.week}: {curriculumItem.topic}</Typography>
+                  <Typography variant="body2">{curriculumItem.overview}</Typography>
+                </Box>
+              ))
+            ) : (
+              <Typography>No Curriculum available</Typography>
+            )}
+
+            {/* Buttons to add cohorts and curriculum */}
+            <Button variant="contained" color="primary" onClick={addCohort}>
+              Add Cohort
+            </Button>
+            <Button variant="contained" color="primary" onClick={openAddCurriculumModal}>
+              Add Curriculum
+            </Button>
+          </Box>
+        )}
+      </Modal>
+
+      {/* Modals for Adding Course, Cohort, and Curriculum */}
+      
+      {/* Add Course Modal */}
+      <Modal open={addCourseModalOpen} onClose={closeAddCourseModal} title="Add New Course">
+        <AddCourseModal />
+      </Modal>
+
+      {/* Add Cohort Modal */}
+      <Modal open={cohortAddModalOpen} onClose={closeCohortAddModal} title="Add Cohort" noConfirm>
+        <AddCohortModal courseId={selectedCourse?.courseId} />
+      </Modal>
+
+      {/* Add Curriculum Modal */}
+      <Modal open={openAddCurriculumModal} onClose={closeAddCurriculumModal} title="Add Curriculum">
+        <AddCurriculumModal />
       </Modal>
     </Grid>
   );

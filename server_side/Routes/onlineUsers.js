@@ -3,6 +3,9 @@ const router = express.Router();
 const userController = require('../controller/onlinUsers'); // Import the controller functions
 const { uploadImages } = require('../middleware/uploadImages')
 
+
+console.log('called')
+
 // Route for creating a user
 router.post('/api/v1/user', uploadImages, userController.createUser);
 
@@ -18,6 +21,6 @@ router.patch('/api/v1/user', uploadImages, userController.patchUser);
 // Route for deleting a user
 router.delete('/api/v1/user', userController.deleteUser);
 
-router.patch('/notification/:notificationId', userController.updateNotificationById);
+router.patch('/api/v1/notification/:notificationId', userController.updateNotificationById);
 
 module.exports = router;

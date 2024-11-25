@@ -9,7 +9,6 @@ const REFRESH_TOKEN_ENDPOINT = import.meta.env.VITE_REFRESHTOKEN_ENDPOINT;
 const COURSES_ENDPOINT = import.meta.env.VITE_COURSES_ENDPOINT;
 
 
-
 const endpoints = {
   LOGIN: `${BASE_URL}${LOGIN_ENDPOINT}`,
   USER: `${BASE_URL}${USER_ENDPOINT}`,

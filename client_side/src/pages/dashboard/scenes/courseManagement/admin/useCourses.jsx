@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import { updateCourseCurriculum } from "../../../../../firebase/utils";
 import useApi from '../../../../../hooks/useApi';
 import useWebSocket from '../../../../../hooks/useWebocket';
-import { setFetchedCourses } from '../../../../../reduxStore/slices/apiCallCheck';
 import { useDispatch, useSelector } from 'react-redux';
 import {setAllCourses} from '../../../../../reduxStore/slices/adminDataSlice'
-
-
+import { endpoints } from '../../../../../utils/constants';
 
 
 const useCourses = () => {
@@ -14,7 +12,6 @@ const useCourses = () => {
 
   // Use the centralized useWebSocket hook, passing both URL and actionToSend
   useWebSocket(actionToSend)
-
 
   const [formValues, setFormValues] = useState({
     courseName: '',
@@ -24,16 +21,18 @@ const useCourses = () => {
     cost: '',
     curriculum: []
   });
-const [courses, setCourses] = useState([]);
+  
+  const [courses, setCourses] = useState([]);
   const [addCourseModalOpen, setAddCourseModalOpen] = useState(false);
+  const [cohortAddModalOpen, setCohortAddModalOpen] = useState(false);  // Separate state for Cohort Add Modal
   const [updateCurriculumModalOpen, setUpdateCurriculumModalOpen] = useState(false);
   const [currentCourseId, setCurrentCourseId] = useState(null);
   const [addMessageModal, setAddMessageModal] = useState(null);
   const [message, setMessage] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const { loading, data, error, callApi } = useApi('http://localhost:5000/api/v1/courses');
-  const allCourses = useSelector((state) => state.adminData.courses.courses);
-  console.log(allCourses);
+
+  const { loading, data, error, callApi } = useApi(endpoints.COURSES);
+  const allCourses = useSelector((state) => state.adminData.allCourses);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -42,23 +41,18 @@ const [courses, setCourses] = useState([]);
     }
   }, [allCourses]);  // Only runs when `allCourses` changes
   
-
-
-
-  // Load courses from session storage on component mount
   useEffect(() => {
     callApi();
     console.log('hello')
-    }, []);
+  }, []);
 
-    useEffect(() => {
-      if (!loading && data) {
-        console.log('Data received:', data);
-        dispatch(setAllCourses(data));
-        setCourses(data.courses);
-      }
-    }, [loading, data]); // Make sure this runs when loading is false and data is available
-    
+  useEffect(() => {
+    if (!loading && data) {
+      console.log('Data received:', data);
+      dispatch(setAllCourses(data));
+      setCourses(data.courses);
+    }
+  }, [loading, data]); 
 
   // Handle course form input changes
   const handleChange = (e) => {
@@ -213,6 +207,18 @@ const [courses, setCourses] = useState([]);
     });
   };
 
+  // Open cohort add modal
+  const openCohortAddModal = () => {
+    console.log('hello')
+    setCohortAddModalOpen(true);  // Set cohort modal to true
+  };
+  console.log(cohortAddModalOpen);
+
+  // Close cohort add modal
+  const closeCohortAddModal = () => {
+    setCohortAddModalOpen(false);  // Set cohort modal to false
+  };
+
   // Close curriculum update modal
   const closeUpdateCurriculumModal = () => {
     setUpdateCurriculumModalOpen(false);
@@ -241,12 +247,11 @@ const [courses, setCourses] = useState([]);
     setAddMessageModal(false);
   };
 
-  
-
   return {
     courses,
     formValues,
     addCourseModalOpen,
+    cohortAddModalOpen,  // Pass this to the UI
     updateCurriculumModalOpen,
     selectedCourse,
     addMessageModal,
@@ -261,6 +266,8 @@ const [courses, setCourses] = useState([]);
     removeCurriculumField,
     openAddCourseModal,
     closeAddCourseModal,
+    openCohortAddModal,  // Provide open/close methods
+    closeCohortAddModal,
     closeUpdateCurriculumModal,
     openCourseDetailsModal,
     closeCourseDetailsModal,

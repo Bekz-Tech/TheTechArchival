@@ -2,7 +2,7 @@ const {Course} = require('../models/schema/courseSchema');  // Adjust the path b
 
 // Function to generate a unique courseId
 async function generateCourseId(courseName) {
-  const baseCourseId = `${courseName.replace(/\s+/g, '')}/`; // Remove spaces in courseName
+  const baseCourseId = `${courseName.replace(/\s+/g, '')}`; // Remove spaces in courseName
   let randomNumber = Math.floor(10000 + Math.random() * 90000); // Generate a 5-digit number
   let courseId = baseCourseId + randomNumber;
 
