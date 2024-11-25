@@ -1,69 +1,110 @@
-// controllers/codeController.js
 const Code = require("../models/schema/codes");
 
-exports.generateCode = async (req, res) => {
-  const length = 11;
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  const now = new Date();
-  const options = { day: "numeric", month: "short", year: "numeric" };
-  const formattedDate = now.toLocaleDateString("en-US", options);
-  const timeOptions = { hour: "numeric", minute: "numeric", hour12: true };
-  const formattedTime = now.toLocaleTimeString("en-US", timeOptions);
-
-  const codeData = {
-    code: result,
-    generatedDate: formattedDate,
-    generatedTime: formattedTime,
-  };
+// Function to store a generated code
+exports.storeGeneratedCode = async (req, res) => {
+  const {
+    code,
+    generatedDate,
+    generatedTime,
+    studentType,
+    amountPaid,
+    userId,
+  } = req.body;
 
   try {
-    const code = await Code.create(codeData);
-    res.status(201).json({ success: true, code });
+    // Validate required fields
+    if (!code || !generatedDate || !generatedTime || !studentType) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    // Create a new code document
+    const newCode = new Code({
+      code,
+      generatedDate,
+      generatedTime,
+      studentType,
+      amountPaid: studentType === "online" ? amountPaid : null, // AmountPaid only for online students
+      used: false, // Default to unused
+      usedDate: null, // Initially null
+      usedTime: null, // Initially null
+      userId: userId || null, // Optional field
+    });
+
+    // Save the code to the database
+    const savedCode = await newCode.save();
+
+    res.status(201).json({
+      message: "Code generated and stored successfully.",
+      codeDetails: savedCode,
+    });
   } catch (error) {
-    console.error("Error generating code:", error);
-    res.status(500).json({ success: false, message: "Failed to generate code" });
+    console.error("Error storing generated code:", error);
+
+    // Handle unique code violation
+    if (error.code === 11000) {
+      return res.status(409).json({ error: "Code already exists. Generate a new code." });
+    }
+
+    res.status(500).json({ error: "Internal server error. Please try again later." });
   }
 };
 
-
+// Function to authenticate and mark a code as used
 exports.authenticateCode = async (req, res) => {
   const { inputCode } = req.body;
 
   try {
-    // Find the code in MongoDB
-    const codeDoc = await Code.findOne({ code: inputCode });
+    // Validate input
+    if (!inputCode || typeof inputCode !== "string") {
+      return res.status(400).json({ error: "Invalid input code provided." });
+    }
+
+    // Get current date and time in UTC
+    const now = new Date();
+    const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const formattedTime = now.toISOString().split("T")[1].slice(0, 8); // HH:mm:ss
+
+    // Find and update the code atomically
+    const codeDoc = await Code.findOneAndUpdate(
+      { code: inputCode, used: false },
+      { used: true, usedDate: formattedDate, usedTime: formattedTime },
+      { new: true } // Returns the updated document
+    );
 
     if (!codeDoc) {
-      // If code doesn't exist
-      return res.status(404).json({ error: "Invalid code. Please try again." });
+      return res.status(404).json({ error: "Invalid or already used code." });
     }
-
-    if (codeDoc.used) {
-      // If code is already used
-      return res.status(400).json({ error: "This code has already been used." });
-    }
-
-    // Mark the code as used and set used date and time
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
-    const formattedTime = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric", hour12: true });
-
-    codeDoc.used = true;
-    codeDoc.usedDate = formattedDate;
-    codeDoc.usedTime = formattedTime;
-
-    await codeDoc.save();
 
     // Respond with success
-    res.status(200).json({ message: "User authenticated successfully" });
+    res.status(200).json({
+      message: "User authenticated successfully",
+      code: codeDoc.code,
+      usedDate: codeDoc.usedDate,
+      usedTime: codeDoc.usedTime,
+    });
   } catch (error) {
-    console.error("Error checking code: ", error);
-    res.status(500).json({ error: "An error occurred while checking the code." });
+    console.error("Error authenticating code:", error);
+    res.status(500).json({ error: "Something went wrong. Please try again later." });
+  }
+};
+
+
+// Function to retrieve all codes
+exports.getAllCodes = async (req, res) => {
+  try {
+    // Fetch all codes from the database
+    const codes = await Code.find();
+
+    if (!codes.length) {
+      return res.status(404).json({ message: "No codes found." });
+    }
+
+    res.status(200).json({
+      message: "Codes retrieved successfully.",
+      codes,
+    });
+  } catch (error) {
+    console.error("Error fetching codes:", error);
+    res.status(500).json({ error: "Internal server error. Please try again later." });
   }
 };

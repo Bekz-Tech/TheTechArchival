@@ -1,16 +1,16 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import TableComponent from "../../../../components/table";
-import { collection, getDocs } from "firebase/firestore"; // Firestore functions
-import { db } from "../../../../firebase/config"; // Make sure to import your Firebase config
-
-
+import { Button } from "@mui/material";
 
 const OfflineStudentTable = () => {
-    const [codes, setLocalCodes] = useState([]); // Local state for handling codes
-    const [sortBy, setSortBy] = useState("generatedDate"); // Sorting state
-    const [sortDirection, setSortDirection] = useState("asc");
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [codes, setCodes] = useState([]); // Local state for handling codes
+  const [tab, setTab] = useState("offline"); // State for switching between tabs
+  const [sortBy, setSortBy] = useState("generatedDate"); // Sorting state
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [loading, setLoading] = useState(false); // Loading state
+
   // Table columns
   const columns = [
     { id: "code", label: "Code" },
@@ -31,46 +31,110 @@ const OfflineStudentTable = () => {
       label: "Used Time",
       renderCell: (row) => (row.usedTime ? row.usedTime : "N/A"),
     },
+    {
+      id: "studentType",
+      label: "Student Type",
+      renderCell: (row) => (row.studentType ? row.studentType : "N/A"),
+    },
+    {
+      id: "amountPaid",
+      label: "Amount Paid",
+      renderCell: (row) => (row.amountPaid ? row.amountPaid : "N/A"),
+    },
   ];
 
-   useEffect(() => {
-     // Fetch codes from Firestore when the component mounts
-     const fetchCodes = async () => {
-       const querySnapshot = await getDocs(collection(db, "codes"));
-       let storedCodes = querySnapshot.docs.map((doc) => doc.data());
+  const fetchCodes = async () => {
+    setLoading(true); // Start loading
+    try {
+      const response = await fetch("http://localhost:5000/api/v1/get-codes", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-       // Sort the codes by generated date and time (newest first)
-       storedCodes.sort((a, b) => {
-         const dateA = new Date(`${a.generatedDate} ${a.generatedTime}`);
-         const dateB = new Date(`${b.generatedDate} ${b.generatedTime}`);
-         return dateB - dateA; // Sort by descending order
-       });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API Response:", data); // Log the response to inspect its structure
 
-       setLocalCodes(storedCodes); // Update local state
-     };
+        // Assuming data.codes contains the array of codes
+        const codesArray = data.codes || [];
 
-     fetchCodes();
-   }, []);
-  
-  return (
-    <TableComponent
-      columns={columns}
-      tableHeader="Generated Codes"
-      data={codes}
-      sortBy={sortBy}
-      sortDirection={sortDirection}
-      onSortChange={(columnId) => {
-        const isAsc = sortBy === columnId && sortDirection === "asc";
-        setSortDirection(isAsc ? "desc" : "asc");
-        setSortBy(columnId);
-      }}
-      page={page}
-      rowsPerPage={rowsPerPage}
-      onPageChange={(event, newPage) => setPage(newPage)}
-      onRowsPerPageChange={(event) =>
-        setRowsPerPage(parseInt(event.target.value, 10))
+        if (Array.isArray(codesArray)) {
+          // Sort the codes by generated date and time (newest first)
+          codesArray.sort((a, b) => {
+            const dateA = new Date(`${a.generatedDate} ${a.generatedTime}`);
+            const dateB = new Date(`${b.generatedDate} ${b.generatedTime}`);
+            return dateB - dateA; // Sort by descending order
+          });
+
+          setCodes(codesArray); // Update local state with sorted data
+        } else {
+          console.error("Expected an array but got:", typeof codesArray);
+        }
+      } else {
+        console.error("Failed to fetch codes:", response.statusText);
       }
-    />
+    } catch (error) {
+      console.error("Error fetching codes:", error);
+    } finally {
+      setLoading(false); // Stop loading
+    }
+  };
+
+  // Filter codes based on the selected tab (online or offline)
+  const filteredCodes = codes.filter((code) => code.studentType === tab);
+
+  return (
+    <div style={{ padding: "20px" }}>
+      {/* Tab Section */}
+      <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
+        <Button
+          onClick={() => setTab("offline")}
+          variant="contained"
+          color="secondary"
+        >
+          Offline Codes
+        </Button>
+        <Button
+          onClick={() => setTab("online")}
+          variant="contained"
+          color="secondary"
+        >
+          Online Codes
+        </Button>
+      </div>
+
+      {/* Fetching Button */}
+      <Button
+        onClick={fetchCodes}
+        variant="contained"
+        color="secondary"
+        disabled={loading} // Disable button while loading
+      >
+        {loading ? "Fetching Codes..." : "Fetch Codes"}
+      </Button>
+
+      {/* Table Display */}
+      <TableComponent
+        columns={columns}
+        tableHeader={`${tab === "offline" ? "Offline" : "Online"} Generated Codes`}
+        data={filteredCodes} // Use the filtered codes based on the tab
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        onSortChange={(columnId) => {
+          const isAsc = sortBy === columnId && sortDirection === "asc";
+          setSortDirection(isAsc ? "desc" : "asc");
+          setSortBy(columnId);
+        }}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={(event, newPage) => setPage(newPage)}
+        onRowsPerPageChange={(event) =>
+          setRowsPerPage(parseInt(event.target.value, 10))
+        }
+      />
+    </div>
   );
 };
 

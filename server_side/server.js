@@ -24,6 +24,7 @@ const payment = require('./Routes/paymentRoute')
 const budget = require('./Routes/budgetRoute')
 const inquiry = require('./Routes/inquiryRoute')
 const feedback = require('./Routes/feedbackRoute')
+const contact = require('./Routes/contactRoute')
 
 
 // Import rate limiting middleware
@@ -107,6 +108,7 @@ app.use(payment)
 app.use(budget)
 app.use(inquiry)
 app.use(feedback)
+app.use(contact)
 
 // Wildcard route to serve the index.html file for all other routes
 app.get('*', (req, res) => {

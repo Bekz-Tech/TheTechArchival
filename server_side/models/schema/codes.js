@@ -10,6 +10,8 @@ const codeSchema = new mongoose.Schema({
   error: { type: String, default: null }, // Error message if the code is invalid or already used
   isAuthenticated: { type: Boolean, default: false }, // Indicates if a user was authenticated successfully with this code
   userId: { type: String, default: null }, // Optional field to associate the code with a specific user ID
+  amountPaid: { type: Number, default: null }, // Amount paid by online students
+  studentType: { type: String, enum: ["online", "offline"], required: true }, // Online or offline student type
 });
 
 const Code = mongoose.model("Code", codeSchema);

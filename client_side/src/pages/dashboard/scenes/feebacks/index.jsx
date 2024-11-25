@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -12,7 +12,8 @@ import {
 } from '@mui/material';
 import { tokens } from '../../theme';
 import Header from '../../components/Header';
-import TableComponent from '../../../../components/table'; // Make sure this path is correct
+import TableComponent from '../../../../components/table';
+import useApi from '../../../../hooks/useApi'; // Import your custom hook
 
 const Feedbacks = () => {
   const theme = useTheme();
@@ -24,14 +25,47 @@ const Feedbacks = () => {
   const [date, setDate] = useState('');
   const [comments, setComments] = useState('');
 
-  const handleSubmit = (e) => {
+  // Using useApi for fetching feedbacks and submitting new feedback
+  const {
+    loading: fetchLoading,
+    data: fetchData,
+    error: fetchError,
+    callApi: fetchFeedbacks,
+  } = useApi('http://localhost:5000/api/v1/feedbacks');
+
+  const {
+    loading: submitLoading,
+    error: submitError,
+    callApi: submitFeedback,
+  } = useApi('http://localhost:5000/api/v1/feedbacks');
+
+  // Fetch feedbacks when the component mounts
+  useEffect(() => {
+    fetchFeedbacks('GET');
+  }, [fetchFeedbacks]);
+
+  // Update feedbacks state when data is fetched
+  useEffect(() => {
+    if (fetchData) {
+      setFeedbacks(fetchData);
+    }
+  }, [fetchData]);
+
+  // Handle form submission to save feedback to the server
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newFeedback = { id: feedbacks.length + 1, name, role, date, comments };
-    setFeedbacks([...feedbacks, newFeedback]);
-    setName('');
-    setRole('');
-    setDate('');
-    setComments('');
+    const newFeedback = { name, role, date, comments };
+
+    await submitFeedback('POST', newFeedback);
+
+    if (!submitError) {
+      // Update feedback list with the newly added feedback
+      setFeedbacks((prevFeedbacks) => [...prevFeedbacks, newFeedback]);
+      setName('');
+      setRole('');
+      setDate('');
+      setComments('');
+    }
   };
 
   const columns = [
@@ -60,7 +94,7 @@ const Feedbacks = () => {
 
   const tableProps = {
     columns,
-    tableHeader: "Feedback",
+    tableHeader: 'Feedback',
     data: feedbacks,
     sortBy: 'id',
     sortDirection: 'asc',
@@ -75,6 +109,9 @@ const Feedbacks = () => {
   return (
     <Box m="20px">
       <Header title="Feedback" subtitle="Feedback from Students, Instructors, and Workers" />
+
+      {fetchLoading && <Typography>Loading feedbacks...</Typography>}
+      {fetchError && <Typography color="error">{fetchError}</Typography>}
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, mb: 3 }}>
         <TextField
@@ -110,32 +147,39 @@ const Feedbacks = () => {
           multiline
           rows={4}
         />
-        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-          Submit Feedback
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          sx={{ mt: 2 }}
+          disabled={submitLoading}
+        >
+          {submitLoading ? 'Submitting...' : 'Submit Feedback'}
         </Button>
+        {submitError && <Typography color="error">{submitError}</Typography>}
       </Box>
 
       <Box
         height="75vh"
         sx={{
-          "& .MuiTable-root": {
-            border: "none",
+          '& .MuiTable-root': {
+            border: 'none',
           },
-          "& .MuiTable-cell": {
-            borderBottom: "none",
+          '& .MuiTable-cell': {
+            borderBottom: 'none',
           },
-          "& .MuiTableHead-root": {
+          '& .MuiTableHead-root': {
             backgroundColor: colors.blueAccent[700],
-            borderBottom: "none",
+            borderBottom: 'none',
           },
-          "& .MuiTableBody-root": {
+          '& .MuiTableBody-root': {
             backgroundColor: colors.primary[400],
           },
-          "& .MuiTableFooter-root": {
-            borderTop: "none",
+          '& .MuiTableFooter-root': {
+            borderTop: 'none',
             backgroundColor: colors.blueAccent[700],
           },
-          "& .MuiCheckbox-root": {
+          '& .MuiCheckbox-root': {
             color: `${colors.greenAccent[200]} !important`,
           },
         }}

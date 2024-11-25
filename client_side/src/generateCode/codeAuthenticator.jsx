@@ -1,26 +1,23 @@
 import React, { useState } from "react";
-import { TextField,  Box, Typography } from "@mui/material";
-import { db } from "../firebase/config"; // Firebase configuration
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-} from "firebase/firestore"; // Frestore functions
+import { TextField, Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import myImage from "../images/authenticator-image.jpg";
-import mobileImg from '../images/svg-2.svg';
+import mobileImg from "../images/svg-2.svg";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "../components/ButtonElement";
+import useApi from "../hooks/useApi"; // Adjust the path as necessary
 
 const CodeAuthenticator = () => {
   const [inputCode, setInputCode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Use the useApi hook
+  const { callApi, loading, data, error: apiError } = useApi(
+    "http://localhost:5000/api/v1/authenticate-code"
+  );
 
   const handleInputChange = (e) => {
     setInputCode(e.target.value);
@@ -29,71 +26,28 @@ const CodeAuthenticator = () => {
   const handleSubmit = async () => {
     console.log("Input Code:", inputCode);
 
-    try {
-      // Query Firestore to find the matching code
-      const codesRef = collection(db, "codes");
-      const q = query(codesRef, where("code", "==", inputCode));
-      const querySnapshot = await getDocs(q);
+    await callApi("POST", { inputCode });
 
-      if (!querySnapshot.empty) {
-        const codeDoc = querySnapshot.docs[0]; // Get the first matching document
-        const codeData = codeDoc.data();
-
-        if (codeData.used) {
-          // If the code is already used, alert the user
-          alert("This code has already been used.");
-          setError("This code has already been used.");
-          setIsAuthenticated(false);
-        } else {
-          // If the code is unused, mark it as used and update the timestamp
-          const now = new Date();
-
-          // Format date as "13 Feb 2024"
-          const options = { day: "numeric", month: "short", year: "numeric" };
-          const formattedDate = now.toLocaleDateString("en-US", options);
-
-          // Format time as "10:00AM"
-          const timeOptions = {
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-          };
-          const formattedTime = now.toLocaleTimeString("en-US", timeOptions);
-
-          // Update the Firestore document to mark the code as used and store the used date/time
-          const codeDocRef = doc(db, "codes", codeDoc.id);
-          await updateDoc(codeDocRef, {
-            used: true,
-            usedDate: formattedDate,
-            usedTime: formattedTime,
-          });
-
-          setIsAuthenticated(true);
-          setError("");
-          alert("User authenticated successfully");
-          navigate("/offlineSignup");
-        }
-      } else {
-        // If the code doesn't exist, show an error
-        setError("Invalid code. Please try again.");
-        setIsAuthenticated(false);
-      }
-    } catch (err) {
-      console.error("Error checking code: ", err);
-      setError("An error occurred while checking the code.");
+    if (apiError) {
+      setError(apiError);
+      setIsAuthenticated(false);
+    } else if (data) {
+      const { message, usedDate, usedTime } = data;
+      setIsAuthenticated(true);
+      setError("");
+      alert(`User authenticated successfully. Used Date: ${usedDate}, Time: ${usedTime}`);
+      navigate("/offlineSignup");
     }
 
     setInputCode(""); // Clear the input field after submission
   };
 
-
   return (
     <Box>
-      {/* navbar */}
-
+      {/* Navbar */}
       <Navbar otp />
 
-      {/* body */}
+      {/* Body */}
       <Box
         sx={{
           display: "flex",
@@ -105,7 +59,7 @@ const CodeAuthenticator = () => {
           paddingX: "20px",
         }}
       >
-        {/* Image placeholder on the left, hidden for screens smaller than 768px */}
+        {/* Image placeholder on the left */}
         <Box
           sx={{
             width: { xs: "0%", md: "100%" },
@@ -117,8 +71,7 @@ const CodeAuthenticator = () => {
           }}
         ></Box>
 
-        {/* Form Section on the right */}
-
+        {/* Form Section */}
         <Box
           sx={{
             display: "flex",
@@ -177,24 +130,24 @@ const CodeAuthenticator = () => {
               variant="outlined"
               value={inputCode}
               onChange={handleInputChange}
-              inputProps={{ maxLength: 11 }}
+              inputProps={{ minLength: 11 }}
               sx={{ marginBottom: "20px", width: "100%" }}
             />
 
-            <Button onClick={handleSubmit} primary otp>
-              Submit
+            <Button onClick={handleSubmit} primary otp disabled={loading}>
+              {loading ? "Submitting..." : "Submit"}
             </Button>
 
-            {error && (
+            {(error || apiError) && (
               <Typography color="error" sx={{ marginTop: "20px" }}>
-                {error}
+                {error || apiError}
               </Typography>
             )}
 
             {isAuthenticated && (
               <Typography
                 color="primary"
-                sx={{ marginTop: "20px", color: "green" }} // Change to green for success
+                sx={{ marginTop: "20px", color: "green" }}
               >
                 Code authenticated successfully!
               </Typography>
