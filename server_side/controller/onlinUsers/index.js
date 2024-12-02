@@ -1,136 +1,186 @@
-const { uploadToDropbox, 
+const { 
+  uploadToDropbox, 
   generateUniqueTransactionId,  
   generateInstructorId, 
   generateStudentId, 
   getModelByRole, 
   userValidationSchemas, 
-  generateUserId 
 } = require('./utils');
 
 const yup = require('yup');
 const bcrypt = require('bcryptjs');
-const Course = require('../../models/schema/courseSchema');
+const { Course } = require('../../models/schema/courseSchema');
+const { Cohort } = require('../../models/schema/courseSchema'); // Import Cohort model
 const Payment = require('../../models/schema/paymentSchema');
 const Chatroom = require('../../models/schema/chatRoom');
 
-// Create user
 const createUser = async (req, res) => {
-const { role, program, password, cohort, amountPaid } = req.body;
-const validationSchema = userValidationSchemas[role];
+  const { role, program, password, cohort, amountPaid } = req.body;
 
-if (!validationSchema) {
-return res.status(400).json({ message: 'Invalid role' });
+  // Ensure role exists
+  if (!role || !program || !cohort) {
+    return res.status(400).json({ message: 'Missing required fields (role, program, cohort)' });
+  }
+
+  // Choose validation schema based on role
+  const validationSchema = userValidationSchemas[role];
+
+  if (!validationSchema) {
+    return res.status(400).json({ message: 'Invalid role' });
+  }
+
+  try {
+    // Validate the incoming data based on the schema
+    await validationSchema.validate(req.body, { abortEarly: false });
+
+    // Generate userId
+    const user = {
+      ...req.body,
+      role,  // Ensure role is preserved
+    };
+
+    // Generate role-specific IDs
+    if (role === 'student') {
+      user.studentId = await generateStudentId(program);
+    } else if (role === 'instructor') {
+      user.instructorId = await generateInstructorId();
+    }
+
+    // Hash the password if provided
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
+    // Handle file uploads (e.g., profile picture, ID card)
+    if (req.files) {
+      if (req.files.profilePictureUrl) {
+        const profilePicture = req.files.profilePictureUrl[0];
+        
+        // URL encode the original file name to avoid special characters
+        const profilePictureFileName = encodeURIComponent(profilePicture.originalname);
+        const profilePicturePath = `/theTechArchival/profilepictures/${profilePictureFileName}`;
+        
+        try {
+          user.profilePictureUrl = await uploadToDropbox(profilePicture, profilePicturePath);
+
+        } catch (error) {
+          console.error('Error uploading profile picture to Dropbox:', error);
+          // Handle error as needed
+        }
+      }
+
+      if (req.files.idCardUrl) {
+        const idCard = req.files.idCardUrl[0];
+        
+        // URL encode the original file name to avoid special characters
+        const idCardFileName = encodeURIComponent(idCard.originalname);
+        const idCardPath = `/theTechArchival/idcards/${idCardFileName}`;
+        
+        try {
+          user.idCardUrl = await uploadToDropbox(idCard, idCardPath);
+        } catch (error) {
+          console.error('Error uploading ID card to Dropbox:', error);
+          // Handle error as needed
+        }
+      }
+    }
+
+    // Get the model based on the role (e.g., student, instructor)
+    const Model = getModelByRole(role);
+
+    console.log(user);
+    // Create the user in the database
+    const newUser = new Model(user);
+    console.log(newUser)
+    await newUser.save();
+
+    // Handle additional logic for students
+    if (role === 'student') {
+      // Create payment record if amountPaid is provided
+      if (amountPaid) {
+        const transactionId = await generateUniqueTransactionId();
+        const payment = new Payment({
+          userId: newUser.userId,
+          amount: amountPaid,
+          status: "completed",
+          transactionId,
+        });
+        await payment.save();
+      }
+
+      // Add student to the course
+      await Course.updateOne(
+        { courseName: program },
+        { $addToSet: { students: newUser.userId } }
+      );
+
+      // Add student to the chatroom (based on cohort)
+      await Chatroom.updateOne(
+        { name: cohort },
+        { $addToSet: { participants: newUser.userId } }
+      );
+      
+      // Add student to the cohort
+      await Course.updateOne(
+        { 'cohorts.cohortName': cohort },
+        { $addToSet: { 'cohorts.$.students': newUser.userId } }
+      );
+    }
+
+    // Handle instructor-specific logic
+    if (role === 'instructor') {
+      // Add instructor to the course
+      await Course.updateOne(
+        { courseName: program },
+        { $addToSet: { instructors: newUser.userId } }
+      );
+
+      // Find the cohort document and update its instructor field
+      const cohortDoc = await Cohort.findOne({ cohortName: cohort });
+
+      if (cohortDoc) {
+        // Update the instructor field in the found cohort document
+        await Cohort.updateOne(
+          { cohortName: cohort },
+          { $set: { instructor: newUser.userId } }
+        );
+      } else {
+        return res.status(404).json({ message: 'Cohort not found' });
+      }
+
+      // Add instructor to the chatroom (based on cohort)
+      await Chatroom.updateOne(
+        { name: cohort },
+        { $addToSet: { participants: newUser.userId } }
+      );
+    }
+
+    // Add admin and superadmin to all chatrooms (if applicable)
+    if (role === 'admin' || role === 'superadmin') {
+      await Chatroom.updateMany(
+        {},
+        { $addToSet: { participants: newUser.userId } }
+      );
+    }
+
+    // Respond with success
+    return res.status(201).json({ message: `${role} created successfully`, user: newUser });
+
+  } catch (error) {
+    console.error(error);
+    if (error instanceof yup.ValidationError) {
+      return res.status(400).json({ message: 'Validation error', details: error.errors });
+    }
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
 }
 
-try {
-// Validate incoming data
-await validationSchema.validate(req.body, { abortEarly: false });
 
-req.body.userId = await generateUserId();
-
-const Model = getModelByRole(role);
-
-if (role === 'student') {
-req.body.studentId = await generateStudentId(program);
-}
-
-if (role === 'instructor') {
-req.body.instructorId = await generateInstructorId();
-}
-
-// Hash the password if provided
-if (password) {
-const hashedPassword = await bcrypt.hash(password, 10);
-req.body.password = hashedPassword;
-}
-
-// Upload profilePicture and idCardUrl to Dropbox (if provided)
-if (req.files) {
-if (req.files.profilePicture) {
-  const profilePicture = req.files.profilePicture[0];
-  req.body.profilePicture = await uploadToDropbox(profilePicture, `profilePictures/${profilePicture.originalname}`);
-}
-
-if (req.files.idCardUrl) {
-  const idCard = req.files.idCardUrl[0];
-  req.body.idCardUrl = await uploadToDropbox(idCard, `idCards/${idCard.originalname}`);
-}
-}
-
-// Create the user in the database
-const newUser = new Model(req.body);
-await newUser.save();
-
-// Payment generation for students
-if (role === 'student' && amountPaid) {
-const transactionId = await generateUniqueTransactionId();
-const payment = new Payment({
-  userId: newUser._id,
-  amount: amountPaid,
-  method: "other", // Add logic to capture actual method if needed
-  status: "completed",
-  transactionId,
-});
-await payment.save();
-}
-
-// Handle cohorts and chatrooms
-if (role === 'student') {
-// Add the user to the course's students array
-await Course.updateOne(
-  { courseName: program },
-  { $addToSet: { students: newUser.userId } }
-);
-
-// Add the user to the chatroom where cohort name matches
-await Chatroom.updateOne(
-  { name: cohort },
-  { $addToSet: { participants: newUser.userId } }
-);
-
-// Add the user to the cohort's students array
-await Course.updateOne(
-  { 'cohorts.cohortName': cohort },
-  { $addToSet: { 'cohorts.$.students': newUser.userId } }
-);
-} else if (role === 'instructor') {
-// Replace instructor in the cohort and add to instructors array
-await Course.updateOne(
-  { 'cohorts.cohortName': cohort },
-  { $set: { 'cohorts.$.instructor': newUser.userId } }
-);
-
-// Add instructor to the course's instructors array
-await Course.updateOne(
-  { courseName: program },
-  { $addToSet: { instructors: newUser.userId } }
-);
-
-// Add the instructor to the chatroom where cohort name matches
-await Chatroom.updateOne(
-  { name: cohort },
-  { $addToSet: { participants: newUser.userId } }
-);
-} else if (role === 'admin' || role === 'superadmin') {
-// Add the admin or superadmin to all chatrooms
-await Chatroom.updateMany(
-  {},
-  { $addToSet: { participants: newUser.userId } }
-);
-}
-
-return res.status(201).json({ message: `${role} created successfully`, user: newUser });
-} catch (error) {
-if (error instanceof yup.ValidationError) {
-return res.status(400).json({ message: 'Validation error', details: error.errors });
-}
-return res.status(500).json({ message: 'Server error', error: error.message });
-}
-};
 
 // Get users by role
 const getUsers = async (req, res) => {
-console.log('called');
+console.log('users');
 try {
 // Fetch all users from each role
 const adminModel = getModelByRole('admin');

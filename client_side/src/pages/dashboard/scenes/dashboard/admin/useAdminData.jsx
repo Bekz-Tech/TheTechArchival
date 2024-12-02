@@ -7,6 +7,7 @@ import { setFetchedUsers, setFetchedCourses } from '../../../../../reduxStore/sl
 import { endpoints } from '../../../../../utils/constants';
 
 const useAdminData = () => {
+  console.log('called')
   const fetchedUsers = useSelector((state) => state.apiCallCheck.fetchedUsers);
   const dispatch = useDispatch();
 
@@ -15,10 +16,10 @@ const useAdminData = () => {
 
   // Check for fetchedUsers and trigger API call if not fetched
   useEffect(() => {
-    if (!fetchedUsers) {
+    // if (!fetchedUsers) {
       console.log('Fetching users from API...');
       callApi(); // Trigger the API call
-    }
+    // }
   }, [fetchedUsers, callApi]); // Trigger this effect when fetchedUsers changes or when callApi changes
 
   // When data changes (after API call resolves), dispatch it to Redux
@@ -35,6 +36,7 @@ const useAdminData = () => {
 
   // Use the centralized useWebSocket hook, passing both URL and actionToSend
   useWebSocket(actionToSend);
+  console.log(data);
 
   return { data, loading, error };
 };

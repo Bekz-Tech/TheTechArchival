@@ -1,0 +1,61 @@
+version: '3.4'
+
+services:
+  client_side:
+    build:
+      context: ./client_side
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - "3000:3000"  # Correct 
+    depends_on:
+      - server_side
+      - messaging_server
+    networks:
+      - app_network
+    restart: always
+
+  messaging_server:
+    build:
+      context: ./messaging_server
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - "4000:4000"
+    networks:
+      - app_network
+    restart: always
+
+  server_side:
+    build:
+      context: ./server_side
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - "5000:5000"
+    networks:
+      - app_network
+    restart: always
+
+  nginx_server:
+    build:
+      context: .  # Set the context to the root where docker-compose.yml resides
+      dockerfile: ./nginx_server/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx_server/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - client_side
+      - messaging_server
+      - server_side
+    networks:
+      - app_network
+    restart: always
+
+networks:
+  app_network:
+    driver: bridge

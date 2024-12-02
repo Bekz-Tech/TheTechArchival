@@ -7,8 +7,7 @@ const paymentSchema = new mongoose.Schema(
     amount: { type: Number, required: true, min: 0 }, // Payment amount, with a minimum value
     method: {
       type: String,
-      enum: ["credit_card", "debit_card", "paypal", "bank_transfer"],
-      required: true,
+      enum: ["credit_card", "debit_card", "paypal", "bank_transfer", "others"],
     }, // Payment method
     status: {
       type: String,

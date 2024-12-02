@@ -19,46 +19,50 @@ const useApi = (url) => {
    */
   const callApi = useCallback(
     async (method = 'GET', body = null, config = {}) => {
-      console.log('called')
-
+      console.log(url);
+  
       setLoading(true);
       setError(null);
-
-      // Set up the headers, assuming JSON content type
-      const headers = {
-        'Content-Type': 'application/json',
-        ...config.headers, // Allow custom headers to be passed in
-      };
-
-      // Set up the request options
+  
+      const headers = config.headers || {};
+  
+      if (!(body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
+  
       const options = {
         method,
         headers,
-        body: body ? JSON.stringify(body) : null, // Only include body if it exists
+        body: body && !(body instanceof FormData) ? JSON.stringify(body) : body,
       };
-
+  
       try {
         const response = await fetch(url, options);
-        console.log(response)
-
-        // If the response is not ok (status not in the 200 range), throw an error
+        console.log(response);
+  
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
-        // Parse the response data as JSON
-        const responseData = await response.json();
-        console.log(responseData)
-        setData(responseData); // Only set if valid data is received
-        console.log(data)
-
+  
+        const contentType = response.headers.get('Content-Type');
+        let responseData;
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+        } else {
+          responseData = await response.text(); // Fallback for non-JSON responses
+        }
+  
+        setData(responseData);
+        console.log(responseData);
       } catch (err) {
         setError(err.message || 'Something went wrong');
       } finally {
         setLoading(false);
       }
-    },[] // No dependencies, so this won't change unless the component re-renders
+    },
+    []
   );
+  
 
   return {
     loading,

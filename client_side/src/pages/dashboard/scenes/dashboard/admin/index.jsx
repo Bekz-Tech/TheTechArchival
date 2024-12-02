@@ -12,11 +12,16 @@ import useAdminData from './useAdminData';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import Loader from '../../../../../utils/loader';
+import useApi from '../../../../../hooks/useApi';
+import { endpoints } from '../../../../../utils/constants';
 
 
 const Admin = () => {
+  console.log('here')
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { loading: courseLoading, data, error, callApi } = useApi(endpoints.COURSES);
+
 
  // Loading state to manage the data fetching
   const [loading, setLoading] = useState(true);

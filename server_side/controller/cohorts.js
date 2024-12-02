@@ -56,6 +56,7 @@ const addCohort = async (req, res) => {
 
 // Get all cohorts for a course
 const getAllCohorts = async (req, res) => {
+  console.log('called')
   try {
     const { courseId } = req.params;
 

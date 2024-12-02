@@ -282,7 +282,6 @@ console.log(offlineStudents)
     setTabIndex(newTabIndex);
   };
 
-  console.log(formattedOfflineStudents);
 
   return {
     studentData,

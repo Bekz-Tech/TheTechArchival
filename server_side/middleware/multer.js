@@ -17,9 +17,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Middleware to handle single or multiple file uploads
-const uploadImages = upload.fields([
+const uploadFiles = upload.fields([
   { name: 'profilePictureUrl', maxCount: 1 },
   { name: 'idCardUrl', maxCount: 1 }
 ]);
 
-module.exports = { uploadImages };
+module.exports = { uploadFiles };
