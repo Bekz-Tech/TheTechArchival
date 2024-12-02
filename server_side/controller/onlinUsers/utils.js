@@ -1,5 +1,4 @@
 const yup = require('yup');
-const dbx = require('../../configs/dropBox');
 const { Admin, SuperAdmin, Instructor, Student } = require('../../models/schema/onlineUsers');
 const mongoose = require('mongoose');
 const fetch = require('isomorphic-fetch'); // Dropbox SDK requires fetch

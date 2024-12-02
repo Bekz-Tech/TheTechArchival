@@ -19,4 +19,4 @@ curl --location --request POST 'https://api.dropboxapi.com/oauth2/token' \
 --header "Authorization: Basic $BASIC_AUTH" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode "code=$ACCESS_CODE_GENERATED" \
---data-urlencode 'grant_type=authorization_code'
+--data-urlencode 'grant_type=authorization_code'stat
