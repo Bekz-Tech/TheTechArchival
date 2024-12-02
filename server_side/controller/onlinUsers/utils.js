@@ -1,60 +1,60 @@
-const yup = require('yup');
-const { Admin, SuperAdmin, Instructor, Student } = require('../../models/schema/onlineUsers');
-const mongoose = require('mongoose');
-const fetch = require('isomorphic-fetch'); // Dropbox SDK requires fetch
-const { loadTokens, saveTokens, refreshAccessToken } = require('../../configs/dropBox')
+// const yup = require('yup');
+// const { Admin, SuperAdmin, Instructor, Student } = require('../../models/schema/onlineUsers');
+// const mongoose = require('mongoose');
+// const fetch = require('isomorphic-fetch'); // Dropbox SDK requires fetch
+// const { loadTokens, saveTokens, refreshAccessToken } = require('../../configs/dropBox')
 
-// Assuming you have a Mongoose model for the `userIds` collection
-const UserId = mongoose.model('UserId', new mongoose.Schema({
-  userId: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-}));
-
-
-// Helper function to generate a unique transaction ID
-const generateUniqueTransactionId = async () => {
-  const Payment = mongoose.model('Payment');
-  let transactionId;
-
-  while (true) {
-    transactionId = `TXN${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
-    const existingTransaction = await Payment.findOne({ transactionId });
-    if (!existingTransaction) break; // If unique, exit loop
-  }
-
-  return transactionId;
-};
+// // Assuming you have a Mongoose model for the `userIds` collection
+// const UserId = mongoose.model('UserId', new mongoose.Schema({
+//   userId: { type: String, required: true },
+//   createdAt: { type: Date, default: Date.now },
+// }));
 
 
+// // Helper function to generate a unique transaction ID
+// const generateUniqueTransactionId = async () => {
+//   const Payment = mongoose.model('Payment');
+//   let transactionId;
 
-const generateUserId = async () => {
-  // Find the latest userId from the collection by sorting in descending order
-  const lastUserId = await UserId.findOne({}).sort({ userId: -1 });
+//   while (true) {
+//     transactionId = `TXN${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
+//     const existingTransaction = await Payment.findOne({ transactionId });
+//     if (!existingTransaction) break; // If unique, exit loop
+//   }
 
-  let serialNumber = 1; // Default number if no userId exists yet
-
-  if (lastUserId) {
-    // Extract the current number from the last userId (e.g., "user/45" -> 45)
-    const lastSerialNumber = parseInt(lastUserId.userId.split('/').pop(), 10);
-
-    // Increment the number for the new userId
-    serialNumber = lastSerialNumber + 1;
-  }
-
-  // Format the new userId as `user/number`, with leading zeros if needed
-  const newUserId = `user/${serialNumber}`;
-
-  // Save the new userId in the userIds collection
-  const newUserIdEntry = new UserId({ userId: newUserId });
-  await newUserIdEntry.save();
-
-  // Return the newly generated userId
-  return newUserId;
-};
+//   return transactionId;
+// };
 
 
 
-// Function to upload file to Dropbox
+// const generateUserId = async () => {
+//   // Find the latest userId from the collection by sorting in descending order
+//   const lastUserId = await UserId.findOne({}).sort({ userId: -1 });
+
+//   let serialNumber = 1; // Default number if no userId exists yet
+
+//   if (lastUserId) {
+//     // Extract the current number from the last userId (e.g., "user/45" -> 45)
+//     const lastSerialNumber = parseInt(lastUserId.userId.split('/').pop(), 10);
+
+//     // Increment the number for the new userId
+//     serialNumber = lastSerialNumber + 1;
+//   }
+
+//   // Format the new userId as `user/number`, with leading zeros if needed
+//   const newUserId = `user/${serialNumber}`;
+
+//   // Save the new userId in the userIds collection
+//   const newUserIdEntry = new UserId({ userId: newUserId });
+//   await newUserIdEntry.save();
+
+//   // Return the newly generated userId
+//   return newUserId;
+// };
+
+
+
+// // Function to upload file to Dropbox
 // const uploadToDropbox = async (file, filePath) => {
 //   try {
 //     // Load the current access token
@@ -137,125 +137,125 @@ const generateUserId = async () => {
 
 
 
-// Validation schemas
-const userValidationSchemas = {
-  admin: yup.object().shape({
-    userId: yup.string().optional(),
-    email: yup.string().email('Invalid email').required('Email is required'),
-    password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-    firstName: yup.string().required('First name is required'),
-    lastName: yup.string().required('Last name is required'),
-    phoneNumber: yup.string().required('Phone number is required'),
-    idCardUrl: yup.string().url().optional(),
-    role: yup.string().required('role is required'),
-  }),
-  superadmin: yup.object().shape({
-    userId: yup.string().optional(),
-    email: yup.string().email('Invalid email').required('Email is required'),
-    password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-    firstName: yup.string().required('First name is required'),
-    lastName: yup.string().required('Last name is required'),
-    phoneNumber: yup.string().required('Phone number is required'),
-    idCardUrl: yup.string().url().optional(),
-    role: yup.string().required('role is required'),
-  }),
-  instructor: yup.object().shape({
-    userId: yup.string().optional(),
-    email: yup.string().email('Invalid email').required('Email is required'),
-    password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-    firstName: yup.string().required('First name is required'),
-    lastName: yup.string().required('Last name is required'),
-    phoneNumber: yup.string().required('Phone number is required'),
-    profilePictureUrl: yup.string().url().optional(),
-    idCardUrl: yup.string().url().optional(),
-    instructorId: yup.string().optional(),
-    program: yup.string().required('Program is required'),
-    role: yup.string().required('role is required'),
-  }),
-  student: yup.object().shape({
-    userId: yup.string().optional(),
-    email: yup.string().email('Invalid email').required('Email is required'),
-    password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-    firstName: yup.string().required('First name is required'),
-    lastName: yup.string().required('Last name is required'),
-    phoneNumber: yup.string().required('Phone number is required'),
-    profilePictureUrl: yup.string().url().optional(),
-    idCardUrl: yup.string().url().optional(),
-    program: yup.string().required('Program is required'),
-    emergencyContactName: yup.string().required('Emergency contact name is required'),
-    emergencyContactRelationship: yup.string().required('Emergency contact relationship is required'),
-    emergencyContactPhone: yup.string().required('Emergency contact phone is required'),
-    role: yup.string().required('role is required'),
-  }),
-};
+// // Validation schemas
+// const userValidationSchemas = {
+//   admin: yup.object().shape({
+//     userId: yup.string().optional(),
+//     email: yup.string().email('Invalid email').required('Email is required'),
+//     password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+//     firstName: yup.string().required('First name is required'),
+//     lastName: yup.string().required('Last name is required'),
+//     phoneNumber: yup.string().required('Phone number is required'),
+//     idCardUrl: yup.string().url().optional(),
+//     role: yup.string().required('role is required'),
+//   }),
+//   superadmin: yup.object().shape({
+//     userId: yup.string().optional(),
+//     email: yup.string().email('Invalid email').required('Email is required'),
+//     password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+//     firstName: yup.string().required('First name is required'),
+//     lastName: yup.string().required('Last name is required'),
+//     phoneNumber: yup.string().required('Phone number is required'),
+//     idCardUrl: yup.string().url().optional(),
+//     role: yup.string().required('role is required'),
+//   }),
+//   instructor: yup.object().shape({
+//     userId: yup.string().optional(),
+//     email: yup.string().email('Invalid email').required('Email is required'),
+//     password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+//     firstName: yup.string().required('First name is required'),
+//     lastName: yup.string().required('Last name is required'),
+//     phoneNumber: yup.string().required('Phone number is required'),
+//     profilePictureUrl: yup.string().url().optional(),
+//     idCardUrl: yup.string().url().optional(),
+//     instructorId: yup.string().optional(),
+//     program: yup.string().required('Program is required'),
+//     role: yup.string().required('role is required'),
+//   }),
+//   student: yup.object().shape({
+//     userId: yup.string().optional(),
+//     email: yup.string().email('Invalid email').required('Email is required'),
+//     password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+//     firstName: yup.string().required('First name is required'),
+//     lastName: yup.string().required('Last name is required'),
+//     phoneNumber: yup.string().required('Phone number is required'),
+//     profilePictureUrl: yup.string().url().optional(),
+//     idCardUrl: yup.string().url().optional(),
+//     program: yup.string().required('Program is required'),
+//     emergencyContactName: yup.string().required('Emergency contact name is required'),
+//     emergencyContactRelationship: yup.string().required('Emergency contact relationship is required'),
+//     emergencyContactPhone: yup.string().required('Emergency contact phone is required'),
+//     role: yup.string().required('role is required'),
+//   }),
+// };
 
-// Map role to the correct Model
-const getModelByRole = (role) => {
-  switch (role) {
-    case 'admin':
-      return Admin;
-    case 'superadmin':
-      return SuperAdmin;
-    case 'instructor':
-      return Instructor;
-    case 'student':
-      return Student;
-    default:
-      throw new Error('Invalid role');
-  }
-};
+// // Map role to the correct Model
+// const getModelByRole = (role) => {
+//   switch (role) {
+//     case 'admin':
+//       return Admin;
+//     case 'superadmin':
+//       return SuperAdmin;
+//     case 'instructor':
+//       return Instructor;
+//     case 'student':
+//       return Student;
+//     default:
+//       throw new Error('Invalid role');
+//   }
+// };
 
-// Generate Student ID
-const generateStudentId = async (program) => {
-  const lastStudent = await Student.findOne({}).sort({ _id: -1 });
-  let serialNumber = 1; // Default serial number
+// // Generate Student ID
+// const generateStudentId = async (program) => {
+//   const lastStudent = await Student.findOne({}).sort({ _id: -1 });
+//   let serialNumber = 1; // Default serial number
 
-  if (lastStudent) {
-    const lastStudentId = lastStudent.studentId;
-    // Match the format: student/{program}/{serialNumber}
-    const match = lastStudentId.match(/student\/([^\/]+)\/(\d+)$/);
-    if (match) {
-      const lastSerialNumber = parseInt(match[2], 10); // Extract the serial number part
-      if (!isNaN(lastSerialNumber)) {
-        serialNumber = lastSerialNumber + 1; // Increment the serial number
-      }
-    }
-  }
+//   if (lastStudent) {
+//     const lastStudentId = lastStudent.studentId;
+//     // Match the format: student/{program}/{serialNumber}
+//     const match = lastStudentId.match(/student\/([^\/]+)\/(\d+)$/);
+//     if (match) {
+//       const lastSerialNumber = parseInt(match[2], 10); // Extract the serial number part
+//       if (!isNaN(lastSerialNumber)) {
+//         serialNumber = lastSerialNumber + 1; // Increment the serial number
+//       }
+//     }
+//   }
 
-  return `student/${program}/${String(serialNumber).padStart(2, '0')}`;
-};
-
-
-// Generate Instructor ID
-const generateInstructorId = async () => {
-  const lastInstructor = await Instructor.findOne({}).sort({ _id: -1 });
-  let serialNumber = 1; // Default serial number
-
-  if (lastInstructor) {
-    const lastInstructorId = lastInstructor.instructorId;
-    // Match the format: instructor/{serialNumber}
-    const match = lastInstructorId.match(/instructor\/(\d+)$/);
-    if (match) {
-      const lastSerialNumber = parseInt(match[1], 10); // Extract the serial number part
-      if (!isNaN(lastSerialNumber)) {
-        serialNumber = lastSerialNumber + 1; // Increment the serial number
-      }
-    }
-  }
-
-  return `instructor/${String(serialNumber).padStart(2, '0')}`;
-};
+//   return `student/${program}/${String(serialNumber).padStart(2, '0')}`;
+// };
 
 
+// // Generate Instructor ID
+// const generateInstructorId = async () => {
+//   const lastInstructor = await Instructor.findOne({}).sort({ _id: -1 });
+//   let serialNumber = 1; // Default serial number
+
+//   if (lastInstructor) {
+//     const lastInstructorId = lastInstructor.instructorId;
+//     // Match the format: instructor/{serialNumber}
+//     const match = lastInstructorId.match(/instructor\/(\d+)$/);
+//     if (match) {
+//       const lastSerialNumber = parseInt(match[1], 10); // Extract the serial number part
+//       if (!isNaN(lastSerialNumber)) {
+//         serialNumber = lastSerialNumber + 1; // Increment the serial number
+//       }
+//     }
+//   }
+
+//   return `instructor/${String(serialNumber).padStart(2, '0')}`;
+// };
 
 
-module.exports = {
-  uploadToDropbox,
-  generateInstructorId,
-  generateStudentId,
-  getModelByRole,
-  userValidationSchemas,
-  generateUserId,
-  generateUniqueTransactionId
 
-};
+
+// module.exports = {
+//   uploadToDropbox,
+//   generateInstructorId,
+//   generateStudentId,
+//   getModelByRole,
+//   userValidationSchemas,
+//   generateUserId,
+//   generateUniqueTransactionId
+
+// };
