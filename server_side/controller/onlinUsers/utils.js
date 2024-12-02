@@ -55,84 +55,84 @@ const generateUserId = async () => {
 
 
 // Function to upload file to Dropbox
-const uploadToDropbox = async (file, filePath) => {
-  try {
-    // Load the current access token
-    // let accessToken = await loadTokens();
-    // if (!accessToken) {
-    //   throw new Error('No access token found');
-    // }
+// const uploadToDropbox = async (file, filePath) => {
+//   try {
+//     // Load the current access token
+//     let accessToken = await loadTokens();
+//     if (!accessToken) {
+//       throw new Error('No access token found');
+//     }
 
-    // Check if the token is still valid or needs to be refreshed
-    const tokenExpiry = Date.now();
-    if (accessToken.expires_at && accessToken.expires_at < tokenExpiry) {
-      console.log('Access token expired, refreshing...');
+//     // Check if the token is still valid or needs to be refreshed
+//     const tokenExpiry = Date.now();
+//     if (accessToken.expires_at && accessToken.expires_at < tokenExpiry) {
+//       console.log('Access token expired, refreshing...');
       
-      const refreshedToken = await refreshAccessToken(accessToken.refreshToken);
-      accessToken = refreshedToken;
-      await saveTokens(refreshedToken);
-    }
+//       const refreshedToken = await refreshAccessToken(accessToken.refreshToken);
+//       accessToken = refreshedToken;
+//       await saveTokens(refreshedToken);
+//     }
 
-    // Dropbox API upload endpoint
-    const uploadUrl = 'https://content.dropboxapi.com/2/files/upload';
-    const headers = {
-      'Authorization': `Bearer ${accessToken.access_token}`,
-      'Content-Type': 'application/octet-stream',
-      'Dropbox-API-Arg': JSON.stringify({
-        path: filePath,   // Path where the file will be saved in Dropbox
-        mode: 'add',      // 'add' to upload new file, 'overwrite' to replace existing files
-        autorename: true, // Automatically rename if there's a conflict
-      }),
-    };
+//     // Dropbox API upload endpoint
+//     const uploadUrl = 'https://content.dropboxapi.com/2/files/upload';
+//     const headers = {
+//       'Authorization': `Bearer ${accessToken.access_token}`,
+//       'Content-Type': 'application/octet-stream',
+//       'Dropbox-API-Arg': JSON.stringify({
+//         path: filePath,   // Path where the file will be saved in Dropbox
+//         mode: 'add',      // 'add' to upload new file, 'overwrite' to replace existing files
+//         autorename: true, // Automatically rename if there's a conflict
+//       }),
+//     };
 
-    const fileBuffer = file.buffer || file;
+//     const fileBuffer = file.buffer || file;
 
-    // Upload the file to Dropbox
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: headers,
-      body: fileBuffer,
-    });
+//     // Upload the file to Dropbox
+//     const uploadResponse = await fetch(uploadUrl, {
+//       method: 'POST',
+//       headers: headers,
+//       body: fileBuffer,
+//     });
 
-    if (!uploadResponse.ok) {
-      throw new Error(`Dropbox upload failed with status: ${uploadResponse.status}`);
-    }
+//     if (!uploadResponse.ok) {
+//       throw new Error(`Dropbox upload failed with status: ${uploadResponse.status}`);
+//     }
 
-    const uploadData = await uploadResponse.json();
-    console.log('File uploaded successfully:', uploadData);
+//     const uploadData = await uploadResponse.json();
+//     console.log('File uploaded successfully:', uploadData);
 
-    // Now create a shareable link for the uploaded file
-    const shareLinkResponse = await fetch('https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        path: uploadData.path_lower, // The path of the uploaded file
-        settings: {
-          requested_visibility: 'public',  // Make it public (optional)
-        },
-      }),
-    });
+//     // Now create a shareable link for the uploaded file
+//     const shareLinkResponse = await fetch('https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings', {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${accessToken.access_token}`,
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({
+//         path: uploadData.path_lower, // The path of the uploaded file
+//         settings: {
+//           requested_visibility: 'public',  // Make it public (optional)
+//         },
+//       }),
+//     });
 
-    if (!shareLinkResponse.ok) {
-      throw new Error(`Failed to create shared link: ${shareLinkResponse.status}`);
-    }
+//     if (!shareLinkResponse.ok) {
+//       throw new Error(`Failed to create shared link: ${shareLinkResponse.status}`);
+//     }
 
-    const shareData = await shareLinkResponse.json();
-    console.log('Shared link created successfully:', shareData);
+//     const shareData = await shareLinkResponse.json();
+//     console.log('Shared link created successfully:', shareData);
 
-    // Return the shared link (Dropbox adds a `dl=0` parameter by default)
-    const shareableUrl = shareData.url.replace('?dl=0', '?raw=1'); // Convert to direct link if needed
-    const directUrl = shareableUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-    return directUrl;  // Return the direct link to the uploaded file
+//     // Return the shared link (Dropbox adds a `dl=0` parameter by default)
+//     const shareableUrl = shareData.url.replace('?dl=0', '?raw=1'); // Convert to direct link if needed
+//     const directUrl = shareableUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+//     return directUrl;  // Return the direct link to the uploaded file
 
-  } catch (error) {
-    console.error('Error uploading file to Dropbox:', error.message);
-    throw error;  // Rethrow the error after logging it
-  }
-};
+//   } catch (error) {
+//     console.error('Error uploading file to Dropbox:', error.message);
+//     throw error;  // Rethrow the error after logging it
+//   }
+// };
 
 
 
