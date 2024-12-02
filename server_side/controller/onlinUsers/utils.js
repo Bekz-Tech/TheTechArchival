@@ -58,10 +58,10 @@ const generateUserId = async () => {
 const uploadToDropbox = async (file, filePath) => {
   try {
     // Load the current access token
-    let accessToken = await loadTokens();
-    if (!accessToken) {
-      throw new Error('No access token found');
-    }
+    // let accessToken = await loadTokens();
+    // if (!accessToken) {
+    //   throw new Error('No access token found');
+    // }
 
     // Check if the token is still valid or needs to be refreshed
     const tokenExpiry = Date.now();
