@@ -9,19 +9,17 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsPopover from '../../components/notificationPopper';
-import { NotificationContext } from '../../../../contexts/notifications'; // Import the NotificationContext
-import DownloadIdButton from '../../components/IdCards';
 import CodeGenerator from '../../../../generateCode/codeGenerator'; // Assuming this is a valid component
 
 const Topbar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
-  const { notifications, unreadCount, markNotificationAsRead } = useContext(NotificationContext); // Access notifications and unreadCount
   
-  // Access user and users from Redux store
+  // Access notifications and unreadCount from Redux store
+  const {unreadCount } = useSelector((state) => state.notifications);
+  
   const userDetails = useSelector((state) => state.users.user);
-  console.log(userDetails)
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
@@ -35,12 +33,8 @@ const Topbar = () => {
 
   const handleOpenNotifications = (event) => {
     setNotificationsAnchorEl(event.currentTarget);
-    // Mark notifications as read when opening the popover
-    notifications.forEach(notification => {
-      if (!notification.isRead) {
-        markNotificationAsRead(notification.id, userDetails.userId); // Call the function to mark notification as read
-      }
-    });
+    // Do not mark all notifications as read here
+    // Simply open the notification popover
   };
 
   const handleCloseNotifications = () => {
@@ -116,8 +110,10 @@ const Topbar = () => {
       <NotificationsPopover
         anchorEl={notificationsAnchorEl}
         handleClose={handleCloseNotifications}
-        notifications={notifications} // Pass the notifications to the popover
+        userId={userDetails.userId}  // Pass the userId from Redux state
+        role={userDetails.role}      // Pass the user role from Redux state
       />
+
 
       {/* Settings Modal */}
       <Dialog open={settingsOpen} onClose={handleCloseSettings}>
@@ -135,50 +131,24 @@ const Topbar = () => {
         <DialogTitle>Profile</DialogTitle>
         <DialogContent>
           <TextField
-            label="First Name"
-            name="firstName"
-            value={editDetails.firstName || ""}
+            label="Name"
+            name="name"
+            value={editDetails.name || ''}
             onChange={handleInputChange}
             fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Last Name"
-            name="lastName"
-            value={editDetails.lastName || ""}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
+            sx={{ marginBottom: '10px' }}
           />
           <TextField
             label="Email"
             name="email"
-            value={editDetails.email || ""}
+            value={editDetails.email || ''}
             onChange={handleInputChange}
             fullWidth
-            margin="normal"
           />
-          <TextField
-            label="Phone Number"
-            name="phoneNumber"
-            value={editDetails.phoneNumber || ""}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-          />
-          {(userDetails.role === "student" || userDetails.role === "instructor") && (
-            <DownloadIdButton userId={userDetails.userId} />
-          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseProfile}>Cancel</Button>
-          <Button
-            onClick={handleSaveDetails}
-            variant="contained"
-            color="primary"
-          >
-            Save
-          </Button>
+          <Button onClick={handleSaveDetails}>Save</Button>
+          <Button onClick={handleCloseProfile}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

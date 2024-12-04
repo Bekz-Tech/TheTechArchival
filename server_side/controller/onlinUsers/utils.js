@@ -1,13 +1,31 @@
 const yup = require('yup');
-const dbx = require('../../configs/dropBox');
 const { Admin, SuperAdmin, Instructor, Student } = require('../../models/schema/onlineUsers');
 const mongoose = require('mongoose');
+const fetch = require('isomorphic-fetch'); // Dropbox SDK requires fetch
+const { loadTokens, saveTokens, refreshAccessToken } = require('../../configs/dropBox')
 
 // Assuming you have a Mongoose model for the `userIds` collection
 const UserId = mongoose.model('UserId', new mongoose.Schema({
   userId: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 }));
+
+
+// Helper function to generate a unique transaction ID
+const generateUniqueTransactionId = async () => {
+  const Payment = mongoose.model('Payment');
+  let transactionId;
+
+  while (true) {
+    transactionId = `TXN${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
+    const existingTransaction = await Payment.findOne({ transactionId });
+    if (!existingTransaction) break; // If unique, exit loop
+  }
+
+  return transactionId;
+};
+
+
 
 const generateUserId = async () => {
   // Find the latest userId from the collection by sorting in descending order
@@ -35,25 +53,89 @@ const generateUserId = async () => {
 };
 
 
+
 // Function to upload file to Dropbox
-const uploadToDropbox = async (file, path) => {
+const uploadToDropbox = async (file, filePath) => {
   try {
-    const response = await dbx.filesUpload({
-      path: `/${path}`, // e.g., '/profilePictures/picture123.jpg'
-      contents: file.buffer, // Use buffer from multer's in-memory storage
+    // Load the current access token
+    let accessToken = await loadTokens();
+    if (!accessToken) {
+      throw new Error('No access token found');
+    }
+
+    // Check if the token is still valid or needs to be refreshed
+    const tokenExpiry = Date.now();
+    if (accessToken.expires_at && accessToken.expires_at < tokenExpiry) {
+      console.log('Access token expired, refreshing...');
+      
+      const refreshedToken = await refreshAccessToken(accessToken.refreshToken);
+      accessToken = refreshedToken;
+      await saveTokens(refreshedToken);
+    }
+
+    // Dropbox API upload endpoint
+    const uploadUrl = 'https://content.dropboxapi.com/2/files/upload';
+    const headers = {
+      'Authorization': `Bearer ${accessToken.access_token}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({
+        path: filePath,   // Path where the file will be saved in Dropbox
+        mode: 'add',      // 'add' to upload new file, 'overwrite' to replace existing files
+        autorename: true, // Automatically rename if there's a conflict
+      }),
+    };
+
+    const fileBuffer = file.buffer || file;
+
+    // Upload the file to Dropbox
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: headers,
+      body: fileBuffer,
     });
 
-    // Get a public link for the file
-    const linkResponse = await dbx.sharingCreateSharedLinkWithSettings({
-      path: response.result.path_lower
+    if (!uploadResponse.ok) {
+      throw new Error(`Dropbox upload failed with status: ${uploadResponse.status}`);
+    }
+
+    const uploadData = await uploadResponse.json();
+    console.log('File uploaded successfully:', uploadData);
+
+    // Now create a shareable link for the uploaded file
+    const shareLinkResponse = await fetch('https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        path: uploadData.path_lower, // The path of the uploaded file
+        settings: {
+          requested_visibility: 'public',  // Make it public (optional)
+        },
+      }),
     });
 
-    return linkResponse.result.url.replace('dl=0', 'raw=1'); // Make direct link
+    if (!shareLinkResponse.ok) {
+      throw new Error(`Failed to create shared link: ${shareLinkResponse.status}`);
+    }
+
+    const shareData = await shareLinkResponse.json();
+    console.log('Shared link created successfully:', shareData);
+
+    // Return the shared link (Dropbox adds a `dl=0` parameter by default)
+    const shareableUrl = shareData.url.replace('?dl=0', '?raw=1'); // Convert to direct link if needed
+    const directUrl = shareableUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    return directUrl;  // Return the direct link to the uploaded file
+
   } catch (error) {
-    console.error("Error uploading to Dropbox:", error);
-    throw new Error('Failed to upload file to Dropbox');
+    console.error('Error uploading file to Dropbox:', error.message);
+    throw error;  // Rethrow the error after logging it
   }
 };
+
+
+
 
 // Validation schemas
 const userValidationSchemas = {
@@ -86,7 +168,7 @@ const userValidationSchemas = {
     phoneNumber: yup.string().required('Phone number is required'),
     profilePictureUrl: yup.string().url().optional(),
     idCardUrl: yup.string().url().optional(),
-    instructorId: yup.string().required('Instructor ID is required'),
+    instructorId: yup.string().optional(),
     program: yup.string().required('Program is required'),
     role: yup.string().required('role is required'),
   }),
@@ -126,30 +208,44 @@ const getModelByRole = (role) => {
 // Generate Student ID
 const generateStudentId = async (program) => {
   const lastStudent = await Student.findOne({}).sort({ _id: -1 });
-  let serialNumber = '01'; // Default serial number
+  let serialNumber = 1; // Default serial number
 
   if (lastStudent) {
     const lastStudentId = lastStudent.studentId;
-    const lastSerialNumber = parseInt(lastStudentId.split('/').pop(), 10); // Extract serial number
-    serialNumber = String(lastSerialNumber + 1).padStart(2, '0'); // Increment and format with leading zeros
+    // Match the format: student/{program}/{serialNumber}
+    const match = lastStudentId.match(/student\/([^\/]+)\/(\d+)$/);
+    if (match) {
+      const lastSerialNumber = parseInt(match[2], 10); // Extract the serial number part
+      if (!isNaN(lastSerialNumber)) {
+        serialNumber = lastSerialNumber + 1; // Increment the serial number
+      }
+    }
   }
 
-  return `student/${program}/${serialNumber}`;
+  return `student/${program}/${String(serialNumber).padStart(2, '0')}`;
 };
+
 
 // Generate Instructor ID
 const generateInstructorId = async () => {
   const lastInstructor = await Instructor.findOne({}).sort({ _id: -1 });
-  let serialNumber = '01'; // Default serial number
+  let serialNumber = 1; // Default serial number
 
   if (lastInstructor) {
     const lastInstructorId = lastInstructor.instructorId;
-    const lastSerialNumber = parseInt(lastInstructorId.split('/').pop(), 10); // Extract serial number
-    serialNumber = String(lastSerialNumber + 1).padStart(2, '0'); // Increment and format with leading zeros
+    // Match the format: instructor/{serialNumber}
+    const match = lastInstructorId.match(/instructor\/(\d+)$/);
+    if (match) {
+      const lastSerialNumber = parseInt(match[1], 10); // Extract the serial number part
+      if (!isNaN(lastSerialNumber)) {
+        serialNumber = lastSerialNumber + 1; // Increment the serial number
+      }
+    }
   }
 
-  return `instructor/${serialNumber}`;
+  return `instructor/${String(serialNumber).padStart(2, '0')}`;
 };
+
 
 
 
@@ -159,6 +255,7 @@ module.exports = {
   generateStudentId,
   getModelByRole,
   userValidationSchemas,
-  generateUserId
+  generateUserId,
+  generateUniqueTransactionId
 
 };

@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "cd server_side && npm install && cd ../client_side && npm install && npm run build",
-    "start": "cd server_side && npm start"
+    "start": "cd server_side && npm start",
+    "dev": "cd client_side && npm run dev"
+
   },
   "author": "",
   "license": "ISC",

@@ -1,104 +1,123 @@
-const { Course } = require('../models/schema/courseSchema');
+const {Course} = require('../models/schema/courseSchema');  // Adjust the path based on your folder structure
 
-// Controller to create a new course
-const createCourse = async (req, res) => {
+// Function to generate a unique courseId
+async function generateCourseId(courseName) {
+  const baseCourseId = `${courseName.replace(/\s+/g, '')}`; // Remove spaces in courseName
+  let randomNumber = Math.floor(10000 + Math.random() * 90000); // Generate a 5-digit number
+  let courseId = baseCourseId + randomNumber;
+
+  // Check if the generated courseId already exists in the database
+  const existingCourse = await Course.findOne({ courseId });
+
+  // If the courseId exists, generate a new one and try again
+  while (existingCourse) {
+    randomNumber = Math.floor(10000 + Math.random() * 90000); // Generate new 5-digit number
+    courseId = baseCourseId + randomNumber;
+    existingCourse = await Course.findOne({ courseId });
+  }
+
+  return courseId;
+}
+
+// Controller function to create a new course
+async function addCourse(req, res) {
   try {
-    const newCourse = new Course(req.body); // Assuming course data is in the request body
-    const savedCourse = await newCourse.save();
-    res.status(201).json(savedCourse);
+    const { courseName, cost, duration, description, startDate, instructors, curriculum, students } = req.body;
+
+    // Generate a unique courseId
+    const courseId = await generateCourseId(courseName);
+
+    // Create a new course with the generated courseId
+    const newCourse = new Course({
+      courseName,
+      courseId,
+      cost,
+      duration,
+      description,
+      startDate,
+      instructors,
+      curriculum,
+      students,
+    });
+
+    // Save the course to the database
+    await newCourse.save();
+
+    res.status(201).json({ message: "Course created successfully", course: newCourse });
   } catch (error) {
-    res.status(400).json({ message: 'Error creating course', error });
+    res.status(500).json({ message: "Error creating course", error });
   }
 };
 
-// Controller to get all courses
+// Get all courses
 const getCourses = async (req, res) => {
   try {
-    const courses = await Course.find({});
-    res.status(200).json(courses);
+    // Fetch all courses from the database
+    const courses = await Course.find();
+
+    return res.status(200).json({
+      message: 'Courses fetched successfully',
+      courses,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    return res.status(500).json({
+      message: 'Error fetching courses',
+      error: error.message,
+    });
   }
 };
 
-// Controller to get a single course by courseId
-const getCourseById = async (req, res) => {
-  try {
-    const { courseId } = req.params; // courseId from URL params
-    const course = await Course.find({ courseId });
-
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    res.status(200).json(course);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
-  }
-};
-
-// Controller to update a course by courseId
+// Update a course
 const updateCourse = async (req, res) => {
+  const { courseId } = req.params;
+  const updatedDetails = req.body;
+
   try {
-    const { courseId } = req.params;
-    const updatedCourse = await Course.findOneAndUpdate({ courseId }, req.body, { new: true });
+    // Find the course by courseId and update it
+    const course = await Course.findByIdAndUpdate(courseId, updatedDetails, { new: true });
 
-    if (!updatedCourse) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    res.status(200).json(updatedCourse);
-  } catch (error) {
-    res.status(400).json({ message: 'Error updating course', error });
-  }
-};
-
-// Controller to delete a course by courseId
-const deleteCourse = async (req, res) => {
-  try {
-    const { courseId } = req.params;
-    const deletedCourse = await Course.findOneAndDelete({ courseId });
-
-    if (!deletedCourse) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    res.status(200).json({ message: 'Course deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting course', error });
-  }
-};
-
-// Controller to add a cohort to the cohorts array by courseId
-const addCohort = async (req, res) => {
-  try {
-    const { courseId } = req.params;
-    const { cohort } = req.body; // Assuming cohort is passed in the request body
-
-    const course = await Course.find({ courseId });
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    // Add the new cohort to the cohorts array if it's not already there
-    if (!course.cohorts.includes(cohort)) {
-      course.cohorts.push(cohort); // Push cohort to the array
-    }
-
-    const updatedCourse = await course.save();
-
-    res.status(200).json(updatedCourse);
+    return res.status(200).json({
+      message: 'Course updated successfully',
+      course,
+    });
   } catch (error) {
-    res.status(400).json({ message: 'Error adding cohort', error });
+    return res.status(500).json({
+      message: 'Error updating course',
+      error: error.message,
+    });
   }
 };
 
+// Delete a course
+const deleteCourse = async (req, res) => {
+  const { courseId } = req.params;
+
+  try {
+    // Find the course by courseId and delete it
+    const course = await Course.findByIdAndDelete(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    return res.status(200).json({
+      message: 'Course deleted successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error deleting course',
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
-  createCourse,
+  addCourse,
   getCourses,
-  getCourseById,
   updateCourse,
-  addCohort,
-  deleteCourse
+  deleteCourse,
 };

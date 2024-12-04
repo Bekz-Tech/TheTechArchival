@@ -1,5 +1,4 @@
 import './App.css';
-import { GlobalContext } from './contexts';
 import MyRoute from './Router';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -13,9 +12,7 @@ function App() {
   return (
     <Provider store={store}> {/* Provide Redux store */}
       <PersistGate loading={null} persistor={persistor}> {/* Wait for persisted state */}
-        <GlobalContext>
           <MyRoute />
-        </GlobalContext>
       </PersistGate>
     </Provider>
   );

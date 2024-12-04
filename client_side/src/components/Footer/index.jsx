@@ -92,6 +92,12 @@ const Footer = () => {
                 </SocialMedia>
             </FooterWrap>
             <button onClick={() => {navigate('./videoCall')}}> to videocall</button>
+            <button
+        onClick={() => navigate("/testVc")}
+        className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
+      >
+        Test Video Call
+      </button>
         </FooterContainer>
     );
 };

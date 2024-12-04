@@ -31,19 +31,22 @@ import StudentManagement from "./scenes/studentManagement/studentManagement";
 import { tokens } from "./theme";
 import OfflineStudentTable from "./scenes/offlineStudent/offlineStudent";
 import ChatComponent from "./components/chatComponent";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import FloatingMessageIcon from "./components/floatingMessageIcon";
-
+import { setNotifications } from "../../reduxStore/slices/notificationSlice";
 
 function DashboardHome() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const [userData, setUserData] = useState(null);
   const colors = tokens(theme.palette.mode);
-  const userRole = useSelector((state) => state.users.user).role
-  const users = useSelector((state) => state.users.allUser);
+  const user = useSelector((state) => state.users.user)
+  const userRole = user.role
   const navigate = useNavigate();
+  console.log(user.notifications)
+  const dispatch = useDispatch();
+  dispatch(setNotifications(user.notifications));
 
 
   const handleMessage = ()  => {

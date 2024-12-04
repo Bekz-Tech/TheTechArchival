@@ -8,6 +8,7 @@ import Loader from './utils/loader';
 import CodeAuthenticator from './generateCode/codeAuthenticator';
 import OfflineSignUp from './pages/offlineSignUp';
 import VideoCall from './pages/VideoCalls';
+import TestVc from '../src/components/Footer/testVc';
 
 function MyRoute() {
   return (
@@ -21,6 +22,7 @@ function MyRoute() {
         <Route path="/code-authenticator" element={<CodeAuthenticator />} />
         <Route path="/offlineSignup" element={<OfflineSignUp />} />
         <Route path="/videoCall" element={<VideoCall />} />
+        <Route path="/testVc" element={<TestVc />} />
       </Routes>
     </Router>
   );

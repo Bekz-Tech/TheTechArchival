@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button, TextField, Grid, Paper, Typography, Divider, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import Instructor from '../dashboard/instrcutor';
 
 const Instructors = () => {
   const [courses, setCourses] = useState([

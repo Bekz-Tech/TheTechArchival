@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react';
  */
 const useApi = (url) => {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState('');
   const [error, setError] = useState(null);
 
   /**
@@ -15,46 +15,54 @@ const useApi = (url) => {
    * @param {string} method - The HTTP method (GET, POST, PUT, DELETE).
    * @param {Object|null} body - The request body (for POST, PUT methods).
    * @param {Object} config - Additional configurations like headers (optional).
+   * @param {string} url - The API endpoint to be called.
    */
   const callApi = useCallback(
     async (method = 'GET', body = null, config = {}) => {
+      console.log(url);
+  
       setLoading(true);
       setError(null);
-
-      // Set up the headers, assuming JSON content type
-      const headers = {
-        'Content-Type': 'application/json',
-        ...config.headers, // Allow custom headers to be passed in
-      };
-
-      // Set up the request options
+  
+      const headers = config.headers || {};
+  
+      if (!(body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
+  
       const options = {
         method,
         headers,
-        body: body ? JSON.stringify(body) : null, // Only include body if it exists
+        body: body && !(body instanceof FormData) ? JSON.stringify(body) : body,
       };
-
+  
       try {
         const response = await fetch(url, options);
-
-        // If the response is not ok (status not in the 200 range), throw an error
+        console.log(response);
+  
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
-        // Parse the response data as JSON
-        const responseData = await response.json();
+  
+        const contentType = response.headers.get('Content-Type');
+        let responseData;
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+        } else {
+          responseData = await response.text(); // Fallback for non-JSON responses
+        }
+  
         setData(responseData);
-
+        console.log(responseData);
       } catch (err) {
-        // Handle errors by setting the error state
         setError(err.message || 'Something went wrong');
       } finally {
         setLoading(false);
       }
     },
-    [url] // The dependency array ensures that it updates if URL changes
+    []
   );
+  
 
   return {
     loading,

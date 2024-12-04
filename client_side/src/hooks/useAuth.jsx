@@ -6,6 +6,7 @@ const useAuth = () => {
   const dispatch = useDispatch();
   const { user} = useSelector((state) => state.users);
   const { loading, error } = useSelector((state) => state.ui);
+  
 
 
   // Function to login the user

@@ -30,7 +30,7 @@ const user = useSelector((state) => state.users.user)
               padding: "10px 20px",
             }}
           >
-            <DownloadOutlinedIcon sx={{ mr: "10px" }} />
+            <DownloadOutlinedIcon />
             Download Reports
           </Button>
         </Box>

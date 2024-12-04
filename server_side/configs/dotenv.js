@@ -12,6 +12,7 @@ module.exports = {
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
   dbxToken: process.env.DROPBOX_ACCESS_TOKEN,
-  MONGO_ATLAS_URI: process.env.MONGO_ATLAS_URI
+  MONGO_ATLAS_URI: process.env.MONGO_ATLAS_URI,
+  dbxRefreshToken: process.env.DROPBOX_REFRESH_TOKEN,
 };
 
